@@ -1,4 +1,4 @@
-# CAIRN
+# CAIRN PROTOCOL
 
 ## Agent Failure and Recovery Protocol
 
