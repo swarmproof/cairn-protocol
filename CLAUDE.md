@@ -264,7 +264,37 @@ Before spawning a teammate agent:
 - Keep `.planning/` local (never push)
 - Don't push PRD-02 through PRD-07 until MVP complete
 
-### 6.1 Progressive Commit Rule
+### 6.1 Phase Completion Workflow (MANDATORY)
+
+> ⚠️ **CRITICAL**: NEVER move to the next phase/branch until this workflow is complete.
+
+When a feature/phase is **fully implemented and tested** (unit, integration, E2E):
+
+```
+1. AUDIT
+   [ ] Run audit against PRD requirements (Section 0 checklist)
+   [ ] Verify docs are consistent with implementation
+   [ ] Update .synthesis/agent_log.json with audit results
+
+2. PUSH BRANCH
+   [ ] Ensure all commits are progressive and atomic
+   [ ] Push branch to remote: git push -u origin branch-name
+
+3. CREATE PR
+   [ ] Create PR with clear description
+   [ ] Reference completed PRD tasks
+   [ ] Include test coverage stats
+   [ ] Link to relevant documentation
+
+4. THEN (and only then) MOVE TO NEXT PHASE
+   [ ] Create new branch for next phase
+   [ ] Update team_status in agent_log.json
+   [ ] Begin next phase work
+```
+
+**Why this matters**: PRs provide review checkpoints, audit trails, and enable rollback if issues are found later.
+
+### 6.3 Progressive Commit Rule
 
 **NEVER batch multiple unrelated changes into one commit.** Each commit should be:
 - One logical unit of work
