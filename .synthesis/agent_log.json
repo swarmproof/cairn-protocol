@@ -31,7 +31,8 @@
     {"timestamp": "2026-03-18T20:00:00Z", "phase": "sdk-dev", "action": "test_suite", "status": "completed", "details": {"files": ["test_types.py", "test_exceptions.py", "test_checkpoint.py", "test_client.py", "test_agent.py", "test_observer.py"], "tests": 113, "coverage": "87%", "target_coverage": "85%"}},
     {"timestamp": "2026-03-18T20:05:00Z", "phase": "sdk-dev", "action": "documentation", "status": "completed", "details": {"file": "sdk/README.md", "sections": ["installation", "quick_start", "components", "environment_variables", "error_handling", "testing"]}},
     {"timestamp": "2026-03-18T20:10:00Z", "phase": "sdk-dev", "action": "prd_compliance_audit", "status": "completed", "details": {"report": "local-docs/sdk-audit-2026-03-18.md", "items_checked": 45, "passed": 43, "warnings": 2, "blocked": 0, "test_coverage": "87%", "verdict": "READY_FOR_PR", "warnings_detail": ["httpx instead of requests (async preferred)", "Python 3.10+ instead of 3.11+ (broader compatibility)"]}},
-    {"timestamp": "2026-03-18T20:15:00Z", "phase": "sdk-dev", "action": "branch_pushed", "status": "completed", "details": {"branch": "claude/sdk-core", "commits": 12, "pr_url": "https://github.com/MarouaBoud/cairn-protocol/pull/new/claude/sdk-core"}}
+    {"timestamp": "2026-03-18T20:15:00Z", "phase": "sdk-dev", "action": "branch_pushed", "status": "completed", "details": {"branch": "claude/sdk-core", "commits": 12, "pr_url": "https://github.com/MarouaBoud/cairn-protocol/pull/new/claude/sdk-core"}},
+    {"timestamp": "2026-03-18T20:30:00Z", "phase": "sdk-dev", "action": "test_suite_expanded", "status": "completed", "details": {"unit_tests": 113, "integration_tests": 6, "e2e_tests": 7, "total_tests": 126, "coverage": "88%", "test_types": ["unit", "integration", "e2e"]}}
   ],
   "deployment": {
     "network": "base-sepolia",
@@ -57,7 +58,7 @@
     {"type": "analysis", "path": "local-docs/gas-optimization-analysis.md", "status": "ready"},
     {"type": "audit_report", "path": "local-docs/documentation-audit-2026-03-18.md", "status": "completed"},
     {"type": "sdk", "path": "sdk/", "status": "complete", "components": ["CairnClient", "CairnAgent", "CheckpointStore", "Observers"]},
-    {"type": "sdk_tests", "path": "tests/", "status": "passing", "test_count": 113, "coverage": "87%"}
+    {"type": "sdk_tests", "path": "tests/", "status": "passing", "test_count": 126, "coverage": "88%", "test_types": ["unit", "integration", "e2e"]}
   ],
   "branches": [
     {"name": "claude/contracts-core", "created_at": "2026-03-18T00:45:00Z", "purpose": "Phase 1: Core contract development", "status": "complete"},
