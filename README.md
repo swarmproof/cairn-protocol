@@ -156,9 +156,23 @@ This is what makes CAIRN compound in value over time. The knowledge graph grows 
 | Property | Value |
 |----------|-------|
 | Version | 1.0 |
-| Status | Specification Complete |
-| Target Network | Base |
+| Status | **MVP Implementation In Progress** |
+| Target Network | Base (Sepolia testnet) |
 | ERC Dependencies | ERC-8183, ERC-8004, ERC-7710 |
+
+### Implementation Progress (Synthesis Hackathon 2026)
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| PRD-00 Vision | ✅ Complete | Full protocol specification |
+| PRD-01 MVP | 🟢 In Progress | Hackathon submission |
+| Smart Contract | ✅ Audited | 49 tests, 98.95% coverage |
+| Deployment | ⏳ Pending | Base Sepolia |
+| SDK (Python) | ⏳ Blocked | Awaiting deployment |
+| Frontend | ⏳ Blocked | Awaiting SDK |
+| PRD-07 Optimization | ✅ Planned | Merkle checkpoint batching |
+
+See [`PRDs/README.md`](./PRDs/README.md) for full roadmap.
 
 ---
 

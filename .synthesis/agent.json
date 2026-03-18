@@ -1,0 +1,77 @@
+{
+  "agent_id": "lagartha-cairn-mvp",
+  "agent_name": "Lagartha",
+  "agent_type": "claude-code-agent-team",
+  "project": "cairn-protocol",
+  "hackathon": "synthesis-2026",
+  "tracks": [
+    "Protocol Labs: Agents With Receipts",
+    "Let the Agent Cook"
+  ],
+  "started_at": "2026-03-17T00:00:00Z",
+  "team": {
+    "orchestrator": "claude-opus-4.5",
+    "mode": "agent-teams",
+    "roles": [
+      {
+        "name": "Contract-Dev",
+        "tasks": "1-8",
+        "status": "completed",
+        "completed_at": "2026-03-18T18:30:00Z",
+        "model": "claude-opus-4.5",
+        "deliverables": [
+          "contracts/src/interfaces/ICairnTaskMVP.sol",
+          "contracts/src/CairnTaskMVP.sol",
+          "contracts/test/CairnTaskMVP.t.sol",
+          "contracts/script/Deploy.s.sol"
+        ],
+        "deployment": {
+          "network": "base-sepolia",
+          "chain_id": 84532,
+          "contract_address": "0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417",
+          "verified": true,
+          "basescan_url": "https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417",
+          "deployed_at": "2026-03-18T18:30:00Z"
+        },
+        "audit": {
+          "prd_compliance": "44/48 pass",
+          "security_issues": 0,
+          "test_coverage": "98.95%",
+          "verdict": "DEPLOYED_AND_VERIFIED"
+        }
+      },
+      {
+        "name": "SDK-Dev",
+        "tasks": "9-14",
+        "status": "ready",
+        "blocked_by": null,
+        "includes": ["Bonfires integration"],
+        "contract_address": "0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417"
+      },
+      {
+        "name": "Frontend-Dev",
+        "tasks": "15-22",
+        "status": "blocked",
+        "blocked_by": "SDK-Dev"
+      },
+      {
+        "name": "Integration",
+        "tasks": "23-26",
+        "status": "blocked",
+        "blocked_by": ["SDK-Dev", "Frontend-Dev"]
+      }
+    ]
+  },
+  "sponsors": [
+    "Base (deployment chain)",
+    "Protocol Labs/IPFS (checkpoint storage)",
+    "Bonfires (intelligence layer)"
+  ],
+  "repository": "https://github.com/MarouaBoud/cairn-protocol",
+  "description": "CAIRN Protocol MVP - Agent failure and recovery protocol with checkpoint-based escrow settlement",
+  "chain": "base-sepolia",
+  "contract_address": "0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417",
+  "license": "BUSL-1.1",
+  "current_phase": "sdk_development",
+  "next_action": "Spawn SDK-Dev agent for Phase 2"
+}
