@@ -30,7 +30,8 @@
     {"timestamp": "2026-03-18T19:55:00Z", "phase": "sdk-dev", "action": "observers", "status": "completed", "details": {"file": "observer.py", "classes": ["CairnObserver", "LoggingObserver", "WebhookObserver", "CompositeObserver"]}},
     {"timestamp": "2026-03-18T20:00:00Z", "phase": "sdk-dev", "action": "test_suite", "status": "completed", "details": {"files": ["test_types.py", "test_exceptions.py", "test_checkpoint.py", "test_client.py", "test_agent.py", "test_observer.py"], "tests": 113, "coverage": "87%", "target_coverage": "85%"}},
     {"timestamp": "2026-03-18T20:05:00Z", "phase": "sdk-dev", "action": "documentation", "status": "completed", "details": {"file": "sdk/README.md", "sections": ["installation", "quick_start", "components", "environment_variables", "error_handling", "testing"]}},
-    {"timestamp": "2026-03-18T20:10:00Z", "phase": "sdk-dev", "action": "prd_compliance_audit", "status": "completed", "details": {"report": "local-docs/sdk-audit-2026-03-18.md", "items_checked": 45, "passed": 43, "warnings": 2, "blocked": 0, "test_coverage": "87%", "verdict": "READY_FOR_PR", "warnings_detail": ["httpx instead of requests (async preferred)", "Python 3.10+ instead of 3.11+ (broader compatibility)"]}}
+    {"timestamp": "2026-03-18T20:10:00Z", "phase": "sdk-dev", "action": "prd_compliance_audit", "status": "completed", "details": {"report": "local-docs/sdk-audit-2026-03-18.md", "items_checked": 45, "passed": 43, "warnings": 2, "blocked": 0, "test_coverage": "87%", "verdict": "READY_FOR_PR", "warnings_detail": ["httpx instead of requests (async preferred)", "Python 3.10+ instead of 3.11+ (broader compatibility)"]}},
+    {"timestamp": "2026-03-18T20:15:00Z", "phase": "sdk-dev", "action": "branch_pushed", "status": "completed", "details": {"branch": "claude/sdk-core", "commits": 12, "pr_url": "https://github.com/MarouaBoud/cairn-protocol/pull/new/claude/sdk-core"}}
   ],
   "deployment": {
     "network": "base-sepolia",
