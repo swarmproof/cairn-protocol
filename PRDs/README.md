@@ -7,30 +7,34 @@
 This folder contains the Product Requirements Documents (PRDs) for CAIRN protocol, structured as a progressive build from a hackathon-ready MVP to the complete protocol vision. Each PRD is a folder containing the main PRD document, status tracker, and spawn prompts for agent team execution.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         CAIRN PRD PROGRESSION                           │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│   PRD-00 ──────────────────────────────────────────────────────────►   │
-│   PROTOCOL VISION (North Star - What we're building toward)            │
-│                                                                         │
-│   ════════════════════════════════════════════════════════════════════ │
-│                                                                         │
-│   PRD-01          PRD-02          PRD-03          PRD-04          PRD-05│
-│   ┌─────┐        ┌─────┐        ┌─────┐        ┌─────┐        ┌─────┐  │
-│   │ MVP │───────►│CORE │───────►│INTEL│───────►│POOL │───────►│ARBIT│  │
-│   │     │        │RECOV│        │LAYER│        │     │        │     │  │
-│   └─────┘        └─────┘        └─────┘        └─────┘        └─────┘  │
-│   Hackathon      Recovery       Execution      Fallback       Arbiter  │
-│   2 weeks        Scoring        Intelligence   Ecosystem      Network  │
-│                                                                         │
-│   ════════════════════════════════════════════════════════════════════ │
-│                                                                         │
-│                              PRD-06                                     │
-│                         FULL INTEGRATION                                │
-│                     (Protocol Complete)                                 │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                           CAIRN PRD PROGRESSION                                │
+├───────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│   PRD-00 ────────────────────────────────────────────────────────────────►   │
+│   PROTOCOL VISION (North Star - What we're building toward)                  │
+│                                                                               │
+│   ════════════════════════════════════════════════════════════════════════   │
+│                                                                               │
+│   PRD-01          PRD-02          PRD-03          PRD-04          PRD-05     │
+│   ┌─────┐        ┌─────┐        ┌─────┐        ┌─────┐        ┌─────┐       │
+│   │ MVP │───────►│CORE │───────►│INTEL│───────►│POOL │───────►│ARBIT│       │
+│   │     │        │RECOV│        │LAYER│        │     │        │     │       │
+│   └─────┘        └─────┘        └─────┘        └─────┘        └─────┘       │
+│   Hackathon      Recovery       Execution      Fallback       Arbiter       │
+│   2 weeks        Scoring        Intelligence   Ecosystem      Network       │
+│                                                                               │
+│   ════════════════════════════════════════════════════════════════════════   │
+│                                                                               │
+│                    PRD-06                         PRD-07                      │
+│               FULL INTEGRATION              GAS OPTIMIZATION                  │
+│             (Protocol Complete)           (Production Scaling)                │
+│                      │                            │                           │
+│                      └────────────┬───────────────┘                           │
+│                                   ▼                                           │
+│                           PRODUCTION READY                                    │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -40,12 +44,13 @@ This folder contains the Product Requirements Documents (PRDs) for CAIRN protoco
 | PRD | Name | Scope | Timeline | Status |
 |-----|------|-------|----------|--------|
 | [PRD-00](./PRD-00-PROTOCOL-VISION/PRD.md) | Protocol Vision | Full CAIRN specification | Reference | 📋 Draft |
-| [PRD-01](./PRD-01-MVP-HACKATHON/PRD.md) | MVP Hackathon | Synthesis-ready demo | 1 weeks | 📋 Draft |
+| [PRD-01](./PRD-01-MVP-HACKATHON/PRD.md) | MVP Hackathon | Synthesis-ready demo | 1 weeks | 🚧 In Progress |
 | [PRD-02](./PRD-02-CORE-RECOVERY/PRD.md) | Core Recovery | Enhanced recovery scoring | +2 weeks | ⏳ Planned |
 | [PRD-03](./PRD-03-EXECUTION-INTELLIGENCE/PRD.md) | Execution Intelligence | Knowledge graph layer | +3 weeks | ⏳ Planned |
 | [PRD-04](./PRD-04-FALLBACK-ECOSYSTEM/PRD.md) | Fallback Ecosystem | Full pool + reputation | +3 weeks | ⏳ Planned |
 | [PRD-05](./PRD-05-ARBITER-NETWORK/PRD.md) | Arbiter Network | Dispute resolution | +2 weeks | ⏳ Planned |
 | [PRD-06](./PRD-06-FULL-INTEGRATION/PRD.md) | Full Integration | Complete protocol | +2 weeks | ⏳ Planned |
+| [PRD-07](./PRD-07-CHECKPOINT-OPTIMIZATION/PRD.md) | Checkpoint Optimization | Gas-efficient Merkle batching | +2 weeks | ⏳ Planned |
 
 ---
 
@@ -101,6 +106,13 @@ PRDs/
 │   ├── spawn-governance.md                # Governance agent
 │   ├── spawn-integration.md               # Integration agent
 │   └── spawn-deployment.md                # Deployment agent
+│
+├── PRD-07-CHECKPOINT-OPTIMIZATION/
+│   ├── PRD.md                             # Gas-efficient Merkle batching
+│   ├── STATUS.md                          # Pipeline tracking
+│   ├── spawn-contract-v2.md               # Contract V2 development
+│   ├── spawn-sdk-v2.md                    # SDK V2 development
+│   └── spawn-migration.md                 # V1 to V2 migration
 │
 └── assets/                                # Diagrams, mockups
     ├── state-machine.png
@@ -312,9 +324,10 @@ PRD-03 (Intel)       → Knowledge graph, pattern detection, intelligence API
 PRD-04 (Ecosystem)   → Fallback pool, reputation, stake/slash, agent SDK
 PRD-05 (Arbiter)     → Dispute resolution, arbiter network, rulings
 PRD-06 (Integration) → Governance, CLI, security, mainnet deployment
+PRD-07 (Optimization)→ Merkle batching, gas efficiency, production scaling
 ```
 
-**Full Protocol = PRD-01 + PRD-02 + PRD-03 + PRD-04 + PRD-05 + PRD-06**
+**Full Protocol = PRD-01 + PRD-02 + PRD-03 + PRD-04 + PRD-05 + PRD-06 + PRD-07**
 
 Each PRD builds on the previous, with no gaps in the vision coverage.
 
@@ -359,12 +372,15 @@ The PRDs form a coherent system where each builds on the previous:
 | From | To | Data Flow |
 |------|----|-----------||PRD-01 | PRD-02 | Checkpoint CIDs → Recovery scoring inputs |
 | PRD-01 | PRD-03 | Task events → Failure record storage |
+| PRD-01 | PRD-07 | Checkpoint storage → Merkle optimization |
 | PRD-02 | PRD-03 | Failure classifications → Knowledge graph |
 | PRD-02 | PRD-04 | Recovery scores → Fallback selection |
 | PRD-03 | PRD-02 | Historical patterns → Score adjustments |
 | PRD-03 | PRD-04 | Task-type matching → Pool queries |
+| PRD-03 | PRD-07 | Event indexing → Batch verification |
 | PRD-04 | PRD-05 | Stake balances → Dispute eligibility |
 | PRD-05 | PRD-04 | Rulings → Reputation updates |
+| PRD-07 | PRD-06 | Optimized contracts → Production deployment |
 
 ### Shared Components
 
@@ -372,11 +388,12 @@ These components span multiple PRDs:
 
 | Component | PRDs | Evolution |
 |-----------|------|-----------|
-| **CairnClient** | 01 → 02 → 04 | Basic → scoring methods → pool methods |
-| **Task struct** | 01 → 02 → 05 | 4 states → failure class → DISPUTED |
-| **Checkpoint CID** | 01 → 02 → 03 | Storage → scoring → intelligence |
+| **CairnClient** | 01 → 02 → 04 → 07 | Basic → scoring methods → pool methods → batched |
+| **Task struct** | 01 → 02 → 05 → 07 | 4 states → failure class → DISPUTED → Merkle roots |
+| **Checkpoint CID** | 01 → 02 → 03 → 07 | Storage → scoring → intelligence → Merkle batching |
 | **Agent identity** | 01 → 04 | EOA → ERC-8004 reputation |
 | **Escrow** | 01 → 02 → 05 | Basic → proportional → disputed |
+| **Gas efficiency** | 01 → 07 | Per-CID storage → Merkle batching (95% reduction) |
 
 ---
 

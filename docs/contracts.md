@@ -4,6 +4,22 @@
 
 ---
 
+> **Note: Full Protocol vs MVP**
+>
+> This document describes the **full protocol vision** (PRD-00). The current **MVP implementation** (PRD-01) is simplified:
+>
+> | Feature | Full Protocol | MVP |
+> |---------|---------------|-----|
+> | States | 6 (IDLE, RUNNING, FAILED, RECOVERING, RESOLVED, DISPUTED) | 4 (RUNNING, FAILED, RECOVERING, RESOLVED) |
+> | Failure Classification | FailureClass enum | Not implemented |
+> | Arbiter | Full dispute resolution | Deferred to PRD-05 |
+> | Recovery Score | Computed on-chain | Deferred to PRD-02 |
+> | Schema Validation | Hash-based | CID storage only |
+>
+> See `contracts/src/interfaces/ICairnTaskMVP.sol` for the current MVP interface.
+
+---
+
 ## Table of Contents
 
 1. [Contract Interface](#contract-interface)
