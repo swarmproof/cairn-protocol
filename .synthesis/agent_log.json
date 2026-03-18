@@ -32,7 +32,8 @@
     {"timestamp": "2026-03-18T20:05:00Z", "phase": "sdk-dev", "action": "documentation", "status": "completed", "details": {"file": "sdk/README.md", "sections": ["installation", "quick_start", "components", "environment_variables", "error_handling", "testing"]}},
     {"timestamp": "2026-03-18T20:10:00Z", "phase": "sdk-dev", "action": "prd_compliance_audit", "status": "completed", "details": {"report": "local-docs/sdk-audit-2026-03-18.md", "items_checked": 45, "passed": 43, "warnings": 2, "blocked": 0, "test_coverage": "87%", "verdict": "READY_FOR_PR", "warnings_detail": ["httpx instead of requests (async preferred)", "Python 3.10+ instead of 3.11+ (broader compatibility)"]}},
     {"timestamp": "2026-03-18T20:15:00Z", "phase": "sdk-dev", "action": "branch_pushed", "status": "completed", "details": {"branch": "claude/sdk-core", "commits": 12, "pr_url": "https://github.com/MarouaBoud/cairn-protocol/pull/new/claude/sdk-core"}},
-    {"timestamp": "2026-03-18T20:30:00Z", "phase": "sdk-dev", "action": "test_suite_expanded", "status": "completed", "details": {"unit_tests": 113, "integration_tests": 6, "e2e_tests": 7, "total_tests": 126, "coverage": "88%", "test_types": ["unit", "integration", "e2e"]}}
+    {"timestamp": "2026-03-18T20:30:00Z", "phase": "sdk-dev", "action": "test_suite_expanded", "status": "completed", "details": {"unit_tests": 113, "integration_tests": 6, "e2e_tests": 7, "total_tests": 126, "coverage": "88%", "test_types": ["unit", "integration", "e2e"]}},
+    {"timestamp": "2026-03-18T21:00:00Z", "phase": "sdk-dev", "action": "pr_created", "status": "completed", "details": {"pr_number": 1, "pr_url": "https://github.com/MarouaBoud/cairn-protocol/pull/1", "branch": "claude/sdk-core", "base": "main", "title": "feat(sdk): add Python SDK for CAIRN Protocol"}}
   ],
   "deployment": {
     "network": "base-sepolia",
@@ -64,7 +65,9 @@
     {"name": "claude/contracts-core", "created_at": "2026-03-18T00:45:00Z", "purpose": "Phase 1: Core contract development", "status": "complete"},
     {"name": "claude/sdk-core", "created_at": "2026-03-18T19:00:00Z", "purpose": "Phase 2: SDK core development", "status": "complete"}
   ],
-  "pull_requests": [],
+  "pull_requests": [
+    {"number": 1, "url": "https://github.com/MarouaBoud/cairn-protocol/pull/1", "branch": "claude/sdk-core", "title": "feat(sdk): add Python SDK for CAIRN Protocol", "status": "open", "created_at": "2026-03-18T21:00:00Z"}
+  ],
   "team_status": {
     "Contract-Dev": "completed",
     "SDK-Dev": "completed",
