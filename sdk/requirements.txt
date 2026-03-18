@@ -1,0 +1,14 @@
+# CAIRN SDK Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core dependencies
+web3>=6.0.0
+pydantic>=2.0.0
+httpx>=0.25.0
+tenacity>=8.0.0
+
+# Development dependencies (install with: pip install -r requirements.txt -r requirements-dev.txt)
+# pytest>=7.0.0
+# pytest-asyncio>=0.21.0
+# pytest-cov>=4.0.0
+# respx>=0.20.0
