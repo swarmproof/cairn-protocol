@@ -46,6 +46,9 @@ packages = ["sdk"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+markers = [
+    "e2e: mark test as end-to-end test (requires --run-e2e and env vars)",
+]
 
 [tool.coverage.run]
 source = ["sdk"]
