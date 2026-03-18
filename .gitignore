@@ -9,7 +9,7 @@ local-docs/
 # Environment files (secrets)
 .env
 *.env.local
-
+*.env
 # Foundry build artifacts
 contracts/cache/
 contracts/out/
