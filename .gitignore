@@ -5,4 +5,29 @@ local-docs/
 
 # Planning and research files (internal)
 .planning/
-.planning/phases
+
+# Environment files (secrets)
+.env
+*.env.local
+
+# Foundry build artifacts
+contracts/cache/
+contracts/out/
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
