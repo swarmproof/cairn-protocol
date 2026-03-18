@@ -260,9 +260,29 @@ Before spawning a teammate agent:
 
 - Branch naming: `claude/feature-name`
 - Only commit/push when feature is **fully implemented AND tested**
-- Progressive commits within feature branches
+- **Progressive commits** - one logical change per commit, never batch multiple changes
 - Keep `.planning/` local (never push)
-- Don't push PRD-02 through PRD-06 until MVP complete
+- Don't push PRD-02 through PRD-07 until MVP complete
+
+### 6.1 Progressive Commit Rule
+
+**NEVER batch multiple unrelated changes into one commit.** Each commit should be:
+- One logical unit of work
+- Independently reviewable
+- Atomic (can be reverted without breaking other changes)
+
+Example of correct progressive commits:
+```
+feat(contracts): add deployment records for Base Sepolia
+docs(synthesis): add hackathon logs with deployment status
+docs(rules): add validation gates and security rules
+docs(prd-01): update status to Phase 1 complete
+```
+
+Example of INCORRECT batching:
+```
+feat: add deployment, logs, rules, and status updates  ❌ TOO BROAD
+```
 
 ### No AI Attribution
 
