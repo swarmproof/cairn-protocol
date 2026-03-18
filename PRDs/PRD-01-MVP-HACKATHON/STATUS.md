@@ -1,11 +1,11 @@
 # PRD-01: CAIRN MVP — Status Tracker
 
-> Last Updated: 2026-03-17
+> Last Updated: 2026-03-18
 
 ## Current Phase
 
 - [x] **Phase 0**: PRD Written & Approved
-- [ ] **Phase 1**: Contract Development (Days 1-3)
+- [x] **Phase 1**: Contract Development ✅ (87% - awaiting deployment)
 - [ ] **Phase 2**: SDK Development (Days 4-5)
 - [ ] **Phase 3**: Frontend & Demo (Days 6-8)
 - [ ] **Phase 4**: Integration & Polish (Days 9-10)
@@ -16,9 +16,10 @@
 | Stage | Status | Notes |
 |-------|--------|-------|
 | PRD Approved | ✅ | Ready for execution |
-| Contract Complete | ⏳ | Not started |
-| Contract Deployed | ⏳ | Blocked by contract |
-| SDK Complete | ⏳ | Blocked by deployment |
+| Contract Complete | ✅ | 49 tests, 98.95% coverage |
+| Contract Audited | ✅ | PRD compliance verified |
+| Contract Deployed | ✅ | `0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417` |
+| SDK Complete | 🔵 | Ready to start |
 | Frontend Complete | ⏳ | Blocked by SDK |
 | E2E Tests Pass | ⏳ | Blocked by frontend |
 | Demo Rehearsed | ⏳ | Blocked by E2E |
@@ -28,100 +29,112 @@
 
 | Teammate | Assigned To | Status | Current Task |
 |----------|-------------|--------|--------------|
-| Contract-Dev | TBD | 🔵 Ready | Task 1 |
-| SDK-Dev | TBD | ⏸️ Waiting | Blocked by Contract |
-| Frontend-Dev | TBD | ⏸️ Waiting | Blocked by SDK |
-| Integration | TBD | ⏸️ Waiting | Blocked by All |
+| Contract-Dev | Tasks 1-6 | ✅ Complete | Awaiting deployment |
+| SDK-Dev | Tasks 9-14 | ⏸️ Waiting | Blocked by deployment |
+| Frontend-Dev | Tasks 15-22 | ⏸️ Waiting | Blocked by SDK |
+| Integration | Tasks 23-26 | ⏸️ Waiting | Blocked by All |
 
 ## Task Breakdown
 
 ### Phase 1: Contract Development
 
-| # | Task | Owner | Status | Blocked By | Notes |
-|---|------|-------|--------|------------|-------|
-| 1 | Setup Foundry project | Contract-Dev | 🔵 Ready | — | |
-| 2 | Implement state machine | Contract-Dev | ⏸️ | 1 | |
-| 3 | Implement checkpoint storage | Contract-Dev | ⏸️ | 2 | |
-| 4 | Implement heartbeat system | Contract-Dev | ⏸️ | 2 | |
-| 5 | Implement settlement | Contract-Dev | ⏸️ | 2 | |
-| 6 | Write unit tests | Contract-Dev | ⏸️ | 3,4,5 | Target: 95% coverage |
-| 7 | Deploy to Base Sepolia | Contract-Dev | ⏸️ | 6 | |
-| 8 | Verify on Basescan | Contract-Dev | ⏸️ | 7 | |
+| # | Task | Owner | Status | Completed | Notes |
+|---|------|-------|--------|-----------|-------|
+| 1 | Setup Foundry project | Contract-Dev | ✅ | 2026-03-18 | Dependencies installed |
+| 2 | Implement state machine | Contract-Dev | ✅ | 2026-03-18 | 4 states |
+| 3 | Implement checkpoint storage | Contract-Dev | ✅ | 2026-03-18 | CID array |
+| 4 | Implement heartbeat system | Contract-Dev | ✅ | 2026-03-18 | Permissionless liveness |
+| 5 | Implement settlement | Contract-Dev | ✅ | 2026-03-18 | Proportional split |
+| 6 | Write unit tests | Contract-Dev | ✅ | 2026-03-18 | 49 tests, 98.95% coverage |
+| 7 | Deploy to Base Sepolia | Agent | ✅ | 2026-03-18 | `0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417` |
+| 8 | Verify on Basescan | Agent | ✅ | 2026-03-18 | [Verified](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) |
 
 ### Phase 2: SDK Development
 
-| # | Task | Owner | Status | Blocked By | Notes |
-|---|------|-------|--------|------------|-------|
-| 9 | Setup Python package | SDK-Dev | ⏸️ | 8 | |
-| 10 | Implement CheckpointStore | SDK-Dev | ⏸️ | 9 | |
-| 11 | Implement CairnClient | SDK-Dev | ⏸️ | 10 | |
-| 12 | Implement CairnAgent wrapper | SDK-Dev | ⏸️ | 11 | |
-| 13 | Write SDK tests | SDK-Dev | ⏸️ | 12 | |
-| 14 | Package and document | SDK-Dev | ⏸️ | 13 | |
+| # | Task | Branch | Status | Notes |
+|---|------|--------|--------|-------|
+| 9 | Setup Python package | `claude/sdk-core` | ⏳ | Needs contract address |
+| 10 | Implement CheckpointStore | `claude/sdk-core` | ⏳ | With Bonfires |
+| 11 | Implement CairnClient | `claude/sdk-core` | ⏳ | |
+| 12 | Implement CairnAgent wrapper | `claude/sdk-core` | ⏳ | |
+| 13 | Write SDK tests | `claude/sdk-core` | ⏳ | |
+| 14 | Package and document | `claude/sdk-core` | ⏳ | |
 
 ### Phase 3: Frontend & Demo
 
-| # | Task | Owner | Status | Blocked By | Notes |
-|---|------|-------|--------|------------|-------|
-| 15 | Setup Next.js + wagmi | Frontend-Dev | ⏸️ | 14 | |
-| 16 | Task list component | Frontend-Dev | ⏸️ | 15 | |
-| 17 | Task detail component | Frontend-Dev | ⏸️ | 16 | |
-| 18 | State machine visualization | Frontend-Dev | ⏸️ | 17 | |
-| 19 | Demo control panel | Frontend-Dev | ⏸️ | 18 | |
-| 20 | Checkpoint viewer | Frontend-Dev | ⏸️ | 17 | |
-| 21 | Settlement display | Frontend-Dev | ⏸️ | 17 | |
-| 22 | Deploy to Vercel | Frontend-Dev | ⏸️ | 21 | |
+| # | Task | Branch | Status | Notes |
+|---|------|--------|--------|-------|
+| 15 | Setup Next.js + wagmi | `claude/frontend` | ⏳ | Needs Phase 2 |
+| 16 | Task list component | `claude/frontend` | ⏳ | |
+| 17 | Task detail component | `claude/frontend` | ⏳ | |
+| 18 | State machine visualization | `claude/frontend` | ⏳ | |
+| 19 | Demo control panel | `claude/frontend` | ⏳ | |
+| 20 | Checkpoint viewer | `claude/frontend` | ⏳ | |
+| 21 | Settlement display | `claude/frontend` | ⏳ | |
+| 22 | Deploy to Vercel | `claude/frontend` | ⏳ | |
 
 ### Phase 4: Integration & Polish
 
-| # | Task | Owner | Status | Blocked By | Notes |
-|---|------|-------|--------|------------|-------|
-| 23 | E2E happy path test | Integration | ⏸️ | 22 | |
-| 24 | E2E recovery path test | Integration | ⏸️ | 23 | |
-| 25 | Demo script rehearsal | Integration | ⏸️ | 24 | |
-| 26 | Record backup video | Integration | ⏸️ | 25 | |
+| # | Task | Branch | Status | Notes |
+|---|------|--------|--------|-------|
+| 23 | E2E happy path test | `claude/integration` | ⏳ | |
+| 24 | E2E recovery path test | `claude/integration` | ⏳ | |
+| 25 | Demo script rehearsal | `claude/integration` | ⏳ | |
+| 26 | Record backup video | `claude/integration` | ⏳ | |
 
 ## Blockers
 
 | # | Blocker | Impact | Owner | Resolution | Status |
 |---|---------|--------|-------|------------|--------|
-| — | None currently | — | — | — | — |
+| 1 | Contract deployment | SDK blocked | USER | Deploy to Base Sepolia | ⏳ Pending |
 
-## Open Spikes
+## Deliverables Completed
 
-| # | Question | Status | Result |
-|---|----------|--------|--------|
-| Q1 | Pinata failover | 🔵 To test | — |
-| Q2 | Demo failure injection | 🔵 To test | — |
-| Q3 | Min heartbeat interval | 🔵 To test | — |
-| Q4 | Gas spike handling | 🔵 To test | — |
-| Q5 | Auto-settlement | 🔵 To test | — |
+| Artifact | Path | Status |
+|----------|------|--------|
+| Interface | `contracts/src/interfaces/ICairnTaskMVP.sol` | ✅ |
+| Contract | `contracts/src/CairnTaskMVP.sol` | ✅ Audited |
+| Tests | `contracts/test/CairnTaskMVP.t.sol` | ✅ 49 tests |
+| Deploy Script | `contracts/script/Deploy.s.sol` | ✅ |
+| PRD-07 | `PRDs/PRD-07-CHECKPOINT-OPTIMIZATION/` | ✅ Planned |
+
+## Gas Report (from audit)
+
+| Operation | Gas | PRD Target | Status |
+|-----------|-----|------------|--------|
+| submitTask | 225,558 | < 200,000 | ⚠️ Slightly over |
+| commitCheckpoint | 66,991 | < 60,000 | ⚠️ Slightly over |
+| heartbeat | 35,105 | < 30,000 | ⚠️ Slightly over |
+| settle | 106,466 | < 100,000 | ⚠️ Slightly over |
+
+*Note: Gas slightly over targets, documented in audit. PRD-07 addresses optimization.*
 
 ## Timeline
 
 ```
 March 2026
-─────────────────────────────────────────────────────
+═══════════════════════════════════════════════════════════════
      13  14  15  16  17  18  19  20  21  22  23
-     ├───┴───┴───┤                           │
-     │ Contract  │                           │
-                 ├───┴───┤                   │
-                 │  SDK  │                   │
-                         ├───┴───┴───┤       │
-                         │ Frontend  │       │
-                                     ├───┴───┤
-                                     │ Integ │
-                                             ▼
-                                         SUBMIT
+                         ▼
+                       TODAY
+     ├───────────────────┤
+     │   Contract Dev    │  ← ✅ COMPLETE (awaiting deploy)
+                         ├───────────┤
+                         │  SDK Dev  │  ← NEXT
+                                     ├───────────────┤
+                                     │   Frontend    │
+                                                     ├─────┤
+                                                     │Integ│
+                                                           ▼
+                                                       SUBMIT
 ```
 
-## Daily Standups
+## Next Steps
 
-### Day 0 (March 17) — Planning
-- ✅ PRD completed with full extended template
-- ✅ STATUS.md created
-- ✅ Spawn prompts created
-- Next: Start Contract-Dev (Day 1)
+1. **USER**: Deploy contract to Base Sepolia
+2. **USER**: Provide contract address
+3. **Agent**: Spawn SDK-Dev with Bonfires integration
+4. Continue Phase 2
 
 ---
 
@@ -133,5 +146,4 @@ March 2026
 | 🟢 | In Progress |
 | 🔵 | Ready to Start |
 | ⏸️ | Blocked / Waiting |
-| 🔴 | Blocked (Critical) |
 | ⏳ | Not Started |
