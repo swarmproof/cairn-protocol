@@ -133,37 +133,37 @@ export default function OperatorsPage() {
           </Card>
 
           {/* After */}
-          <Card className="border-green-500/30 bg-green-500/5">
+          <Card className="border-amber-500/30 bg-amber-500/5">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-400">
+              <CardTitle className="flex items-center gap-2 text-amber-400">
                 <CheckCircle className="h-5 w-5" />
                 With CAIRN
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-start gap-3">
-                <span className="text-green-400">✓</span>
+                <span className="text-amber-400">✓</span>
                 <div>
                   <p className="font-medium">Auto-detection</p>
                   <p className="text-sm text-muted-foreground">Heartbeat monitoring catches failures instantly</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-green-400">✓</span>
+                <span className="text-amber-400">✓</span>
                 <div>
                   <p className="font-medium">21 min average recovery</p>
                   <p className="text-sm text-muted-foreground">Fallback agent resumes from checkpoint</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-green-400">✓</span>
+                <span className="text-amber-400">✓</span>
                 <div>
                   <p className="font-medium">Fair settlement</p>
                   <p className="text-sm text-muted-foreground">Escrow split based on verified work</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <span className="text-green-400">✓</span>
+                <span className="text-amber-400">✓</span>
                 <div>
                   <p className="font-medium">Network intelligence</p>
                   <p className="text-sm text-muted-foreground">Every failure teaches all future agents</p>
@@ -179,7 +179,7 @@ export default function OperatorsPage() {
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-500" />
+              <DollarSign className="h-5 w-5 text-amber-500" />
               ROI Calculator
             </CardTitle>
           </CardHeader>
@@ -190,11 +190,11 @@ export default function OperatorsPage() {
               </p>
               <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="p-4 rounded-lg bg-muted">
-                  <div className="text-2xl font-bold text-green-500">$47K</div>
+                  <div className="text-2xl font-bold text-amber-500">$47K</div>
                   <div className="text-xs text-muted-foreground">Example savings</div>
                 </div>
                 <div className="p-4 rounded-lg bg-muted">
-                  <div className="text-2xl font-bold text-cyan-500">98.7%</div>
+                  <div className="text-2xl font-bold text-amber-500">98.7%</div>
                   <div className="text-xs text-muted-foreground">Target recovery</div>
                 </div>
                 <div className="p-4 rounded-lg bg-muted">
@@ -225,7 +225,7 @@ export default function OperatorsPage() {
             { step: '4', title: 'Settle', desc: 'Fair escrow split' },
           ].map((item) => (
             <div key={item.step} className="text-center">
-              <div className="w-12 h-12 rounded-full bg-cyan-500/10 text-cyan-500 font-bold text-xl flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 font-bold text-xl flex items-center justify-center mx-auto mb-3">
                 {item.step}
               </div>
               <h3 className="font-semibold mb-1">{item.title}</h3>
@@ -243,7 +243,7 @@ export default function OperatorsPage() {
         </p>
         <Link
           href="/explorer"
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-cyan-600 text-white font-semibold hover:bg-cyan-700 transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-amber-600 text-white font-semibold hover:bg-amber-700 transition-colors"
         >
           Launch Demo Dashboard
           <ArrowRight className="h-4 w-4" />

@@ -94,7 +94,7 @@ export default function HomePage() {
               </div>
 
               <div className="p-6 rounded-xl bg-card border">
-                <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">🔍</span>
                 </div>
                 <h3 className="font-semibold mb-2">Query Intelligence</h3>
@@ -105,7 +105,7 @@ export default function HomePage() {
               </div>
 
               <div className="p-6 rounded-xl bg-card border">
-                <div className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 rounded-lg bg-stone-500/10 flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">📈</span>
                 </div>
                 <h3 className="font-semibold mb-2">Compound Learning</h3>

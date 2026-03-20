@@ -112,8 +112,8 @@ export default function RoadmapPage() {
                 <div
                   className={cn(
                     'w-12 h-2 rounded-full mb-1',
-                    phase.status === 'complete' && 'bg-green-500',
-                    phase.status === 'current' && 'bg-blue-500 animate-pulse',
+                    phase.status === 'complete' && 'bg-amber-500',
+                    phase.status === 'current' && 'bg-amber-600 animate-pulse',
                     phase.status === 'planned' && 'bg-muted'
                   )}
                 />
@@ -136,8 +136,8 @@ export default function RoadmapPage() {
               <div
                 className={cn(
                   'absolute left-0 top-0 w-4 h-4 -translate-x-1/2 rounded-full border-2 border-background z-10',
-                  phase.status === 'complete' && 'bg-green-500',
-                  phase.status === 'current' && 'bg-blue-500 animate-pulse',
+                  phase.status === 'complete' && 'bg-amber-500',
+                  phase.status === 'current' && 'bg-amber-600 animate-pulse',
                   phase.status === 'planned' && 'bg-muted'
                 )}
               />
@@ -148,8 +148,8 @@ export default function RoadmapPage() {
                   <div
                     className={cn(
                       'flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium',
-                      phase.status === 'complete' && 'bg-green-500/10 text-green-500',
-                      phase.status === 'current' && 'bg-blue-500/10 text-blue-500',
+                      phase.status === 'complete' && 'bg-amber-500/10 text-amber-500',
+                      phase.status === 'current' && 'bg-amber-600/10 text-amber-600',
                       phase.status === 'planned' && 'bg-muted text-muted-foreground'
                     )}
                   >
@@ -175,9 +175,9 @@ export default function RoadmapPage() {
 
                 {/* Highlight Box (Merkle Optimization) */}
                 {phase.highlight && (
-                  <Card className="border-green-500/30 bg-green-500/5">
+                  <Card className="border-amber-500/30 bg-amber-500/5">
                     <CardHeader className="pb-2">
-                      <CardTitle className="flex items-center gap-2 text-green-500 text-base">
+                      <CardTitle className="flex items-center gap-2 text-amber-500 text-base">
                         <Zap className="h-5 w-5" />
                         {phase.highlight.title}
                       </CardTitle>
@@ -190,11 +190,11 @@ export default function RoadmapPage() {
                         </div>
                         <div>
                           <span className="text-muted-foreground">With Merkle:</span>
-                          <p className="font-mono text-green-400">{phase.highlight.after}</p>
+                          <p className="font-mono text-amber-400">{phase.highlight.after}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10">
-                        <span className="text-2xl font-bold text-green-500">{phase.highlight.improvement}</span>
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10">
+                        <span className="text-2xl font-bold text-amber-500">{phase.highlight.improvement}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">{phase.highlight.description}</p>
                     </CardContent>
@@ -208,27 +208,27 @@ export default function RoadmapPage() {
 
       {/* Current Focus */}
       <section className="max-w-4xl mx-auto mt-12">
-        <Card className="border-blue-500/30">
+        <Card className="border-amber-500/30">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-500 animate-pulse" />
+              <Clock className="h-5 w-5 text-amber-500 animate-pulse" />
               Current Focus: Synthesis Hackathon 2026
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-3 gap-4">
               <div className="p-4 rounded-lg bg-muted/50 text-center">
-                <Shield className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+                <Shield className="h-8 w-8 text-amber-500 mx-auto mb-2" />
                 <h3 className="font-semibold mb-1">Live Demo</h3>
                 <p className="text-sm text-muted-foreground">Fully functional on Base Sepolia</p>
               </div>
               <div className="p-4 rounded-lg bg-muted/50 text-center">
-                <GitBranch className="h-8 w-8 text-purple-500 mx-auto mb-2" />
+                <GitBranch className="h-8 w-8 text-stone-400 mx-auto mb-2" />
                 <h3 className="font-semibold mb-1">Open Source</h3>
                 <p className="text-sm text-muted-foreground">MIT licensed, public repo</p>
               </div>
               <div className="p-4 rounded-lg bg-muted/50 text-center">
-                <Users className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                <Users className="h-8 w-8 text-amber-500 mx-auto mb-2" />
                 <h3 className="font-semibold mb-1">Community</h3>
                 <p className="text-sm text-muted-foreground">Building in public</p>
               </div>

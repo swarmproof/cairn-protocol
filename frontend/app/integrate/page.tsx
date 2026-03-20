@@ -216,7 +216,7 @@ export default function IntegratePage() {
               className="absolute top-4 right-4 p-2 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors z-10"
             >
               {copied ? (
-                <Check className="h-4 w-4 text-green-400" />
+                <Check className="h-4 w-4 text-amber-400" />
               ) : (
                 <Copy className="h-4 w-4 text-slate-400" />
               )}
@@ -230,19 +230,19 @@ export default function IntegratePage() {
         <h2 className="text-2xl font-bold text-center mb-8">Production Ready</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
           <div className="p-4 rounded-lg bg-muted/50 text-center">
-            <div className="font-semibold mb-1 text-green-500">✓</div>
+            <div className="font-semibold mb-1 text-amber-500">✓</div>
             <div className="text-sm">TypeScript Types</div>
           </div>
           <div className="p-4 rounded-lg bg-muted/50 text-center">
-            <div className="font-semibold mb-1 text-green-500">✓</div>
+            <div className="font-semibold mb-1 text-amber-500">✓</div>
             <div className="text-sm">Full Docs</div>
           </div>
           <div className="p-4 rounded-lg bg-muted/50 text-center">
-            <div className="font-semibold mb-1 text-green-500">✓</div>
+            <div className="font-semibold mb-1 text-amber-500">✓</div>
             <div className="text-sm">95%+ Coverage</div>
           </div>
           <div className="p-4 rounded-lg bg-muted/50 text-center">
-            <div className="font-semibold mb-1 text-green-500">✓</div>
+            <div className="font-semibold mb-1 text-amber-500">✓</div>
             <div className="text-sm">MIT License</div>
           </div>
         </div>

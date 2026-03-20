@@ -174,7 +174,7 @@ export default function IntelligencePage() {
           {filteredTypes.map((taskType) => (
             <GlowCard
               key={taskType.id}
-              glowColor={taskType.successRate >= 90 ? 'rgba(34, 197, 94, 0.2)' : taskType.successRate >= 80 ? 'rgba(59, 130, 246, 0.2)' : 'rgba(245, 158, 11, 0.2)'}
+              glowColor={taskType.successRate >= 90 ? 'rgba(217, 119, 6, 0.25)' : taskType.successRate >= 80 ? 'rgba(217, 119, 6, 0.2)' : 'rgba(217, 119, 6, 0.15)'}
               className="cursor-pointer"
               onClick={() => setSelectedType(selectedType === taskType.id ? null : taskType.id)}
             >
@@ -198,8 +198,8 @@ export default function IntelligencePage() {
                       <span className="text-muted-foreground">Success rate</span>
                       <span className={cn(
                         'font-medium',
-                        taskType.successRate >= 90 ? 'text-green-500' :
-                        taskType.successRate >= 80 ? 'text-blue-500' : 'text-amber-500'
+                        taskType.successRate >= 90 ? 'text-amber-400' :
+                        taskType.successRate >= 80 ? 'text-amber-500' : 'text-amber-600'
                       )}>
                         {taskType.successRate}%
                       </span>
@@ -259,7 +259,7 @@ export default function IntelligencePage() {
                       <span className="font-mono text-sm">HEARTBEAT_MISS</span>
                       <div className="flex items-center gap-2">
                         <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full bg-blue-500" style={{ width: '13%' }} />
+                          <div className="h-full bg-stone-500" style={{ width: '13%' }} />
                         </div>
                         <span className="text-xs text-muted-foreground">13%</span>
                       </div>
@@ -270,7 +270,7 @@ export default function IntelligencePage() {
                 {/* Recommendations */}
                 <div>
                   <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-green-500" />
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
                     Intelligence Insights
                   </h3>
                   <div className="space-y-3 text-sm">
@@ -278,12 +278,12 @@ export default function IntelligencePage() {
                       <strong className="text-amber-500">Avoid:</strong>
                       <span className="text-muted-foreground ml-2">00:00-04:00 UTC (12 failures)</span>
                     </div>
-                    <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                      <strong className="text-green-500">Best agent:</strong>
+                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <strong className="text-amber-500">Best agent:</strong>
                       <span className="text-muted-foreground ml-2">0x91a2...4b (94% success)</span>
                     </div>
-                    <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                      <strong className="text-blue-500">Est. cost:</strong>
+                    <div className="p-3 rounded-lg bg-stone-500/10 border border-stone-500/20">
+                      <strong className="text-stone-400">Est. cost:</strong>
                       <span className="text-muted-foreground ml-2">P50: 0.023 ETH</span>
                     </div>
                   </div>
