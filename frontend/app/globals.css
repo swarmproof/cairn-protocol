@@ -36,33 +36,34 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Cairn/Desert Palette - Muted, Sophisticated */
+    --background: 20 8% 4%;
+    --foreground: 35 10% 90%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 25 6% 8%;
+    --card-foreground: 35 10% 90%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 20 8% 6%;
+    --popover-foreground: 35 10% 90%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 38 45% 55%;
+    --primary-foreground: 20 8% 4%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 30 5% 18%;
+    --secondary-foreground: 35 10% 85%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 28 5% 15%;
+    --muted-foreground: 30 8% 55%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 35 50% 45%;
+    --accent-foreground: 35 10% 95%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 55% 40%;
+    --destructive-foreground: 35 10% 95%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 30 5% 18%;
+    --input: 28 5% 12%;
+    --ring: 38 40% 50%;
   }
 }
 
@@ -129,4 +130,232 @@
 
 .state-arrow.active {
   @apply text-primary;
+}
+
+/* ============================================
+   CAIRN PROTOCOL V2 - Visual Identity System
+   ============================================ */
+
+@layer base {
+  :root {
+    /* Primary - Wilderness Trail Markers */
+    --cairn-stone: 30 6% 47%;
+    --wilderness-blue: 201 96% 39%;
+    --trail-orange: 21 90% 48%;
+    --recovery-green: 160 84% 29%;
+    --failure-red: 0 72% 51%;
+    --intelligence-purple: 263 70% 58%;
+
+    /* Cairn Stone Types */
+    --stone-liveness: 217 91% 60%;
+    --stone-resource: 38 92% 50%;
+    --stone-logic: 0 84% 60%;
+    --stone-success: 160 84% 39%;
+  }
+}
+
+/* Cairn Icon Styles */
+.cairn-stone {
+  @apply rounded-lg transition-all duration-300;
+}
+
+.cairn-stone-liveness {
+  @apply bg-blue-500/20 text-blue-500;
+}
+
+.cairn-stone-resource {
+  @apply bg-orange-500/20 text-orange-500;
+}
+
+.cairn-stone-logic {
+  @apply bg-red-500/20 text-red-500;
+}
+
+.cairn-stone-success {
+  @apply bg-green-500/20 text-green-500;
+}
+
+.cairn-glow {
+  @apply ring-2 ring-current ring-opacity-50 animate-pulse;
+}
+
+/* Hero Animation */
+.hero-frame {
+  @apply transition-all duration-500 ease-out;
+}
+
+/* Intelligence Feed */
+.intelligence-read {
+  @apply border-l-2 border-l-blue-500;
+}
+
+.intelligence-write {
+  @apply border-l-2 border-l-orange-500;
+}
+
+/* Segment Cards */
+.segment-card {
+  @apply border-2 rounded-xl p-8 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl cursor-pointer;
+}
+
+.segment-card-operator {
+  @apply border-blue-500/30 hover:border-blue-500 hover:bg-blue-500/5;
+}
+
+.segment-card-developer {
+  @apply border-purple-500/30 hover:border-purple-500 hover:bg-purple-500/5;
+}
+
+/* Navigation Active Link */
+.nav-link-active {
+  @apply text-foreground relative;
+}
+
+.nav-link-active::after {
+  content: '';
+  @apply absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full;
+}
+
+/* Code Block */
+.code-block {
+  @apply bg-slate-900 rounded-lg p-4 font-mono text-sm overflow-x-auto;
+}
+
+/* Roadmap Timeline */
+.roadmap-phase {
+  @apply relative pl-8 pb-8 border-l-2 border-muted;
+}
+
+.roadmap-phase:last-child {
+  @apply border-l-transparent;
+}
+
+.roadmap-phase::before {
+  content: '';
+  @apply absolute left-0 top-0 w-4 h-4 -translate-x-1/2 rounded-full bg-muted border-2 border-background;
+}
+
+.roadmap-phase.complete::before {
+  @apply bg-green-500;
+}
+
+.roadmap-phase.current::before {
+  @apply bg-blue-500 animate-pulse;
+}
+
+/* ============================================
+   HERO ANIMATION KEYFRAMES
+   ============================================ */
+
+@keyframes progress-fail {
+  0% { width: 0%; }
+  60% { width: 65%; }
+  100% { width: 65%; }
+}
+
+.animate-progress-fail {
+  animation: progress-fail 1.5s ease-out forwards;
+}
+
+@keyframes progress-success {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.animate-progress-success {
+  animation: progress-success 1s ease-out forwards;
+}
+
+@keyframes stack-grow {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-stack-grow {
+  animation: stack-grow 0.5s ease-out forwards;
+}
+
+@keyframes stone-appear {
+  0% { transform: translateY(-10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-stone-appear {
+  animation: stone-appear 0.3s ease-out forwards;
+}
+
+@keyframes agent-connect {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-agent-connect {
+  animation: agent-connect 0.4s ease-out forwards;
+}
+
+@keyframes line-draw {
+  0% { width: 0; opacity: 0; }
+  100% { width: 2rem; opacity: 1; }
+}
+
+.animate-line-draw {
+  animation: line-draw 0.5s ease-out forwards;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4); }
+  50% { box-shadow: 0 0 20px 5px rgba(249, 115, 22, 0.2); }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes data-flow {
+  0% { transform: translateY(5px); opacity: 0.5; }
+  50% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-5px); opacity: 0.5; }
+}
+
+.animate-data-flow {
+  animation: data-flow 1s ease-in-out infinite;
+}
+
+@keyframes insight-appear {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-insight-appear {
+  animation: insight-appear 0.3s ease-out forwards;
+}
+
+@keyframes particle {
+  0% { transform: translateY(0) scale(1); opacity: 0.8; }
+  100% { transform: translateY(-20px) scale(0); opacity: 0; }
+}
+
+.animate-particle {
+  animation: particle 1.5s ease-out infinite;
+}
+
+/* Animation delays */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .pulse-running {
+    animation: none;
+  }
+
+  .hero-frame,
+  .segment-card,
+  .cairn-stone {
+    transition: none;
+  }
 }
