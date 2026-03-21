@@ -48,7 +48,7 @@ class CairnAgent:
                 return {"result": "done"}
 
         client = CairnClient(rpc_url, contract, private_key)
-        ipfs = CheckpointStore(pinata_jwt)
+        ipfs = CheckpointStore()  # Auto-loads from PINATA_JWT env var
         agent = CairnAgent(MyAgent(), client, ipfs)
 
         async with agent:

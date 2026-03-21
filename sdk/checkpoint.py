@@ -6,6 +6,7 @@ IPFS checkpoint storage with Pinata pinning service.
 
 import json
 import logging
+import os
 from typing import Any
 
 import httpx
@@ -41,6 +42,10 @@ class CheckpointStore:
     IPFS checkpoint storage using Pinata for pinning.
 
     Example:
+        # Auto-load from environment
+        store = CheckpointStore()
+
+        # Or provide explicitly
         store = CheckpointStore(pinata_jwt="your_jwt_token")
 
         # Write checkpoint
@@ -50,18 +55,26 @@ class CheckpointStore:
         data = await store.read(cid)
     """
 
-    def __init__(self, pinata_jwt: str):
+    def __init__(self, pinata_jwt: str | None = None):
         """
         Initialize CheckpointStore.
 
         Args:
             pinata_jwt: Pinata JWT token for authentication.
+                        If not provided, will try to load from PINATA_JWT env var.
                         Get from https://app.pinata.cloud/developers/api-keys
-        """
-        if not pinata_jwt:
-            raise ValueError("pinata_jwt is required")
 
-        self._jwt = pinata_jwt
+        Raises:
+            CheckpointError: If JWT is not provided and not found in environment
+        """
+        jwt = pinata_jwt or os.getenv("PINATA_JWT")
+
+        if not jwt:
+            raise CheckpointError(
+                "PINATA_JWT is required. Either pass pinata_jwt parameter or set PINATA_JWT environment variable."
+            )
+
+        self._jwt = jwt
         self._client: httpx.AsyncClient | None = None
 
     async def _get_client(self) -> httpx.AsyncClient:
