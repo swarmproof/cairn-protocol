@@ -1,0 +1,18 @@
+# CAIRN SDK Development Dependencies
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
+
+# Testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
+
+# Mocking HTTP for unit tests (not needed for integration tests)
+respx>=0.20.0
+
+# Code quality
+black>=23.0.0
+ruff>=0.1.0
+mypy>=1.0.0
+
+# Type stubs
+types-requests>=2.0.0
