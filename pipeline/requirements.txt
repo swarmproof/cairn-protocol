@@ -1,0 +1,20 @@
+# CAIRN Pipeline Requirements
+
+# Core dependencies
+pydantic>=2.0.0
+httpx>=0.24.0
+tenacity>=8.2.0
+python-dotenv>=1.0.0
+
+# Web3 and blockchain
+web3>=6.11.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+
+# Shared with SDK (already in sdk/requirements.txt)
+# web3>=6.11.0
+# httpx>=0.24.0
+# tenacity>=8.2.0
