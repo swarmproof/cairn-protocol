@@ -249,13 +249,13 @@ export default function IntegratePage() {
 
         <div className="flex flex-wrap items-center justify-center gap-4 mt-8 text-sm">
           <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 font-medium">
-            ERC-8183
+            ERC-8183 <span className="text-xs opacity-60">(Phase 4)</span>
           </span>
           <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 font-medium">
-            ERC-8004
+            ERC-8004 <span className="text-xs opacity-60">(Phase 4)</span>
           </span>
           <span className="px-3 py-1 rounded-full bg-stone-500/10 text-stone-400 font-medium">
-            ERC-7710
+            ERC-7710 <span className="text-xs opacity-60">(Phase 4)</span>
           </span>
         </div>
       </section>
