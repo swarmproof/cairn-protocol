@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils';
 import { CairnLogo } from '@/components/ui/cairn-logo';
 
 const navLinks = [
-  { href: '/operators', label: 'Operators' },
-  { href: '/integrate', label: 'Developers' },
+  { href: '/operators', label: 'Frameworks' },
+  { href: '/integrate', label: 'SDK' },
   { href: '/intelligence', label: 'Intelligence' },
   { href: '/explorer', label: 'Explorer' },
   { href: '/roadmap', label: 'Roadmap' },
