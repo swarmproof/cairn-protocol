@@ -1,0 +1,4 @@
+# Upgradeable contracts require @openzeppelin/contracts-upgradeable
+# Run: forge install OpenZeppelin/openzeppelin-contracts-upgradeable
+# Then add to foundry.toml remappings:
+# @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
