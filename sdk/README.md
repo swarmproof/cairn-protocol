@@ -95,25 +95,35 @@ print(f"Primary share: {settlement.primary_share / 10**18} ETH")
 
 ### CheckpointStore
 
-Stores checkpoints on IPFS via Pinata.
+Stores checkpoints on IPFS via Pinata with real API integration.
 
 ```python
 from sdk import CheckpointStore
 
-async with CheckpointStore(pinata_jwt="eyJ...") as store:
+# Auto-loads from PINATA_JWT environment variable
+async with CheckpointStore() as store:
     # Write checkpoint
     cid = await store.write({
         "subtask": 0,
         "result": {"status": "success"},
         "timestamp": int(time.time()),
-    })
+    }, name="optional-name-for-pinata")
 
-    # Read checkpoint
+    # Read checkpoint (tries multiple IPFS gateways with fallback)
     data = await store.read(cid)
 
     # Check if exists
     exists = await store.exists(cid)
+
+    # Unpin from Pinata
+    await store.unpin(cid)
 ```
+
+**Features**:
+- Real Pinata API integration (not mocked)
+- Automatic retry with exponential backoff
+- Multiple IPFS gateway fallback for reads
+- Auto-loads JWT from environment or accepts explicit parameter
 
 ### CairnAgent
 
@@ -202,12 +212,51 @@ except ContractError as e:
 
 ## Testing
 
+### Run Tests
+
 ```bash
 cd sdk
-pip install -e ".[dev]"
+
+# Install dev dependencies
+pip install -r requirements.txt -r requirements-dev.txt
+
+# Run all tests (unit + integration)
 pytest -v
+
+# Run only unit tests (fast, no external services needed)
+pytest -v -m "not integration"
+
+# Run integration tests (requires PINATA_JWT env var)
+pytest -v -m integration
+
+# Run with coverage
 pytest --cov=sdk --cov-report=html
 ```
+
+### Integration Tests
+
+Integration tests use the **real Pinata API** and require:
+- `PINATA_JWT` environment variable set (from `.env` file)
+- Internet connection
+- Pinata account with API access
+
+**Note**: Integration tests will create and delete pins on Pinata during testing.
+
+### Examples
+
+See practical examples in `examples/`:
+
+```bash
+# Run checkpoint examples
+python -m sdk.examples.checkpoint_example
+```
+
+Examples demonstrate:
+- Basic write/read operations
+- Multi-step tasks with sequential checkpoints
+- Error handling and recovery
+- Resume from checkpoint (fallback scenario)
+- Concurrent checkpoint operations
 
 ## Contract Address
 
