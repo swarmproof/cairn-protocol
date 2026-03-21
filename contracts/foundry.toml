@@ -11,6 +11,12 @@ via_ir = false
 ffi = false
 fs_permissions = [{ access = "read", path = "./"}]
 
+# Remappings
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/"
+]
+
 # Base Sepolia configuration
 [rpc_endpoints]
 base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
