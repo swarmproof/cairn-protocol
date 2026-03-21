@@ -1,0 +1,230 @@
+# CAIRN Protocol - The Graph Schema
+# Tracks execution intelligence, failure patterns, and task analytics
+
+# ═══════════════════════════════════════════════════════════════
+# CORE ENTITIES
+# ═══════════════════════════════════════════════════════════════
+
+"""
+Task lifecycle and state tracking
+"""
+type Task @entity {
+  id: Bytes! # taskId
+  taskType: Bytes! # Domain.operation identifier
+  specHash: Bytes! # Hash of task specification
+
+  # Participants
+  operator: Bytes!
+  primaryAgent: Agent!
+  fallbackAgent: Agent
+  currentAgent: Bytes!
+
+  # State machine (6 states)
+  state: TaskState!
+  createdAt: BigInt!
+  startedAt: BigInt
+  deadline: BigInt!
+
+  # Escrow
+  escrowAmount: BigInt!
+  settledPrimary: BigInt!
+  settledFallback: BigInt!
+
+  # Heartbeat monitoring
+  heartbeatInterval: BigInt!
+  lastHeartbeat: BigInt
+
+  # Checkpoints
+  checkpointCount: BigInt!
+  primaryCheckpoints: BigInt!
+  fallbackCheckpoints: BigInt!
+  latestCheckpointCID: Bytes
+  checkpoints: [Checkpoint!]! @derivedFrom(field: "task")
+
+  # Failure data (PRD-02)
+  failureClass: FailureClass
+  failureType: FailureType
+  failureRecordCID: Bytes
+  recoveryScore: BigInt # Scaled by 1e18
+
+  # Resolution
+  resolutionType: ResolutionType
+  resolutionRecordCID: Bytes
+
+  # Intelligence hints (from TaskStarted event)
+  successRate: BigInt
+  avgCheckpoints: BigInt
+}
+
+"""
+Agent performance and reputation tracking
+"""
+type Agent @entity {
+  id: Bytes! # Agent address
+
+  # Task participation
+  primaryTasks: [Task!]! @derivedFrom(field: "primaryAgent")
+  fallbackTasks: [Task!]! @derivedFrom(field: "fallbackAgent")
+
+  # Counters
+  totalTasksCreated: BigInt!
+  totalTasksStarted: BigInt!
+  totalTasksCompleted: BigInt!
+  totalTasksFailed: BigInt!
+  totalTasksRecovered: BigInt!
+
+  # Earnings
+  totalEarned: BigInt!
+  totalPrimaryEarned: BigInt!
+  totalFallbackEarned: BigInt!
+
+  # Performance metrics
+  successRate: BigDecimal! # 0.0 to 1.0
+  averageCheckpoints: BigDecimal!
+  averageRecoveryScore: BigDecimal! # For failed tasks
+
+  # Activity
+  firstTaskAt: BigInt
+  lastTaskAt: BigInt
+  lastHeartbeat: BigInt
+}
+
+"""
+Individual checkpoint record
+"""
+type Checkpoint @entity {
+  id: Bytes! # taskId-batchIndex-leafIndex
+  task: Task!
+  agent: Bytes!
+  cid: Bytes! # IPFS CID
+  batchIndex: BigInt!
+  leafIndex: BigInt!
+  merkleRoot: Bytes!
+  timestamp: BigInt!
+}
+
+"""
+Aggregated failure pattern analytics (PRD-03)
+"""
+type FailurePattern @entity {
+  id: Bytes! # taskType-failureClass
+  taskType: Bytes!
+  failureClass: FailureClass!
+
+  # Analytics
+  occurrenceCount: BigInt!
+  totalRecoveryScore: BigInt!
+  avgRecoveryScore: BigDecimal!
+
+  # Common failure types within this class
+  heartbeatMissCount: BigInt!
+  networkPartitionCount: BigInt!
+  rateLimitCount: BigInt!
+  gasExhaustedCount: BigInt!
+  validationFailedCount: BigInt!
+  schemaInvalidCount: BigInt!
+
+  # Recovery success
+  totalAttempted: BigInt!
+  totalRecovered: BigInt!
+  recoveryRate: BigDecimal!
+
+  # Temporal
+  firstOccurrence: BigInt!
+  lastOccurrence: BigInt!
+}
+
+# ═══════════════════════════════════════════════════════════════
+# PROTOCOL ANALYTICS
+# ═══════════════════════════════════════════════════════════════
+
+"""
+Global protocol metrics
+"""
+type Protocol @entity {
+  id: Bytes! # Singleton: contract address
+
+  # Counters
+  totalTasksCreated: BigInt!
+  totalTasksResolved: BigInt!
+  totalEscrowLocked: BigInt!
+
+  # State distribution
+  idleTasks: BigInt!
+  runningTasks: BigInt!
+  failedTasks: BigInt!
+  recoveringTasks: BigInt!
+  disputedTasks: BigInt!
+  resolvedTasks: BigInt!
+
+  # Financial
+  totalFeesCollected: BigInt!
+  totalPrimaryPaid: BigInt!
+  totalFallbackPaid: BigInt!
+
+  # Performance
+  overallSuccessRate: BigDecimal!
+  avgTaskDuration: BigInt!
+  avgCheckpointsPerTask: BigDecimal!
+}
+
+"""
+Daily analytics snapshot
+"""
+type DailyMetrics @entity {
+  id: Bytes! # date (YYYY-MM-DD)
+  date: BigInt! # Unix timestamp (start of day)
+
+  # Task metrics
+  tasksCreated: BigInt!
+  tasksCompleted: BigInt!
+  tasksFailed: BigInt!
+  tasksRecovered: BigInt!
+
+  # Financial
+  escrowLocked: BigInt!
+  escrowSettled: BigInt!
+  feesCollected: BigInt!
+
+  # Performance
+  avgRecoveryScore: BigDecimal!
+  successRate: BigDecimal!
+}
+
+# ═══════════════════════════════════════════════════════════════
+# ENUMS
+# ═══════════════════════════════════════════════════════════════
+
+enum TaskState {
+  IDLE
+  RUNNING
+  FAILED
+  RECOVERING
+  DISPUTED
+  RESOLVED
+}
+
+enum FailureClass {
+  LIVENESS
+  RESOURCE
+  LOGIC
+}
+
+enum FailureType {
+  HEARTBEAT_MISS
+  NETWORK_PARTITION
+  NODE_CRASH
+  RATE_LIMIT
+  GAS_EXHAUSTED
+  UPSTREAM_TIMEOUT
+  VALIDATION_FAILED
+  SCHEMA_MISMATCH
+  INVARIANT_VIOLATION
+}
+
+enum ResolutionType {
+  SUCCESS
+  RECOVERY
+  ARBITER_RULING
+  TIMEOUT_REFUND
+}

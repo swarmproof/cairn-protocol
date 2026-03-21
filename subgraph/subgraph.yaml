@@ -1,0 +1,46 @@
+specVersion: 0.0.5
+schema:
+  file: ./schema.graphql
+
+dataSources:
+  - kind: ethereum
+    name: CairnCore
+    network: base-sepolia
+    source:
+      address: "0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640"
+      abi: CairnCore
+      startBlock: 17741070 # Deployment block (approximate)
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Task
+        - Agent
+        - Checkpoint
+        - FailurePattern
+        - Protocol
+        - DailyMetrics
+      abis:
+        - name: CairnCore
+          file: ./abis/CairnCore.json
+      eventHandlers:
+        - event: TaskCreated(indexed bytes32,indexed bytes32,indexed address,address,address,uint256,uint256)
+          handler: handleTaskCreated
+        - event: TaskStarted(indexed bytes32,indexed address,uint256,uint256)
+          handler: handleTaskStarted
+        - event: TaskCompleted(indexed bytes32,indexed address,uint256)
+          handler: handleTaskCompleted
+        - event: CheckpointBatchCommitted(indexed bytes32,indexed address,uint256,uint256,bytes32,bytes32)
+          handler: handleCheckpointBatchCommitted
+        - event: Heartbeat(indexed bytes32,indexed address,uint256)
+          handler: handleHeartbeat
+        - event: TaskFailed(indexed bytes32,indexed address,uint8,uint8,uint256,bytes32)
+          handler: handleTaskFailed
+        - event: RecoveryStarted(indexed bytes32,indexed address,uint256)
+          handler: handleRecoveryStarted
+        - event: TaskDisputed(indexed bytes32,uint256,uint256)
+          handler: handleTaskDisputed
+        - event: TaskSettled(indexed bytes32,uint8,uint256,uint256,uint256)
+          handler: handleTaskSettled
+      file: ./src/mapping.ts

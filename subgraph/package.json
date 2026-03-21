@@ -1,0 +1,25 @@
+{
+  "name": "cairn-protocol-subgraph",
+  "version": "1.0.0",
+  "description": "The Graph subgraph for CAIRN Protocol execution intelligence",
+  "repository": "https://github.com/cairn-protocol/subgraph",
+  "license": "BSL-1.1",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy": "graph deploy --studio cairn-protocol",
+    "deploy-sepolia": "graph deploy --studio cairn-protocol-sepolia",
+    "create-local": "graph create --node http://localhost:8020/ cairn-protocol",
+    "remove-local": "graph remove --node http://localhost:8020/ cairn-protocol",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 cairn-protocol",
+    "test": "graph test"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.70.0",
+    "@graphprotocol/graph-ts": "^0.35.0"
+  },
+  "devDependencies": {
+    "matchstick-as": "^0.6.0",
+    "source-map-support": "^0.5.21"
+  }
+}
