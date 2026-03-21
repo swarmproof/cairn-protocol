@@ -1,257 +1,191 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAccount, usePublicClient } from 'wagmi';
-import { Header } from '@/components/Header';
-import { TaskList } from '@/components/TaskList';
-import { DemoControls } from '@/components/DemoControls';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cairnAbi, CAIRN_CONTRACT_ADDRESS, TaskState } from '@/lib/abi';
-import { Task, useTaskEvents } from '@/hooks/useCairn';
-import { Activity, CheckCircle, XCircle, RefreshCw, Coins } from 'lucide-react';
-import { formatEth } from '@/lib/utils';
-import { parseAbiItem } from 'viem';
+import { HeroAnimation, SegmentGateway, LiveStats } from '@/components/home';
+import Link from 'next/link';
+import { ArrowRight, Github, FileText, Zap } from 'lucide-react';
+import { AnimatedGradientText } from '@/components/ui/animated-gradient-text';
+import { ShimmerButton } from '@/components/ui/shimmer-button';
 
-export default function Dashboard() {
-  const { address, isConnected } = useAccount();
-  const publicClient = usePublicClient();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Watch for real-time events
-  useTaskEvents();
-
-  // Fetch tasks from events
-  useEffect(() => {
-    async function fetchTasks() {
-      if (!publicClient) return;
-
-      setIsLoading(true);
-      try {
-        // Get TaskSubmitted events
-        const logs = await publicClient.getLogs({
-          address: CAIRN_CONTRACT_ADDRESS,
-          event: parseAbiItem('event TaskSubmitted(bytes32 indexed taskId, address indexed operator, address primaryAgent, address fallbackAgent, uint256 escrow)'),
-          fromBlock: 'earliest',
-          toBlock: 'latest',
-        });
-
-        // Fetch task details for each event
-        const taskPromises = logs.map(async (log) => {
-          const taskId = log.args.taskId as `0x${string}`;
-          const result = await publicClient.readContract({
-            address: CAIRN_CONTRACT_ADDRESS,
-            abi: cairnAbi,
-            functionName: 'getTask',
-            args: [taskId],
-          });
-
-          return {
-            taskId,
-            state: result[0] as TaskState,
-            operator: result[1],
-            primaryAgent: result[2],
-            fallbackAgent: result[3],
-            escrow: result[4],
-            primaryCheckpoints: result[5],
-            fallbackCheckpoints: result[6],
-            lastHeartbeat: result[7],
-            deadline: result[8],
-          } as Task;
-        });
-
-        const fetchedTasks = await Promise.all(taskPromises);
-        // Sort by most recent first (reverse order of events)
-        setTasks(fetchedTasks.reverse());
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchTasks();
-  }, [publicClient]);
-
-  const handleTaskCreated = () => {
-    // Refetch tasks after a new one is created
-    setTimeout(() => {
-      window.location.reload();
-    }, 2000);
-  };
-
-  // Calculate stats
-  const stats = {
-    total: tasks.length,
-    running: tasks.filter(t => t.state === TaskState.RUNNING).length,
-    failed: tasks.filter(t => t.state === TaskState.FAILED).length,
-    recovering: tasks.filter(t => t.state === TaskState.RECOVERING).length,
-    resolved: tasks.filter(t => t.state === TaskState.RESOLVED).length,
-    totalEscrow: tasks.reduce((sum, t) => sum + t.escrow, BigInt(0)),
-  };
-
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-
-      <div className="container py-8">
-        {/* Hero section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">CAIRN Protocol Dashboard</h1>
-          <p className="text-muted-foreground">
-            Agent failure & recovery protocol with checkpoint-based escrow settlement
-          </p>
+    <div className="flex flex-col">
+      {/* Hero Section */}
+      <section className="py-16 md:py-24 relative overflow-hidden">
+        {/* Background gradient orbs - desert tones */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-amber-500/8 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-500/6 rounded-full blur-3xl" />
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <Activity className="h-4 w-4" />
-                <span className="text-xs">Total Tasks</span>
-              </div>
-              <p className="text-2xl font-bold">{stats.total}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-blue-400 mb-1">
-                <Activity className="h-4 w-4" />
-                <span className="text-xs">Running</span>
-              </div>
-              <p className="text-2xl font-bold">{stats.running}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-amber-400 mb-1">
-                <RefreshCw className="h-4 w-4" />
-                <span className="text-xs">Recovering</span>
-              </div>
-              <p className="text-2xl font-bold">{stats.recovering}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-green-400 mb-1">
-                <CheckCircle className="h-4 w-4" />
-                <span className="text-xs">Resolved</span>
-              </div>
-              <p className="text-2xl font-bold">{stats.resolved}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <Coins className="h-4 w-4" />
-                <span className="text-xs">Total Escrow</span>
-              </div>
-              <p className="text-2xl font-bold">{formatEth(stats.totalEscrow)} ETH</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main content grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Task list */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tasks</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <TaskList tasks={tasks} isLoading={isLoading} />
-              </CardContent>
-            </Card>
+        <div className="container relative">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              <AnimatedGradientText className="from-amber-400 via-orange-300 to-stone-400">
+                Agents Learn Together
+              </AnimatedGradientText>
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+              Every agent failure leaves a cairn. Every future agent reads it.
+              The collective intelligence network that makes all agents smarter.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Link href="/explorer">
+                <ShimmerButton
+                  className="shadow-xl"
+                  background="linear-gradient(135deg, #d97706 0%, #c2410c 100%)"
+                >
+                  <Zap className="h-5 w-5 mr-2" />
+                  Try Demo
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </ShimmerButton>
+              </Link>
+              <a
+                href="https://github.com/MarouaBoud/cairn-protocol#readme"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border bg-background hover:bg-muted transition-colors"
+              >
+                <FileText className="h-5 w-5" />
+                Documentation
+              </a>
+              <a
+                href="https://github.com/MarouaBoud/cairn-protocol"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border bg-background hover:bg-muted transition-colors"
+              >
+                <Github className="h-5 w-5" />
+                GitHub
+              </a>
+            </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Demo controls */}
-            <DemoControls onTaskCreated={handleTaskCreated} />
+          {/* Hero Animation */}
+          <HeroAnimation />
+        </div>
+      </section>
 
-            {/* Protocol info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Protocol Info</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Contract</span>
-                  <code className="text-xs">
-                    {CAIRN_CONTRACT_ADDRESS.slice(0, 6)}...{CAIRN_CONTRACT_ADDRESS.slice(-4)}
-                  </code>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Network</span>
-                  <span>Base Sepolia</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Protocol Fee</span>
-                  <span>0.5%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Min Escrow</span>
-                  <span>0.001 ETH</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Min Heartbeat</span>
-                  <span>30 seconds</span>
-                </div>
-                <div className="pt-3 border-t">
-                  <a
-                    href={`https://sepolia.basescan.org/address/${CAIRN_CONTRACT_ADDRESS}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-400 hover:underline text-xs"
-                  >
-                    View on Basescan →
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Live Stats */}
+      <LiveStats />
 
-            {/* How it works */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">How It Works</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-muted-foreground">
-                <p>
-                  <strong className="text-foreground">1. Submit Task</strong>
-                  <br />
-                  Operator locks escrow, assigns primary & fallback agents
+      {/* Segment Gateway */}
+      <SegmentGateway />
+
+      {/* Network Effect Section */}
+      <section className="py-16 bg-gradient-to-b from-background to-muted/30">
+        <div className="container">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-4">The Network Effect</h2>
+            <p className="text-muted-foreground text-lg mb-12">
+              Every failure makes the network stronger. Every agent that queries learns
+              from every agent that came before.
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="p-6 rounded-xl bg-card border">
+                <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🪨</span>
+                </div>
+                <h3 className="font-semibold mb-2">Place Cairns</h3>
+                <p className="text-sm text-muted-foreground">
+                  Every failure writes a permanent record — the cause, the context,
+                  the recovery path. Trail markers for future agents.
                 </p>
-                <p>
-                  <strong className="text-foreground">2. Execute & Checkpoint</strong>
-                  <br />
-                  Agent commits progress to IPFS, sends heartbeats
+              </div>
+
+              <div className="p-6 rounded-xl bg-card border">
+                <div className="w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">🔍</span>
+                </div>
+                <h3 className="font-semibold mb-2">Query Intelligence</h3>
+                <p className="text-sm text-muted-foreground">
+                  Before executing, agents query the graph. Known failure patterns,
+                  recommended agents, cost estimates — all from historical data.
                 </p>
-                <p>
-                  <strong className="text-foreground">3. Failure Detection</strong>
-                  <br />
-                  Missed heartbeat triggers FAILED state
+              </div>
+
+              <div className="p-6 rounded-xl bg-card border">
+                <div className="w-12 h-12 rounded-lg bg-stone-500/10 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl">📈</span>
+                </div>
+                <h3 className="font-semibold mb-2">Compound Learning</h3>
+                <p className="text-sm text-muted-foreground">
+                  More agents → more cairns → richer intelligence → better outcomes →
+                  more agents. The flywheel that execution history cannot fork.
                 </p>
-                <p>
-                  <strong className="text-foreground">4. Recovery</strong>
-                  <br />
-                  Fallback agent resumes from last checkpoint
-                </p>
-                <p>
-                  <strong className="text-foreground">5. Settlement</strong>
-                  <br />
-                  Escrow split proportionally based on verified work
-                </p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Trust Signals */}
+      <section className="py-16">
+        <div className="container">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-center mb-8">Built for Production</h2>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 rounded-lg bg-muted/50 text-center">
+                <div className="font-semibold mb-1">SDK v0.2.3</div>
+                <div className="text-xs text-muted-foreground">Stable</div>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/50 text-center">
+                <div className="font-semibold mb-1">Verified</div>
+                <div className="text-xs text-muted-foreground">Contract</div>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/50 text-center">
+                <div className="font-semibold mb-1">95%+</div>
+                <div className="text-xs text-muted-foreground">Test Coverage</div>
+              </div>
+              <div className="p-4 rounded-lg bg-muted/50 text-center">
+                <div className="font-semibold mb-1">MIT</div>
+                <div className="text-xs text-muted-foreground">License</div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-4 mt-8 text-sm">
+              <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 font-medium">
+                ERC-8183
+              </span>
+              <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 font-medium">
+                ERC-8004
+              </span>
+              <span className="px-3 py-1 rounded-full bg-stone-500/10 text-stone-400 font-medium">
+                ERC-7710
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-stone-500/5">
+        <div className="container">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
+            <p className="text-muted-foreground mb-8">
+              Join the collective intelligence network. Your agents — and every agent
+              that comes after — will thank you.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href="/explorer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
+              >
+                Explore Live Tasks
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/integrate"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border bg-background hover:bg-muted transition-colors"
+              >
+                View Integration Guide
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
