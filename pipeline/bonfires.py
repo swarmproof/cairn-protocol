@@ -1,8 +1,8 @@
 """
 Bonfires Client
 
-Client wrapper for Bonfires API integration.
-Based on Bonfires API: https://docs.bonfires.ai/
+Client wrapper for Bonfires Knowledge Graph API integration.
+API: https://tnt-v2.api.bonfires.ai/docs
 """
 
 import logging
@@ -16,7 +16,6 @@ from tenacity import (
 )
 
 from pipeline.config import PipelineConfig
-from pipeline.records import FailureRecord, ResolutionRecord
 
 logger = logging.getLogger(__name__)
 
@@ -29,24 +28,30 @@ class BonfiresError(Exception):
 
 class BonfiresClient:
     """
-    Client for interacting with Bonfires knowledge graph API.
+    Client for interacting with Bonfires Knowledge Graph API.
 
     Bonfires is a decentralized knowledge graph for AI agents.
-    API documentation: https://docs.bonfires.ai/
+    API: https://tnt-v2.api.bonfires.ai
+
+    Endpoints:
+        - POST /knowledge_graph/episode_update - Write episodes
+        - POST /delve - Query knowledge graph
+        - GET /healthz - Health check
 
     Example:
         config = PipelineConfig.from_env()
         client = BonfiresClient(config)
 
-        # Write failure record
-        await client.write_record(
-            record_type="failure",
-            data=failure_record.to_bonfires_record(),
-            cid="Qm..."
+        # Write failure episode
+        episode_id = await client.write_episode(
+            summary="Task 0x1234 failed: HEARTBEAT_MISSED",
+            content="Agent 0xABCD missed heartbeat...",
+            attributes={"task_id": "0x1234", "failure_type": "LIVENESS"},
+            labels=["CAIRN", "TaskFailed"]
         )
 
-        # Query agent history
-        history = await client.get_agent_history("erc8004://base/0x...")
+        # Query patterns
+        results = await client.delve("failure patterns for defi tasks")
     """
 
     def __init__(self, config: PipelineConfig):
@@ -54,11 +59,11 @@ class BonfiresClient:
         Initialize Bonfires client.
 
         Args:
-            config: Pipeline configuration with API key
+            config: Pipeline configuration with API key and bonfire_id
         """
         self._api_key = config.bonfires_api_key
-        self._api_url = config.bonfires_api_url
-        self._room = config.bonfires_room
+        self._api_url = config.bonfires_api_url.rstrip("/")
+        self._bonfire_id = config.bonfires_bonfire_id
         self._client: Optional[httpx.AsyncClient] = None
 
     async def _get_client(self) -> httpx.AsyncClient:
@@ -93,53 +98,69 @@ class BonfiresClient:
         retry=retry_if_exception_type((httpx.HTTPError, httpx.TimeoutException)),
         reraise=True,
     )
-    async def write_record(
+    async def write_episode(
         self,
-        record_type: str,
-        data: dict[str, Any],
-        cid: str,
-        tags: Optional[list[str]] = None,
+        summary: str,
+        content: str,
+        attributes: dict[str, Any],
+        labels: list[str],
+        source: str = "cairn-protocol",
+        source_description: str = "CAIRN Protocol Event",
+        user_updates: Optional[list[dict[str, Any]]] = None,
     ) -> str:
         """
-        Write a record to Bonfires knowledge graph.
+        Write an episode to Bonfires knowledge graph.
 
         Args:
-            record_type: Type of record ("failure" or "resolution")
-            data: Record data (output of to_bonfires_record())
-            cid: IPFS CID where full record is stored
-            tags: Optional tags for categorization
+            summary: Short summary of the episode
+            content: Full content/description
+            attributes: Structured attributes (task_id, failure_type, etc.)
+            labels: List of label names for categorization
+            source: Source identifier (default: "cairn-protocol")
+            source_description: Human-readable source description
+            user_updates: Optional user/agent activity updates
 
         Returns:
-            Record ID assigned by Bonfires
+            Episode UUID assigned by Bonfires
 
         Raises:
             BonfiresError: If write fails
         """
         client = await self._get_client()
 
+        # Build episode payload per Bonfires API spec
         payload = {
-            "room": self._room,
-            "record_type": record_type,
-            "data": data,
-            "ipfs_cid": cid,
-            "tags": tags or [],
+            "bonfire_id": self._bonfire_id,
+            "episode": {
+                "summary": summary,
+                "content": content,
+                "source": source,
+                "source_description": source_description,
+                "attributes": attributes,
+            },
+            "labels": [{"label_name": label} for label in labels],
         }
+
+        if user_updates:
+            payload["user_updates"] = user_updates
 
         try:
             response = await client.post(
-                f"{self._api_url}/records",
+                f"{self._api_url}/knowledge_graph/episode_update",
                 json=payload,
             )
             response.raise_for_status()
 
             result = response.json()
-            record_id = result.get("record_id")
+            episode_uuid = result.get("episode_uuid") or result.get("uuid") or result.get("id")
 
-            if not record_id:
-                raise BonfiresError("Bonfires response missing record_id")
+            if not episode_uuid:
+                # Some APIs return success without explicit ID
+                episode_uuid = f"episode-{attributes.get('task_id', 'unknown')[:16]}"
+                logger.warning(f"Bonfires response missing episode_uuid, using: {episode_uuid}")
 
-            logger.info(f"Record written to Bonfires: {record_id} (CID: {cid})")
-            return record_id
+            logger.info(f"Episode written to Bonfires: {episode_uuid}")
+            return episode_uuid
 
         except httpx.HTTPStatusError as e:
             error_detail = ""
@@ -156,7 +177,155 @@ class BonfiresClient:
             raise BonfiresError("Bonfires request timed out") from e
 
         except Exception as e:
-            raise BonfiresError(f"Failed to write record: {e}") from e
+            raise BonfiresError(f"Failed to write episode: {e}") from e
+
+    async def write_failure_episode(
+        self,
+        task_id: str,
+        agent_id: str,
+        task_type: str,
+        failure_class: str,
+        failure_type: str,
+        checkpoint_count: int,
+        recovery_score: float,
+        block_number: int,
+        failure_details: Optional[dict[str, Any]] = None,
+    ) -> str:
+        """
+        Write a TaskFailed episode to Bonfires.
+
+        Args:
+            task_id: Task identifier (hex string)
+            agent_id: Agent identifier (ERC8004 format)
+            task_type: Type of task (e.g., "defi.price_fetch")
+            failure_class: Failure class (LIVENESS, RESOURCE, EXECUTION, DEADLINE)
+            failure_type: Specific failure type
+            checkpoint_count: Number of checkpoints completed
+            recovery_score: Recovery likelihood (0-1)
+            block_number: Block number when failure occurred
+            failure_details: Additional failure context
+
+        Returns:
+            Episode UUID
+        """
+        summary = f"Task {task_id[:16]}... failed: {failure_type} after {checkpoint_count} checkpoints"
+        content = (
+            f"Agent {agent_id} executing task type '{task_type}' experienced {failure_class} failure. "
+            f"Failure type: {failure_type}. Recovery score: {recovery_score:.2f}. "
+            f"Checkpoints completed: {checkpoint_count}."
+        )
+
+        attributes = {
+            "task_id": task_id,
+            "agent_id": agent_id,
+            "task_type": task_type,
+            "failure_class": failure_class,
+            "failure_type": failure_type,
+            "checkpoint_count": checkpoint_count,
+            "recovery_score": recovery_score,
+            "block_number": block_number,
+            "chain_id": 84532,  # Base Sepolia
+        }
+
+        if failure_details:
+            attributes["failure_details"] = failure_details
+
+        labels = ["CAIRN", "TaskFailed", task_type, failure_class]
+
+        user_updates = [
+            {
+                "user_id": agent_id,
+                "username": f"Agent {agent_id[:10]}...",
+                "per_label": [{"label_name": "FailedTask", "activity": "primary_agent"}],
+            }
+        ]
+
+        return await self.write_episode(
+            summary=summary,
+            content=content,
+            attributes=attributes,
+            labels=labels,
+            source_description="CAIRN TaskFailed event",
+            user_updates=user_updates,
+        )
+
+    async def write_resolution_episode(
+        self,
+        task_id: str,
+        original_agent: str,
+        fallback_agent: Optional[str],
+        task_type: str,
+        recovery_attempted: bool,
+        recovery_successful: bool,
+        original_checkpoints: int,
+        fallback_checkpoints: int,
+        total_cost_eth: str,
+        original_payout_eth: str,
+        fallback_payout_eth: str,
+        block_number: int,
+    ) -> str:
+        """
+        Write a TaskResolved episode to Bonfires.
+
+        Args:
+            task_id: Task identifier
+            original_agent: Original agent ID
+            fallback_agent: Fallback agent ID (if recovery attempted)
+            task_type: Type of task
+            recovery_attempted: Whether recovery was attempted
+            recovery_successful: Whether recovery succeeded
+            original_checkpoints: Checkpoints by original agent
+            fallback_checkpoints: Checkpoints by fallback agent
+            total_cost_eth: Total cost in ETH
+            original_payout_eth: Payout to original agent
+            fallback_payout_eth: Payout to fallback agent
+            block_number: Block number of resolution
+
+        Returns:
+            Episode UUID
+        """
+        if recovery_attempted:
+            if recovery_successful:
+                summary = f"Task {task_id[:16]}... resolved: Recovery successful via fallback"
+            else:
+                summary = f"Task {task_id[:16]}... resolved: Recovery attempted but failed"
+        else:
+            summary = f"Task {task_id[:16]}... resolved: Direct completion"
+
+        content = (
+            f"Original agent completed {original_checkpoints} checkpoints. "
+            f"{'Fallback agent completed ' + str(fallback_checkpoints) + ' checkpoints. ' if recovery_attempted else ''}"
+            f"Settlement: {original_payout_eth} ETH to original"
+            f"{', ' + fallback_payout_eth + ' ETH to fallback' if recovery_attempted else ''}."
+        )
+
+        attributes = {
+            "task_id": task_id,
+            "task_type": task_type,
+            "original_agent": original_agent,
+            "fallback_agent": fallback_agent or "",
+            "recovery_attempted": recovery_attempted,
+            "recovery_successful": recovery_successful,
+            "original_checkpoints": original_checkpoints,
+            "fallback_checkpoints": fallback_checkpoints,
+            "total_cost_eth": total_cost_eth,
+            "original_payout_eth": original_payout_eth,
+            "fallback_payout_eth": fallback_payout_eth,
+            "block_number": block_number,
+            "chain_id": 84532,
+        }
+
+        labels = ["CAIRN", "TaskResolved", task_type]
+        if recovery_attempted:
+            labels.append("RecoverySuccess" if recovery_successful else "RecoveryFailed")
+
+        return await self.write_episode(
+            summary=summary,
+            content=content,
+            attributes=attributes,
+            labels=labels,
+            source_description="CAIRN TaskResolved event",
+        )
 
     @retry(
         stop=stop_after_attempt(3),
@@ -164,185 +333,104 @@ class BonfiresClient:
         retry=retry_if_exception_type((httpx.HTTPError, httpx.TimeoutException)),
         reraise=True,
     )
-    async def query_records(
+    async def delve(
         self,
-        record_type: Optional[str] = None,
-        task_type: Optional[str] = None,
-        agent_id: Optional[str] = None,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> list[dict[str, Any]]:
+        query: str,
+        num_results: int = 10,
+    ) -> dict[str, Any]:
         """
-        Query records from Bonfires.
+        Query the Bonfires knowledge graph using natural language.
 
         Args:
-            record_type: Filter by record type ("failure" or "resolution")
-            task_type: Filter by task type (e.g., "defi.price_fetch")
-            agent_id: Filter by agent ID (ERC8004 format)
-            limit: Maximum records to return
-            offset: Pagination offset
+            query: Natural language query (e.g., "failure patterns for defi tasks")
+            num_results: Maximum number of results
 
         Returns:
-            List of matching records
+            Query results with episodes, entities, and graph_id
 
         Raises:
             BonfiresError: If query fails
         """
         client = await self._get_client()
 
-        params = {
-            "room": self._room,
-            "limit": limit,
-            "offset": offset,
+        payload = {
+            "query": query,
+            "bonfire_id": self._bonfire_id,
+            "num_results": num_results,
         }
 
-        if record_type:
-            params["record_type"] = record_type
-        if task_type:
-            params["task_type"] = task_type
-        if agent_id:
-            params["agent_id"] = agent_id
-
         try:
-            response = await client.get(
-                f"{self._api_url}/records",
-                params=params,
+            response = await client.post(
+                f"{self._api_url}/delve",
+                json=payload,
             )
             response.raise_for_status()
 
             result = response.json()
-            records = result.get("records", [])
 
-            logger.debug(f"Queried {len(records)} records from Bonfires")
-            return records
+            logger.debug(f"Delve query returned {len(result.get('episodes', []))} episodes")
+            return {
+                "episodes": result.get("episodes", []),
+                "entities": result.get("entities", []),
+                "graph_id": result.get("graph_id"),
+                "query": query,
+            }
 
         except httpx.HTTPStatusError as e:
             raise BonfiresError(
-                f"Bonfires query failed ({e.response.status_code})"
+                f"Bonfires delve failed ({e.response.status_code})"
             ) from e
 
         except Exception as e:
-            raise BonfiresError(f"Failed to query records: {e}") from e
+            raise BonfiresError(f"Failed to query Bonfires: {e}") from e
+
+    async def get_failure_patterns(
+        self,
+        task_type: str,
+        limit: int = 10,
+    ) -> dict[str, Any]:
+        """
+        Get failure patterns for a specific task type.
+
+        Args:
+            task_type: Task type to analyze (e.g., "defi.price_fetch")
+            limit: Maximum number of results
+
+        Returns:
+            Failure pattern analysis
+        """
+        query = f"failure patterns and common issues for {task_type} tasks in CAIRN protocol"
+        return await self.delve(query, num_results=limit)
 
     async def get_agent_history(
         self,
         agent_id: str,
-        limit: int = 50,
+        limit: int = 20,
     ) -> dict[str, Any]:
         """
         Get execution history for a specific agent.
 
         Args:
             agent_id: Agent identifier (ERC8004 format)
-            limit: Maximum records to return
+            limit: Maximum number of results
 
         Returns:
-            Agent history with aggregated stats
-
-        Raises:
-            BonfiresError: If query fails
+            Agent history with episodes
         """
-        # Query all records for this agent
-        records = await self.query_records(
-            agent_id=agent_id,
-            limit=limit,
-        )
+        query = f"all task failures and resolutions for agent {agent_id}"
+        results = await self.delve(query, num_results=limit)
 
-        # Aggregate statistics
-        failures = [r for r in records if r.get("record_type") == "failure"]
-        resolutions = [r for r in records if r.get("record_type") == "resolution"]
-
-        successful_resolutions = [
-            r for r in resolutions if r.get("recovery_successful", False)
-        ]
-
-        total_tasks = len(resolutions)
-        successful_tasks = len(successful_resolutions)
-        failed_tasks = len(failures)
-
-        success_rate = (
-            successful_tasks / total_tasks if total_tasks > 0 else 0.0
-        )
+        # Extract and categorize episodes
+        episodes = results.get("episodes", [])
+        failures = [e for e in episodes if "TaskFailed" in str(e.get("labels", []))]
+        resolutions = [e for e in episodes if "TaskResolved" in str(e.get("labels", []))]
 
         return {
             "agent_id": agent_id,
-            "total_tasks": total_tasks,
-            "successful_tasks": successful_tasks,
-            "failed_tasks": failed_tasks,
-            "success_rate": success_rate,
-            "recent_failures": failures[:10],
-            "recent_resolutions": resolutions[:10],
-        }
-
-    async def get_task_type_stats(
-        self,
-        task_type: str,
-        lookback_hours: int = 24,
-    ) -> dict[str, Any]:
-        """
-        Get statistics for a specific task type.
-
-        Args:
-            task_type: Task type to analyze (e.g., "defi.price_fetch")
-            lookback_hours: Hours to look back (default 24)
-
-        Returns:
-            Task type statistics
-
-        Raises:
-            BonfiresError: If query fails
-        """
-        # Query records for this task type
-        records = await self.query_records(
-            task_type=task_type,
-            limit=1000,
-        )
-
-        # Filter by time window
-        import time
-
-        cutoff_timestamp = int(time.time()) - (lookback_hours * 3600)
-        recent_records = [
-            r for r in records if r.get("timestamp", 0) >= cutoff_timestamp
-        ]
-
-        # Aggregate stats
-        failures = [r for r in recent_records if r.get("record_type") == "failure"]
-        resolutions = [
-            r for r in recent_records if r.get("record_type") == "resolution"
-        ]
-
-        total_tasks = len(resolutions)
-        successful = [r for r in resolutions if r.get("recovery_successful", True)]
-        success_rate = len(successful) / total_tasks if total_tasks > 0 else 0.0
-
-        # Failure pattern analysis
-        failure_types: dict[str, int] = {}
-        for failure in failures:
-            failure_type = failure.get("failure_type", "UNKNOWN")
-            failure_types[failure_type] = failure_types.get(failure_type, 0) + 1
-
-        # Cost analysis
-        costs = [
-            float(r.get("total_cost", "0")) for r in resolutions if "total_cost" in r
-        ]
-        avg_cost = sum(costs) / len(costs) if costs else 0.0
-
-        # Duration analysis
-        durations = [r.get("duration_blocks", 0) for r in resolutions]
-        avg_duration = sum(durations) / len(durations) if durations else 0
-
-        return {
-            "task_type": task_type,
-            "lookback_hours": lookback_hours,
-            "total_tasks": total_tasks,
-            "success_rate": success_rate,
-            "avg_cost_eth": avg_cost,
-            "avg_duration_blocks": int(avg_duration),
-            "failure_patterns": [
-                {"failure_type": ft, "count": count}
-                for ft, count in failure_types.items()
-            ],
+            "total_episodes": len(episodes),
+            "failures": len(failures),
+            "resolutions": len(resolutions),
+            "recent_episodes": episodes[:10],
         }
 
     async def health_check(self) -> bool:
@@ -358,10 +446,25 @@ class BonfiresClient:
         client = await self._get_client()
 
         try:
-            response = await client.get(f"{self._api_url}/health")
+            response = await client.get(f"{self._api_url}/healthz")
             response.raise_for_status()
-            logger.debug("Bonfires health check passed")
-            return True
+
+            result = response.json()
+            status = result.get("status", "unknown")
+
+            if status == "ok":
+                logger.debug("Bonfires health check passed")
+                return True
+            else:
+                raise BonfiresError(f"Bonfires unhealthy: {status}")
+
+        except httpx.HTTPStatusError as e:
+            raise BonfiresError(f"Bonfires health check failed ({e.response.status_code})") from e
 
         except Exception as e:
             raise BonfiresError(f"Bonfires health check failed: {e}") from e
+
+
+# Legacy compatibility - map old method names to new ones
+BonfiresClient.write_record = BonfiresClient.write_episode  # type: ignore
+BonfiresClient.query_records = BonfiresClient.delve  # type: ignore

@@ -147,19 +147,24 @@ class BonfiresAdapter:
 
             logger.info(f"Failure record pinned to IPFS: {cid}")
 
-            # Index in Bonfires
-            bonfires_data = failure_record.to_bonfires_record()
-            record_id = await self._bonfires.write_record(
-                record_type="failure",
-                data=bonfires_data,
-                cid=cid,
-                tags=[task_type, failure_class.value, failure_type.value],
+            # Index in Bonfires using episode API
+            episode_uuid = await self._bonfires.write_failure_episode(
+                task_id=task_id,
+                agent_id=agent_id,
+                task_type=task_type,
+                failure_class=failure_class.value,
+                failure_type=failure_type.value,
+                checkpoint_count=checkpoint_count,
+                recovery_score=recovery_score,
+                block_number=block_number,
+                failure_details={**failure_details, "ipfs_cid": cid},
             )
 
-            logger.info(f"Failure record indexed in Bonfires: {record_id}")
+            logger.info(f"Failure episode indexed in Bonfires: {episode_uuid}")
 
             # Add to pattern detector
-            self._detector.add_record({**bonfires_data, "record_type": "failure"})
+            pattern_data = failure_record.to_bonfires_record()
+            self._detector.add_record({**pattern_data, "record_type": "failure"})
 
             return cid
 
@@ -282,19 +287,31 @@ class BonfiresAdapter:
 
             logger.info(f"Resolution record pinned to IPFS: {cid}")
 
-            # Index in Bonfires
-            bonfires_data = resolution_record.to_bonfires_record()
-            record_id = await self._bonfires.write_record(
-                record_type="resolution",
-                data=bonfires_data,
-                cid=cid,
-                tags=[task_type, "resolved", "recovery" if recovery_attempted else "direct"],
+            # Index in Bonfires using episode API
+            fallback_agent_id = None
+            if fallback_agent_info:
+                fallback_agent_id = fallback_agent_info.id
+
+            episode_uuid = await self._bonfires.write_resolution_episode(
+                task_id=task_id,
+                original_agent=original_agent.id,
+                fallback_agent=fallback_agent_id,
+                task_type=task_type,
+                recovery_attempted=recovery_attempted,
+                recovery_successful=recovery_successful,
+                original_checkpoints=primary_checkpoints,
+                fallback_checkpoints=fallback_checkpoints,
+                total_cost_eth=total_cost,
+                original_payout_eth=primary_cost,
+                fallback_payout_eth=fallback_cost,
+                block_number=block_number,
             )
 
-            logger.info(f"Resolution record indexed in Bonfires: {record_id}")
+            logger.info(f"Resolution episode indexed in Bonfires: {episode_uuid}")
 
             # Add to pattern detector
-            self._detector.add_record({**bonfires_data, "record_type": "resolution"})
+            pattern_data = resolution_record.to_bonfires_record()
+            self._detector.add_record({**pattern_data, "record_type": "resolution"})
 
             return cid
 

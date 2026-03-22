@@ -16,7 +16,8 @@ class TestBonfiresAdapter:
     def mock_bonfires(self):
         """Mock Bonfires client."""
         client = AsyncMock()
-        client.write_record = AsyncMock(return_value="bonfires-record-id-123")
+        client.write_failure_episode = AsyncMock(return_value="episode-uuid-failure-123")
+        client.write_resolution_episode = AsyncMock(return_value="episode-uuid-resolution-456")
         return client
 
     @pytest.fixture
@@ -52,8 +53,12 @@ class TestBonfiresAdapter:
         call_args = mock_ipfs.write.call_args
         assert call_args[1]["name"].startswith("failure-")
 
-        # Verify Bonfires was called
-        assert mock_bonfires.write_record.called
+        # Verify Bonfires episode was written
+        assert mock_bonfires.write_failure_episode.called
+        call_kwargs = mock_bonfires.write_failure_episode.call_args[1]
+        assert call_kwargs["task_id"] == "0x" + "a" * 64
+        assert call_kwargs["failure_class"] == "RESOURCE"
+        assert call_kwargs["checkpoint_count"] == 3
         assert cid == "QmTestCID123"
 
     @pytest.mark.asyncio
@@ -80,8 +85,13 @@ class TestBonfiresAdapter:
         call_args = mock_ipfs.write.call_args
         assert call_args[1]["name"].startswith("resolution-")
 
-        # Verify Bonfires was called
-        assert mock_bonfires.write_record.called
+        # Verify Bonfires resolution episode was written
+        assert mock_bonfires.write_resolution_episode.called
+        call_kwargs = mock_bonfires.write_resolution_episode.call_args[1]
+        assert call_kwargs["task_id"] == "0x" + "b" * 64
+        assert call_kwargs["recovery_attempted"] is True
+        assert call_kwargs["original_checkpoints"] == 3
+        assert call_kwargs["fallback_checkpoints"] == 2
         assert cid == "QmTestCID123"
 
     @pytest.mark.asyncio
@@ -104,7 +114,11 @@ class TestBonfiresAdapter:
         cid = await adapter.on_task_resolved(event)
 
         assert mock_ipfs.write.called
-        assert mock_bonfires.write_record.called
+        # Verify Bonfires resolution episode was written without recovery
+        assert mock_bonfires.write_resolution_episode.called
+        call_kwargs = mock_bonfires.write_resolution_episode.call_args[1]
+        assert call_kwargs["recovery_attempted"] is False
+        assert call_kwargs["fallback_agent"] is None
         assert cid == "QmTestCID123"
 
     def test_map_failure_class(self, adapter):
