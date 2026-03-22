@@ -15,8 +15,8 @@ class PipelineConfig:
 
     # Bonfires API
     bonfires_api_key: str
-    bonfires_api_url: str = "https://api.bonfires.ai/v1"
-    bonfires_room: str = "cairn-failures"
+    bonfires_api_url: str = "https://tnt-v2.api.bonfires.ai"
+    bonfires_bonfire_id: str = "cairn-protocol"
 
     # RPC Configuration
     rpc_url: str = "https://sepolia.base.org"
@@ -54,8 +54,8 @@ class PipelineConfig:
 
         return cls(
             bonfires_api_key=bonfires_api_key,
-            bonfires_api_url=os.getenv("BONFIRES_API_URL", "https://api.bonfires.ai/v1"),
-            bonfires_room=os.getenv("BONFIRES_ROOM", "cairn-failures"),
+            bonfires_api_url=os.getenv("BONFIRES_API_URL", "https://tnt-v2.api.bonfires.ai"),
+            bonfires_bonfire_id=os.getenv("BONFIRES_BONFIRE_ID", "cairn-protocol"),
             rpc_url=os.getenv("RPC_URL", "https://sepolia.base.org"),
             contract_address=contract_address,
             pinata_jwt=pinata_jwt,
