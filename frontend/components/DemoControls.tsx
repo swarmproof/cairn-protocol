@@ -8,9 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import {
   useSubmitTask,
   useHeartbeat,
-  useCheckLiveness,
+  useDetectFailure,
   useCompleteTask,
-  useSettle,
   useCommitCheckpoint,
   useIsStale,
 } from '@/hooks/useCairn';
@@ -21,12 +20,11 @@ import {
   Heart,
   XCircle,
   CheckCircle,
-  Coins,
   FileText,
   AlertTriangle,
   Zap,
 } from 'lucide-react';
-import { keccak256, toBytes, parseEther } from 'viem';
+import { keccak256, toBytes } from 'viem';
 
 interface DemoControlsProps {
   taskId?: `0x${string}`;
@@ -47,9 +45,8 @@ export function DemoControls({
 
   const { submitTask, isPending: isSubmitPending } = useSubmitTask();
   const { heartbeat, isPending: isHeartbeatPending } = useHeartbeat();
-  const { checkLiveness, isPending: isCheckLivenessPending } = useCheckLiveness();
+  const { detectFailure, isPending: isDetectFailurePending } = useDetectFailure();
   const { completeTask, isPending: isCompletePending } = useCompleteTask();
-  const { settle, isPending: isSettlePending } = useSettle();
   const { commitCheckpoint, isPending: isCheckpointPending } = useCommitCheckpoint();
   const { isStale } = useIsStale(taskId);
 
@@ -102,15 +99,15 @@ export function DemoControls({
     }
   };
 
-  const handleCheckLiveness = async () => {
+  const handleDetectFailure = async () => {
     if (!taskId) return;
     setError(null);
 
     try {
-      await checkLiveness(taskId);
+      await detectFailure(taskId);
       onActionComplete?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to check liveness');
+      setError(err instanceof Error ? err.message : 'Failed to detect failure');
     }
   };
 
@@ -119,9 +116,10 @@ export function DemoControls({
     setError(null);
 
     try {
-      // Generate a demo checkpoint CID
+      // Generate a demo checkpoint batch
+      // For demo purposes: single checkpoint (count=1), same hash for merkle root and CID
       const cid = keccak256(toBytes(`checkpoint-${Date.now()}`));
-      await commitCheckpoint(taskId, cid);
+      await commitCheckpoint(taskId, BigInt(1), cid, cid);
       onActionComplete?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to commit checkpoint');
@@ -137,18 +135,6 @@ export function DemoControls({
       onActionComplete?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to complete task');
-    }
-  };
-
-  const handleSettle = async () => {
-    if (!taskId) return;
-    setError(null);
-
-    try {
-      await settle(taskId);
-      onActionComplete?.();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to settle task');
     }
   };
 
@@ -219,8 +205,8 @@ export function DemoControls({
                     </Button>
                     <Button
                       variant="danger"
-                      onClick={handleCheckLiveness}
-                      disabled={isCheckLivenessPending || !isStale}
+                      onClick={handleDetectFailure}
+                      disabled={isDetectFailurePending || !isStale}
                     >
                       <XCircle className="h-4 w-4 mr-2" />
                       {isStale ? 'Trigger Failure' : 'Not Stale'}
@@ -272,17 +258,14 @@ export function DemoControls({
                   </Button>
                 )}
 
-                {/* Resolved state - settle */}
+                {/* Resolved state - already settled */}
                 {taskState === TaskState.RESOLVED && (
-                  <Button
-                    variant="default"
-                    onClick={handleSettle}
-                    disabled={isSettlePending}
-                    className="col-span-2"
-                  >
-                    <Coins className="h-4 w-4 mr-2" />
-                    Settle & Distribute
-                  </Button>
+                  <div className="col-span-2 flex items-center justify-center gap-2 p-3 bg-stone-500/10 rounded-lg border border-stone-500/30">
+                    <CheckCircle className="h-4 w-4 text-stone-400" />
+                    <span className="text-sm text-stone-400">
+                      Task completed & settled
+                    </span>
+                  </div>
                 )}
               </div>
             )}

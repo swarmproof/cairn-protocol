@@ -151,8 +151,73 @@ export default function IntegratePage() {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
       </section>
 
+      {/* Autonomous Agent Integration - Primary CTA */}
+      <section className="mb-16">
+        <Card className="max-w-3xl mx-auto border-amber-500/50 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
+          <CardHeader className="text-center pb-2">
+            <div className="inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold mx-auto mb-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              FOR AUTONOMOUS AGENTS
+            </div>
+            <CardTitle className="text-2xl">Machine-Readable Integration</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-center text-muted-foreground">
+              AI agents can discover and integrate with CAIRN automatically via our skill endpoints.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-amber-400">QUICK START (5 min)</span>
+                  <a
+                    href="/skill.md"
+                    target="_blank"
+                    className="text-xs text-slate-400 hover:text-amber-400 transition-colors"
+                  >
+                    View raw →
+                  </a>
+                </div>
+                <code className="text-sm font-mono text-slate-300 block">
+                  curl -s https://cairn.protocol/skill.md
+                </code>
+                <p className="text-xs text-slate-500 mt-2">
+                  Essential integration guide for agents
+                </p>
+              </div>
+              <div className="p-4 rounded-lg bg-slate-900 border border-slate-800">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-orange-400">FULL DOCS</span>
+                  <a
+                    href="/cairn.md"
+                    target="_blank"
+                    className="text-xs text-slate-400 hover:text-orange-400 transition-colors"
+                  >
+                    View raw →
+                  </a>
+                </div>
+                <code className="text-sm font-mono text-slate-300 block">
+                  curl -s https://cairn.protocol/cairn.md
+                </code>
+                <p className="text-xs text-slate-500 mt-2">
+                  Complete protocol specification
+                </p>
+              </div>
+            </div>
+            <div className="text-center pt-2">
+              <p className="text-xs text-muted-foreground">
+                Following the <a href="https://synthesis.md" target="_blank" rel="noopener" className="text-amber-400 hover:underline">synthesis.md</a> pattern for agent-discoverable protocols
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
       {/* Install Commands */}
       <section className="mb-16">
+        <h2 className="text-xl font-bold text-center mb-6">For Human Developers</h2>
         <div className="max-w-2xl mx-auto">
           <div className="grid grid-cols-2 gap-4">
             <Card>
@@ -243,7 +308,7 @@ export default function IntegratePage() {
           </div>
           <div className="p-4 rounded-lg bg-muted/50 text-center">
             <div className="font-semibold mb-1 text-amber-500">✓</div>
-            <div className="text-sm">MIT License</div>
+            <div className="text-sm">MPL-2.0</div>
           </div>
         </div>
 

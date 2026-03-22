@@ -33,26 +33,26 @@ export function useTask(taskId: `0x${string}` | undefined) {
 
   const task: Task | undefined = data ? {
     taskId: taskId!,
-    state: data[0] as TaskState,
-    operator: data[1],
-    primaryAgent: data[2],
-    fallbackAgent: data[3],
-    escrow: data[4],
-    primaryCheckpoints: data[5],
-    fallbackCheckpoints: data[6],
-    lastHeartbeat: data[7],
-    deadline: data[8],
+    state: data.state as TaskState,
+    operator: data.operator,
+    primaryAgent: data.primaryAgent,
+    fallbackAgent: data.fallbackAgent,
+    escrow: data.escrowAmount,
+    primaryCheckpoints: data.primaryCheckpoints,
+    fallbackCheckpoints: data.fallbackCheckpoints,
+    lastHeartbeat: data.lastHeartbeat,
+    deadline: data.deadline,
   } : undefined;
 
   return { task, isLoading, error, refetch };
 }
 
-// Hook to get checkpoints for a task
+// Hook to get checkpoint batch roots for a task
 export function useCheckpoints(taskId: `0x${string}` | undefined) {
   const { data, isLoading, error, refetch } = useReadContract({
     address: CAIRN_CONTRACT_ADDRESS,
     abi: cairnAbi,
-    functionName: 'getCheckpoints',
+    functionName: 'getBatchRoots',
     args: taskId ? [taskId] : undefined,
     query: {
       enabled: !!taskId,
@@ -118,20 +118,20 @@ export function useHeartbeat() {
   return { heartbeat, isPending, error };
 }
 
-// Hook to check liveness (trigger failure)
-export function useCheckLiveness() {
+// Hook to detect failure (trigger failure check)
+export function useDetectFailure() {
   const { writeContractAsync, isPending, error } = useWriteContract();
 
-  const checkLiveness = async (taskId: `0x${string}`) => {
+  const detectFailure = async (taskId: `0x${string}`) => {
     return writeContractAsync({
       address: CAIRN_CONTRACT_ADDRESS,
       abi: cairnAbi,
-      functionName: 'checkLiveness',
+      functionName: 'detectFailure',
       args: [taskId],
     });
   };
 
-  return { checkLiveness, isPending, error };
+  return { detectFailure, isPending, error };
 }
 
 // Hook to complete task
@@ -150,32 +150,25 @@ export function useCompleteTask() {
   return { completeTask, isPending, error };
 }
 
-// Hook to settle task
-export function useSettle() {
-  const { writeContractAsync, isPending, error } = useWriteContract();
+// Note: Settlement happens automatically in CairnCore when task is completed
+// The completeTask function handles both completion and settlement
 
-  const settle = async (taskId: `0x${string}`) => {
-    return writeContractAsync({
-      address: CAIRN_CONTRACT_ADDRESS,
-      abi: cairnAbi,
-      functionName: 'settle',
-      args: [taskId],
-    });
-  };
-
-  return { settle, isPending, error };
-}
-
-// Hook to commit checkpoint
+// Hook to commit checkpoint batch
+// Note: The contract uses batch commits with Merkle roots for gas efficiency
 export function useCommitCheckpoint() {
   const { writeContractAsync, isPending, error } = useWriteContract();
 
-  const commitCheckpoint = async (taskId: `0x${string}`, cid: `0x${string}`) => {
+  const commitCheckpoint = async (
+    taskId: `0x${string}`,
+    count: bigint,
+    merkleRoot: `0x${string}`,
+    latestCID: `0x${string}`
+  ) => {
     return writeContractAsync({
       address: CAIRN_CONTRACT_ADDRESS,
       abi: cairnAbi,
-      functionName: 'commitCheckpoint',
-      args: [taskId, cid],
+      functionName: 'commitCheckpointBatch',
+      args: [taskId, count, merkleRoot, latestCID],
     });
   };
 
@@ -186,11 +179,21 @@ export function useCommitCheckpoint() {
 export function useTaskEvents(taskId?: `0x${string}`) {
   const queryClient = useQueryClient();
 
-  // Watch TaskSubmitted events
+  // Watch TaskCreated events
   useWatchContractEvent({
     address: CAIRN_CONTRACT_ADDRESS,
     abi: cairnAbi,
-    eventName: 'TaskSubmitted',
+    eventName: 'TaskCreated',
+    onLogs: () => {
+      queryClient.invalidateQueries({ queryKey: ['readContract'] });
+    },
+  });
+
+  // Watch TaskStarted events
+  useWatchContractEvent({
+    address: CAIRN_CONTRACT_ADDRESS,
+    abi: cairnAbi,
+    eventName: 'TaskStarted',
     onLogs: () => {
       queryClient.invalidateQueries({ queryKey: ['readContract'] });
     },
@@ -206,31 +209,51 @@ export function useTaskEvents(taskId?: `0x${string}`) {
     },
   });
 
-  // Watch TaskResolved events
+  // Watch TaskCompleted events
   useWatchContractEvent({
     address: CAIRN_CONTRACT_ADDRESS,
     abi: cairnAbi,
-    eventName: 'TaskResolved',
+    eventName: 'TaskCompleted',
     onLogs: () => {
       queryClient.invalidateQueries({ queryKey: ['readContract'] });
     },
   });
 
-  // Watch CheckpointCommitted events
+  // Watch TaskSettled events
   useWatchContractEvent({
     address: CAIRN_CONTRACT_ADDRESS,
     abi: cairnAbi,
-    eventName: 'CheckpointCommitted',
+    eventName: 'TaskSettled',
     onLogs: () => {
       queryClient.invalidateQueries({ queryKey: ['readContract'] });
     },
   });
 
-  // Watch HeartbeatReceived events
+  // Watch CheckpointBatchCommitted events
   useWatchContractEvent({
     address: CAIRN_CONTRACT_ADDRESS,
     abi: cairnAbi,
-    eventName: 'HeartbeatReceived',
+    eventName: 'CheckpointBatchCommitted',
+    onLogs: () => {
+      queryClient.invalidateQueries({ queryKey: ['readContract'] });
+    },
+  });
+
+  // Watch Heartbeat events
+  useWatchContractEvent({
+    address: CAIRN_CONTRACT_ADDRESS,
+    abi: cairnAbi,
+    eventName: 'Heartbeat',
+    onLogs: () => {
+      queryClient.invalidateQueries({ queryKey: ['readContract'] });
+    },
+  });
+
+  // Watch RecoveryStarted events
+  useWatchContractEvent({
+    address: CAIRN_CONTRACT_ADDRESS,
+    abi: cairnAbi,
+    eventName: 'RecoveryStarted',
     onLogs: () => {
       queryClient.invalidateQueries({ queryKey: ['readContract'] });
     },

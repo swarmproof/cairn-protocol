@@ -55,8 +55,8 @@ export function LiveStats() {
             args: [taskId],
           });
           return {
-            state: result[0] as TaskState,
-            escrow: result[4] as bigint,
+            state: result.state as TaskState,
+            escrow: result.escrowAmount as bigint,
           };
         });
 

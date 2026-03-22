@@ -30,10 +30,10 @@ export default function ExplorerPage() {
 
       setIsLoading(true);
       try {
-        // Get TaskSubmitted events
+        // Get TaskCreated events
         const logs = await publicClient.getLogs({
           address: CAIRN_CONTRACT_ADDRESS,
-          event: parseAbiItem('event TaskSubmitted(bytes32 indexed taskId, address indexed operator, address primaryAgent, address fallbackAgent, uint256 escrow)'),
+          event: parseAbiItem('event TaskCreated(bytes32 indexed taskId, address indexed operator, address primaryAgent, address fallbackAgent, uint256 escrowAmount)'),
           fromBlock: 'earliest',
           toBlock: 'latest',
         });
@@ -50,15 +50,15 @@ export default function ExplorerPage() {
 
           return {
             taskId,
-            state: result[0] as TaskState,
-            operator: result[1],
-            primaryAgent: result[2],
-            fallbackAgent: result[3],
-            escrow: result[4],
-            primaryCheckpoints: result[5],
-            fallbackCheckpoints: result[6],
-            lastHeartbeat: result[7],
-            deadline: result[8],
+            state: result.state as TaskState,
+            operator: result.operator,
+            primaryAgent: result.primaryAgent,
+            fallbackAgent: result.fallbackAgent,
+            escrow: result.escrowAmount,
+            primaryCheckpoints: result.primaryCheckpoints,
+            fallbackCheckpoints: result.fallbackCheckpoints,
+            lastHeartbeat: result.lastHeartbeat,
+            deadline: result.deadline,
           } as Task;
         });
 

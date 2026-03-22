@@ -17,6 +17,8 @@ const footerLinks = {
     { label: 'Documentation', href: 'https://github.com/MarouaBoud/cairn-protocol#readme', external: true },
     { label: 'GitHub', href: 'https://github.com/MarouaBoud/cairn-protocol', external: true },
     { label: 'Contract', href: `https://sepolia.basescan.org/address/${CAIRN_CONTRACT}`, external: true },
+    { label: 'skill.md', href: '/skill.md', external: false },
+    { label: 'cairn.md', href: '/cairn.md', external: false },
   ],
   community: [
     { label: 'Synthesis 2026', href: 'https://synthesis.md', external: true },
@@ -72,15 +74,25 @@ export function Footer() {
             <ul className="space-y-2">
               {footerLinks.resources.map((link) => (
                 <li key={link.href}>
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                  >
-                    {link.label}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                    >
+                      {link.label}
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                    >
+                      {link.label}
+                      <FileText className="h-3 w-3" />
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -126,7 +138,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} CAIRN Protocol. All Rights Reserved. MPL-2.0.
+            &copy; {new Date().getFullYear()} CAIRN Protocol. Licensed under <a href="https://github.com/MarouaBoud/cairn-protocol/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:underline">MPL-2.0</a>.
           </p>
           <div className="flex items-center gap-4">
             <a

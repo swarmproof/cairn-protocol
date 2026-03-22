@@ -10,9 +10,11 @@ interface StateBadgeProps {
 }
 
 const stateVariant = {
+  [TaskState.IDLE]: 'secondary',
   [TaskState.RUNNING]: 'running',
   [TaskState.FAILED]: 'failed',
   [TaskState.RECOVERING]: 'recovering',
+  [TaskState.DISPUTED]: 'destructive',
   [TaskState.RESOLVED]: 'resolved',
 } as const;
 

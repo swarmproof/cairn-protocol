@@ -18,16 +18,20 @@ const states = [
 ];
 
 const stateColors = {
+  [TaskState.IDLE]: 'border-stone-500 bg-stone-500/10 text-stone-400',
   [TaskState.RUNNING]: 'border-blue-500 bg-blue-500/10 text-blue-400',
   [TaskState.FAILED]: 'border-red-500 bg-red-500/10 text-red-400',
   [TaskState.RECOVERING]: 'border-amber-500 bg-amber-500/10 text-amber-400',
+  [TaskState.DISPUTED]: 'border-purple-500 bg-purple-500/10 text-purple-400',
   [TaskState.RESOLVED]: 'border-green-500 bg-green-500/10 text-green-400',
 };
 
 const activeStateColors = {
+  [TaskState.IDLE]: 'border-stone-500 bg-stone-500 text-white shadow-stone-500/50',
   [TaskState.RUNNING]: 'border-blue-500 bg-blue-500 text-white shadow-blue-500/50',
   [TaskState.FAILED]: 'border-red-500 bg-red-500 text-white shadow-red-500/50',
   [TaskState.RECOVERING]: 'border-amber-500 bg-amber-500 text-white shadow-amber-500/50',
+  [TaskState.DISPUTED]: 'border-purple-500 bg-purple-500 text-white shadow-purple-500/50',
   [TaskState.RESOLVED]: 'border-green-500 bg-green-500 text-white shadow-green-500/50',
 };
 
