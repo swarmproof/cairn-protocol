@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { Github, FileText, ExternalLink } from 'lucide-react';
 
+// CairnCore contract on Base Sepolia
+const CAIRN_CONTRACT = '0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640';
+
 const footerLinks = {
   protocol: [
     { label: 'Operators', href: '/operators' },
@@ -13,7 +16,7 @@ const footerLinks = {
   resources: [
     { label: 'Documentation', href: 'https://github.com/MarouaBoud/cairn-protocol#readme', external: true },
     { label: 'GitHub', href: 'https://github.com/MarouaBoud/cairn-protocol', external: true },
-    { label: 'Contract', href: 'https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417', external: true },
+    { label: 'Contract', href: `https://sepolia.basescan.org/address/${CAIRN_CONTRACT}`, external: true },
   ],
   community: [
     { label: 'Synthesis 2026', href: 'https://synthesis.md', external: true },
@@ -104,10 +107,26 @@ export function Footer() {
           </div>
         </div>
 
+        {/* Testnet Notice */}
+        <div className="mt-8 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+          <div className="flex items-start gap-3">
+            <div className="shrink-0 mt-0.5">
+              <span className="text-amber-500 text-lg">⚠️</span>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-amber-500">Testnet Only</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                This is a testnet deployment on Base Sepolia. Do not use real funds.
+                The protocol is under active development for Synthesis Hackathon 2026.
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} CAIRN Protocol. MIT License.
+            &copy; {new Date().getFullYear()} CAIRN Protocol. All Rights Reserved. MPL-2.0.
           </p>
           <div className="flex items-center gap-4">
             <a
