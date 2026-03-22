@@ -30,10 +30,10 @@ class TestCheckpointStoreInit:
 
     def test_init_without_jwt(self):
         """Test initialization without JWT raises error."""
-        with pytest.raises(ValueError, match="pinata_jwt is required"):
+        with pytest.raises(CheckpointError, match="PINATA_JWT is required"):
             CheckpointStore(pinata_jwt="")
 
-        with pytest.raises(ValueError):
+        with pytest.raises(CheckpointError):
             CheckpointStore(pinata_jwt=None)  # type: ignore
 
 
