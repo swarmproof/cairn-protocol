@@ -148,6 +148,9 @@ This is what makes CAIRN compound in value over time. The knowledge graph grows 
 | [Standards](./docs/standards.md) | ERC-8183, ERC-8004, ERC-7710, Olas integration |
 | [Alternatives](./docs/alternatives.md) | Comparison with LangGraph, Temporal, Kubernetes, LangSmith |
 | [Observer](./docs/observer.md) | CAIRN Observer — failure cost visibility layer |
+| [CLI Usage](./docs/CLI_USAGE.md) | Command-line tool for task management |
+| [Multi-Sig Governance](./docs/MULTI_SIG_GOVERNANCE.md) | Gnosis Safe setup, parameter management |
+| [Olas Integration](./docs/OLAS_INTEGRATION.md) | Mech marketplace adapter, fallback pool |
 
 ---
 
@@ -156,8 +159,8 @@ This is what makes CAIRN compound in value over time. The knowledge graph grows 
 | Property | Value |
 |----------|-------|
 | Version | 1.0 |
-| Status | **MVP Implementation In Progress** |
-| Target Network | Base (Sepolia testnet) |
+| Status | **Live on Base Sepolia** |
+| Network | Base Sepolia (Chain ID: 84532) |
 | ERC Dependencies | ERC-8183, ERC-8004, ERC-7710 |
 
 ### Implementation Progress (Synthesis Hackathon 2026)
@@ -165,14 +168,36 @@ This is what makes CAIRN compound in value over time. The knowledge graph grows 
 | Component | Status | Notes |
 |-----------|--------|-------|
 | PRD-00 Vision | ✅ Complete | Full protocol specification |
-| PRD-01 MVP | 🟢 In Progress | Hackathon submission |
-| Smart Contract | ✅ Audited | 49 tests, 98.95% coverage |
-| Deployment | ⏳ Pending | Base Sepolia |
-| SDK (Python) | ⏳ Blocked | Awaiting deployment |
-| Frontend | ⏳ Blocked | Awaiting SDK |
+| PRD-01 MVP | ✅ Complete | Hackathon submission |
+| Smart Contracts | ✅ Deployed | 302 tests, 98.95% coverage |
+| Deployment | ✅ Live | Base Sepolia (6 contracts) |
+| SDK (Python) | ✅ Complete | CairnClient, CairnAgent, CheckpointStore, Observers |
+| CLI Tool | ✅ Complete | submit-task, heartbeat, checkpoint, monitor, recover |
+| Subgraph | ✅ Deployed | The Graph Studio indexing |
+| Upgradeable | ✅ Complete | UUPS proxy pattern (OpenZeppelin 5.x) |
+| Frontend | ✅ Deployed | Next.js 14, wagmi |
 | PRD-07 Optimization | ✅ Planned | Merkle checkpoint batching |
 
 See [`PRDs/README.md`](./PRDs/README.md) for full roadmap.
+
+### Deployed Contracts (Base Sepolia)
+
+| Contract | Address | Description |
+|----------|---------|-------------|
+| **CairnCore** | [`0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`](https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640) | Main entry point — 6-state machine, task lifecycle |
+| CairnGovernance | [`0x7A09567e0348889Cc14264bEcf08F8d72Dc6987f`](https://sepolia.basescan.org/address/0x7A09567e0348889Cc14264bEcf08F8d72Dc6987f) | Protocol parameters, admin controls |
+| RecoveryRouter | [`0xE52703946cb44c12A6A38A41f638BA2D7197a84d`](https://sepolia.basescan.org/address/0xE52703946cb44c12A6A38A41f638BA2D7197a84d) | Failure classification, recovery scoring |
+| FallbackPool | [`0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0`](https://sepolia.basescan.org/address/0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0) | Agent registration, selection algorithm |
+| ArbiterRegistry | [`0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68`](https://sepolia.basescan.org/address/0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68) | Dispute resolution, appeals |
+| CairnTaskMVP | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) | Simplified MVP (4-state) |
+
+### Live Demo
+
+| Resource | URL |
+|----------|-----|
+| **Frontend** | [frontend-8ymorar3b-iona-78423aa1.vercel.app](https://frontend-8ymorar3b-iona-78423aa1.vercel.app) |
+| **Subgraph** | [The Graph Studio](https://thegraph.com/studio/subgraph/cairn) |
+| **Query Endpoint** | `https://api.studio.thegraph.com/query/1744842/cairn/v1.0.0` |
 
 ---
 
@@ -202,4 +227,4 @@ For detailed integration guidance, see [Standards Documentation](./docs/standard
 
 ## License
 
-[BSL 1.1](./LICENSE) — Business Source License. Free for non-production use. Production use requires written permission until March 2028, then converts to Apache 2.0.
+[MPL 2.0](./LICENSE) — Mozilla Public License 2.0. Copyleft license that allows commercial use while requiring source disclosure for modifications to MPL-covered files.

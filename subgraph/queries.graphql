@@ -1,0 +1,508 @@
+# CAIRN Protocol Subgraph - Example Queries
+# Copy and paste these into The Graph Studio playground
+
+# ═══════════════════════════════════════════════════════════════
+# PROTOCOL OVERVIEW
+# ═══════════════════════════════════════════════════════════════
+
+# Get global protocol metrics
+query ProtocolMetrics {
+  protocol(id: "0xb65596b21d670b6c670106c3e3c7e5fff8e3a640") {
+    totalTasksCreated
+    totalTasksResolved
+    totalEscrowLocked
+
+    # State distribution
+    idleTasks
+    runningTasks
+    failedTasks
+    recoveringTasks
+    disputedTasks
+    resolvedTasks
+
+    # Performance
+    overallSuccessRate
+    avgTaskDuration
+    avgCheckpointsPerTask
+
+    # Financial
+    totalFeesCollected
+    totalPrimaryPaid
+    totalFallbackPaid
+  }
+}
+
+# ═══════════════════════════════════════════════════════════════
+# TASK QUERIES
+# ═══════════════════════════════════════════════════════════════
+
+# Get specific task with full details
+query TaskDetails($taskId: Bytes!) {
+  task(id: $taskId) {
+    id
+    taskType
+    operator
+
+    # Agents
+    primaryAgent {
+      id
+      successRate
+      totalTasksCompleted
+    }
+    fallbackAgent {
+      id
+      totalTasksRecovered
+    }
+    currentAgent
+
+    # State
+    state
+    createdAt
+    startedAt
+    deadline
+
+    # Escrow
+    escrowAmount
+    settledPrimary
+    settledFallback
+
+    # Progress
+    checkpointCount
+    primaryCheckpoints
+    fallbackCheckpoints
+    lastHeartbeat
+
+    # Failure info (if failed)
+    failureClass
+    failureType
+    failureRecordCID
+    recoveryScore
+
+    # Resolution
+    resolutionType
+
+    # Intelligence hints
+    successRate
+    avgCheckpoints
+
+    # Recent checkpoints
+    checkpoints(first: 5, orderBy: timestamp, orderDirection: desc) {
+      cid
+      agent
+      timestamp
+    }
+  }
+}
+
+# Get all running tasks
+query RunningTasks {
+  tasks(where: { state: RUNNING }, orderBy: startedAt, orderDirection: desc) {
+    id
+    taskType
+    currentAgent
+    operator
+    startedAt
+    deadline
+    lastHeartbeat
+    checkpointCount
+    escrowAmount
+  }
+}
+
+# Get failed tasks awaiting recovery/dispute
+query FailedTasks {
+  failedTasks: tasks(where: { state: FAILED }) {
+    id
+    taskType
+    currentAgent
+    failureClass
+    failureType
+    recoveryScore
+    checkpointCount
+  }
+
+  recoveringTasks: tasks(where: { state: RECOVERING }) {
+    id
+    taskType
+    primaryAgent { id }
+    fallbackAgent { id }
+    currentAgent
+    failureClass
+    recoveryScore
+    checkpointCount
+  }
+
+  disputedTasks: tasks(where: { state: DISPUTED }) {
+    id
+    taskType
+    failureClass
+    failureType
+    recoveryScore
+    createdAt
+  }
+}
+
+# Get tasks by type
+query TasksByType($taskType: Bytes!) {
+  tasks(where: { taskType: $taskType }, first: 100, orderBy: createdAt, orderDirection: desc) {
+    id
+    state
+    operator
+    primaryAgent { id }
+    createdAt
+    checkpointCount
+    resolutionType
+  }
+}
+
+# Get recent task activity
+query RecentTasks($limit: Int = 20) {
+  tasks(first: $limit, orderBy: createdAt, orderDirection: desc) {
+    id
+    taskType
+    operator
+    primaryAgent { id }
+    state
+    createdAt
+    escrowAmount
+  }
+}
+
+# ═══════════════════════════════════════════════════════════════
+# AGENT QUERIES
+# ═══════════════════════════════════════════════════════════════
+
+# Agent leaderboard by earnings
+query AgentLeaderboardByEarnings($limit: Int = 10) {
+  agents(first: $limit, orderBy: totalEarned, orderDirection: desc) {
+    id
+    totalEarned
+    totalTasksCompleted
+    totalTasksFailed
+    totalTasksRecovered
+    successRate
+    averageCheckpoints
+    averageRecoveryScore
+  }
+}
+
+# Agent leaderboard by success rate
+query AgentLeaderboardBySuccessRate($limit: Int = 10) {
+  agents(
+    first: $limit
+    orderBy: successRate
+    orderDirection: desc
+    where: { totalTasksCompleted_gte: "3" } # Minimum 3 tasks for ranking
+  ) {
+    id
+    successRate
+    totalTasksCompleted
+    totalTasksFailed
+    totalEarned
+    averageCheckpoints
+  }
+}
+
+# Get specific agent profile
+query AgentProfile($agentId: Bytes!) {
+  agent(id: $agentId) {
+    id
+
+    # Counters
+    totalTasksCreated
+    totalTasksStarted
+    totalTasksCompleted
+    totalTasksFailed
+    totalTasksRecovered
+
+    # Earnings
+    totalEarned
+    totalPrimaryEarned
+    totalFallbackEarned
+
+    # Performance
+    successRate
+    averageCheckpoints
+    averageRecoveryScore
+
+    # Activity
+    firstTaskAt
+    lastTaskAt
+    lastHeartbeat
+
+    # Recent tasks as primary
+    primaryTasks(first: 5, orderBy: createdAt, orderDirection: desc) {
+      id
+      taskType
+      state
+      createdAt
+      resolutionType
+    }
+
+    # Recent tasks as fallback
+    fallbackTasks(first: 5, orderBy: createdAt, orderDirection: desc) {
+      id
+      taskType
+      state
+      createdAt
+      resolutionType
+    }
+  }
+}
+
+# Get agent's active tasks
+query AgentActiveTasks($agentId: Bytes!) {
+  agent(id: $agentId) {
+    id
+    primaryTasks(where: { state_in: [RUNNING, RECOVERING] }) {
+      id
+      taskType
+      state
+      startedAt
+      deadline
+      checkpointCount
+      lastHeartbeat
+    }
+  }
+}
+
+# ═══════════════════════════════════════════════════════════════
+# FAILURE PATTERN ANALYTICS
+# ═══════════════════════════════════════════════════════════════
+
+# Get all failure patterns sorted by occurrence
+query FailurePatterns {
+  failurePatterns(orderBy: occurrenceCount, orderDirection: desc) {
+    id
+    taskType
+    failureClass
+    occurrenceCount
+    avgRecoveryScore
+    recoveryRate
+
+    # Breakdown by type
+    heartbeatMissCount
+    networkPartitionCount
+    rateLimitCount
+    gasExhaustedCount
+    validationFailedCount
+    schemaInvalidCount
+
+    # Stats
+    totalAttempted
+    totalRecovered
+    firstOccurrence
+    lastOccurrence
+  }
+}
+
+# Get failure patterns for specific task type
+query FailurePatternsForTaskType($taskType: Bytes!) {
+  failurePatterns(where: { taskType: $taskType }) {
+    failureClass
+    occurrenceCount
+    avgRecoveryScore
+    recoveryRate
+    heartbeatMissCount
+    rateLimitCount
+    gasExhaustedCount
+  }
+}
+
+# Get failure patterns by class
+query FailurePatternsByClass($class: FailureClass!) {
+  failurePatterns(where: { failureClass: $class }, orderBy: occurrenceCount, orderDirection: desc) {
+    taskType
+    occurrenceCount
+    avgRecoveryScore
+    recoveryRate
+    lastOccurrence
+  }
+}
+
+# ═══════════════════════════════════════════════════════════════
+# CHECKPOINT QUERIES
+# ═══════════════════════════════════════════════════════════════
+
+# Get recent checkpoints across all tasks
+query RecentCheckpoints($limit: Int = 50) {
+  checkpoints(first: $limit, orderBy: timestamp, orderDirection: desc) {
+    id
+    task {
+      id
+      taskType
+      state
+    }
+    agent
+    cid
+    timestamp
+    batchIndex
+  }
+}
+
+# Get checkpoints for specific task
+query TaskCheckpoints($taskId: Bytes!) {
+  task(id: $taskId) {
+    checkpointCount
+    checkpoints(orderBy: timestamp, orderDirection: asc) {
+      cid
+      agent
+      timestamp
+      batchIndex
+      merkleRoot
+    }
+  }
+}
+
+# ═══════════════════════════════════════════════════════════════
+# TIME SERIES ANALYTICS
+# ═══════════════════════════════════════════════════════════════
+
+# Get daily metrics for last 30 days
+query DailyMetrics($days: Int = 30) {
+  dailyMetrics(first: $days, orderBy: date, orderDirection: desc) {
+    date
+
+    # Task metrics
+    tasksCreated
+    tasksCompleted
+    tasksFailed
+    tasksRecovered
+
+    # Financial
+    escrowLocked
+    escrowSettled
+    feesCollected
+
+    # Performance
+    successRate
+    avgRecoveryScore
+  }
+}
+
+# Get metrics for specific date
+query MetricsForDate($date: Bytes!) {
+  dailyMetrics(id: $date) {
+    date
+    tasksCreated
+    tasksCompleted
+    tasksFailed
+    tasksRecovered
+    successRate
+    avgRecoveryScore
+    escrowLocked
+    feesCollected
+  }
+}
+
+# ═══════════════════════════════════════════════════════════════
+# DASHBOARD QUERIES (Combined)
+# ═══════════════════════════════════════════════════════════════
+
+# Main dashboard data
+query Dashboard {
+  # Protocol overview
+  protocol(id: "0xb65596b21d670b6c670106c3e3c7e5fff8e3a640") {
+    totalTasksCreated
+    totalTasksResolved
+    totalEscrowLocked
+    runningTasks
+    failedTasks
+    recoveringTasks
+    overallSuccessRate
+    totalFeesCollected
+  }
+
+  # Top agents
+  topAgents: agents(first: 5, orderBy: totalEarned, orderDirection: desc) {
+    id
+    totalEarned
+    successRate
+    totalTasksCompleted
+  }
+
+  # Recent tasks
+  recentTasks: tasks(first: 10, orderBy: createdAt, orderDirection: desc) {
+    id
+    taskType
+    state
+    createdAt
+    escrowAmount
+  }
+
+  # Active tasks
+  runningTasks: tasks(where: { state: RUNNING }, first: 10) {
+    id
+    taskType
+    currentAgent
+    startedAt
+    checkpointCount
+  }
+
+  # Failure patterns
+  topFailures: failurePatterns(first: 5, orderBy: occurrenceCount, orderDirection: desc) {
+    taskType
+    failureClass
+    occurrenceCount
+    avgRecoveryScore
+  }
+
+  # Recent metrics
+  recentMetrics: dailyMetrics(first: 7, orderBy: date, orderDirection: desc) {
+    date
+    tasksCreated
+    tasksCompleted
+    successRate
+  }
+}
+
+# Operator dashboard
+query OperatorDashboard($operator: Bytes!) {
+  # Operator's tasks
+  tasks(where: { operator: $operator }, first: 100, orderBy: createdAt, orderDirection: desc) {
+    id
+    taskType
+    state
+    primaryAgent { id }
+    fallbackAgent { id }
+    createdAt
+    escrowAmount
+    settledPrimary
+    settledFallback
+    resolutionType
+  }
+}
+
+# Agent performance dashboard
+query AgentDashboard($agentId: Bytes!) {
+  agent(id: $agentId) {
+    id
+    totalTasksCompleted
+    totalTasksFailed
+    successRate
+    totalEarned
+
+    # Active tasks
+    primaryTasks(where: { state_in: [RUNNING, RECOVERING] }) {
+      id
+      taskType
+      state
+      deadline
+      checkpointCount
+    }
+
+    # Recent completions
+    primaryTasks(
+      where: { state: RESOLVED }
+      first: 10
+      orderBy: createdAt
+      orderDirection: desc
+    ) {
+      id
+      taskType
+      resolutionType
+      settledPrimary
+      settledFallback
+    }
+  }
+}

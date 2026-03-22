@@ -2,13 +2,27 @@
 
 import { HeroAnimation, SegmentGateway, LiveStats } from '@/components/home';
 import Link from 'next/link';
-import { ArrowRight, Github, FileText, Zap } from 'lucide-react';
+import { ArrowRight, Github, FileText, Zap, AlertTriangle } from 'lucide-react';
 import { AnimatedGradientText } from '@/components/ui/animated-gradient-text';
 import { ShimmerButton } from '@/components/ui/shimmer-button';
 
 export default function HomePage() {
   return (
     <div className="flex flex-col">
+      {/* MVP Status Banner */}
+      <div className="bg-amber-500/10 border-b border-amber-500/30">
+        <div className="container py-3">
+          <div className="flex items-center justify-center gap-3 text-sm">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <span>
+              <strong className="text-amber-500">Phase 1 of 6:</strong>
+              {' '}Foundation MVP live on Base Sepolia.
+              {' '}<Link href="/roadmap" className="text-amber-500 hover:underline">See full roadmap →</Link>
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <section className="py-16 md:py-24 relative overflow-hidden">
         {/* Background gradient orbs - desert tones */}
@@ -146,13 +160,13 @@ export default function HomePage() {
 
             <div className="flex flex-wrap items-center justify-center gap-4 mt-8 text-sm">
               <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 font-medium">
-                ERC-8183
+                ERC-8183 <span className="text-xs opacity-60">(planned)</span>
               </span>
               <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 font-medium">
-                ERC-8004
+                ERC-8004 <span className="text-xs opacity-60">(planned)</span>
               </span>
               <span className="px-3 py-1 rounded-full bg-stone-500/10 text-stone-400 font-medium">
-                ERC-7710
+                ERC-7710 <span className="text-xs opacity-60">(planned)</span>
               </span>
             </div>
           </div>

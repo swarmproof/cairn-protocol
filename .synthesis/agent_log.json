@@ -55,19 +55,46 @@
     {"timestamp": "2026-03-20T09:45:00Z", "phase": "frontend-dev", "action": "feature_pages_created", "status": "completed", "details": {"commit": "2da1eaa", "pages": ["/intelligence", "/roadmap"], "features": ["query_intelligence", "compound_learning", "roadmap_visualization"]}},
     {"timestamp": "2026-03-20T10:00:00Z", "phase": "frontend-dev", "action": "explorer_dashboard_created", "status": "completed", "details": {"commit": "75e8c61", "page": "/explorer", "features": ["task_listing", "status_filtering", "real_time_updates"]}},
     {"timestamp": "2026-03-20T10:15:00Z", "phase": "frontend-dev", "action": "homepage_redesigned", "status": "completed", "details": {"commit": "f41aa4b", "sections": ["hero", "problem_statement", "solution_segments", "cta"], "messaging": "Integration layer positioning"}},
-    {"timestamp": "2026-03-20T10:30:00Z", "phase": "frontend-dev", "action": "color_palette_updated", "status": "completed", "details": {"commit": "28b0005", "changes": {"from": ["blue", "green", "purple", "cyan", "emerald"], "to": ["amber", "stone"]}, "files_updated": 6, "purpose": "Unified warm palette for brand consistency"}}
+    {"timestamp": "2026-03-20T10:30:00Z", "phase": "frontend-dev", "action": "color_palette_updated", "status": "completed", "details": {"commit": "28b0005", "changes": {"from": ["blue", "green", "purple", "cyan", "emerald"], "to": ["amber", "stone"]}, "files_updated": 6, "purpose": "Unified warm palette for brand consistency"}},
+    {"timestamp": "2026-03-21T12:00:00Z", "phase": "contract-dev", "action": "full_protocol_implemented", "status": "completed", "details": {"contracts": ["CairnGovernance", "RecoveryRouter", "FallbackPool", "ArbiterRegistry", "CairnCore"], "tests_passed": 260, "coverage": "85.48%", "prds_implemented": ["PRD-02", "PRD-04", "PRD-05", "PRD-06"]}},
+    {"timestamp": "2026-03-21T12:30:00Z", "phase": "deployment", "action": "full_protocol_deployed", "status": "completed", "details": {"chain": "Base Sepolia", "chain_id": 84532, "deployer": "0xd98CEBd6E194f17EcCf25aeAD7894ABEDd8Ea815", "contracts": {"CairnGovernance": "0x7A09567e0348889Cc14264bEcf08F8d72Dc6987f", "RecoveryRouter": "0xE52703946cb44c12A6A38A41f638BA2D7197a84d", "FallbackPool": "0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0", "ArbiterRegistry": "0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68", "CairnCore": "0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640"}, "total_gas": 7987255, "total_cost_eth": "0.00004792353", "block": 39169404}},
+    {"timestamp": "2026-03-21T12:35:00Z", "phase": "deployment", "action": "contracts_verification_submitted", "status": "completed", "details": {"contracts_verified": 5, "guids": {"CairnGovernance": "cfpyf1qetglr1ueku3xj62gzsk9dbk8rspzad2xgrtvnqxvxtz", "RecoveryRouter": "tely5yqy333qfelucjhz6k5tivnftxmtpaqxatxdn4e1cbuqar", "FallbackPool": "sdh4y7atgabk55gab5qpkin4c274g72x52xzklbimgdp3dz9k3", "ArbiterRegistry": "nsd8ap3qeyc9ree1x2dkmjcuiixv9cse5sldrvhbazdysn8qbi", "CairnCore": "n448n4ekqrr7ht6n5ztracjcae7d2kbzkqpnbw4hygvsbtsat4"}}},
+    {"timestamp": "2026-03-21T12:40:00Z", "phase": "documentation", "action": "readme_updated", "status": "completed", "details": {"sections_added": ["Deployed Contracts table"], "status_updated": "Live on Base Sepolia"}},
+    {"timestamp": "2026-03-21T14:00:00Z", "phase": "contract-dev", "action": "prd_parallel_implementation", "status": "completed", "details": {"prds_completed": ["PRD-03", "PRD-04", "PRD-06"], "implementations": {"subgraph": "contracts/subgraph/", "bonfires_pipeline": "contracts/pipeline/", "erc_8004": "contracts/src/interfaces/IERC8004.sol", "erc_7710": "contracts/src/interfaces/IERC7710.sol", "erc_8183": "contracts/src/interfaces/IERC8183.sol", "olas_adapter": "contracts/src/adapters/OlasMechAdapter.sol", "cli_tool": "contracts/cli/"}, "agents_spawned": 7, "parallel_execution": true}},
+    {"timestamp": "2026-03-21T15:00:00Z", "phase": "contract-dev", "action": "uups_upgradeable_contracts", "status": "completed", "details": {"contracts_upgraded": ["CairnCoreUpgradeable", "FallbackPoolUpgradeable", "ArbiterRegistryUpgradeable", "RecoveryRouterUpgradeable"], "oz_version": "5.x", "migration_notes": "ReentrancyGuard now stateless, removed _init calls for ReentrancyGuard and UUPS", "deployment_script": "contracts/script/DeployUpgradeable.s.sol", "tests": "contracts/test/upgrades/CairnCoreUpgrade.t.sol"}},
+    {"timestamp": "2026-03-21T15:30:00Z", "phase": "contract-dev", "action": "full_test_suite_verified", "status": "completed", "details": {"total_tests": 302, "tests_passed": 302, "tests_failed": 0, "test_suites": 10, "duration_ms": 278, "oz_5x_compatible": true}},
+    {"timestamp": "2026-03-21T20:00:00Z", "phase": "integration", "action": "subgraph_deployed", "status": "completed", "details": {"platform": "The Graph Studio", "subgraph_name": "cairn", "version": "v1.0.0", "studio_url": "https://thegraph.com/studio/subgraph/cairn", "query_endpoint": "https://api.studio.thegraph.com/query/1744842/cairn/v1.0.0", "ipfs_hash": "QmRLduEyd3UQCXLupHEYV7GNfCfBX6o5oxCKiYB7rU2W8p", "network": "base-sepolia", "indexed_contract": "0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640", "start_block": 17741070, "entities": ["Task", "Agent", "Checkpoint", "FailurePattern", "Protocol", "DailyMetrics"], "events_indexed": ["TaskCreated", "TaskStarted", "TaskCompleted", "CheckpointBatchCommitted", "Heartbeat", "TaskFailed", "RecoveryStarted", "TaskDisputed", "TaskSettled"]}},
+    {"timestamp": "2026-03-21T20:30:00Z", "phase": "integration", "action": "multisig_governance_configured", "status": "completed", "details": {"documentation": "docs/MULTI_SIG_GOVERNANCE.md", "transfer_script": "contracts/script/TransferToMultisig.s.sol", "governance_phases": ["launch_single_admin", "multisig_gnosis_safe", "token_dao_future"], "timelock_duration": "48 hours", "recommended_setup": "2-of-3 for testnet, 3-of-5 for mainnet", "parameters_configurable": ["PROTOCOL_FEE_BPS", "ARBITER_FEE_BPS", "MIN_REPUTATION", "MIN_STAKE_PERCENT", "MIN_ARBITER_STAKE_PERCENT", "RECOVERY_THRESHOLD", "DISPUTE_TIMEOUT", "APPEAL_WINDOW", "MIN_HEARTBEAT_INTERVAL"], "emergency_controls": ["emergencyPause", "emergencyUnpause"]}}
   ],
   "deployment": {
     "network": "base-sepolia",
     "chain_id": 84532,
-    "contract_address": "0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417",
-    "basescan_url": "https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417",
+    "mvp_contract": "0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417",
+    "full_protocol": {
+      "CairnCore": "0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640",
+      "CairnGovernance": "0x7A09567e0348889Cc14264bEcf08F8d72Dc6987f",
+      "RecoveryRouter": "0xE52703946cb44c12A6A38A41f638BA2D7197a84d",
+      "FallbackPool": "0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0",
+      "ArbiterRegistry": "0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68"
+    },
+    "basescan_urls": {
+      "CairnCore": "https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640",
+      "CairnGovernance": "https://sepolia.basescan.org/address/0x7A09567e0348889Cc14264bEcf08F8d72Dc6987f",
+      "RecoveryRouter": "https://sepolia.basescan.org/address/0xE52703946cb44c12A6A38A41f638BA2D7197a84d",
+      "FallbackPool": "https://sepolia.basescan.org/address/0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0",
+      "ArbiterRegistry": "https://sepolia.basescan.org/address/0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68"
+    },
     "verified": true,
-    "deployed_at": "2026-03-18T18:30:00Z",
+    "deployed_at": "2026-03-21T12:30:00Z",
     "deployer": "0xd98CEBd6E194f17EcCf25aeAD7894ABEDd8Ea815",
-    "constructor_args": {
-      "owner": "0xd98CEBd6E194f17EcCf25aeAD7894ABEDd8Ea815",
-      "feeRecipient": "0xd98CEBd6E194f17EcCf25aeAD7894ABEDd8Ea815"
+    "subgraph": {
+      "platform": "The Graph Studio",
+      "name": "cairn",
+      "version": "v1.0.0",
+      "studio_url": "https://thegraph.com/studio/subgraph/cairn",
+      "query_endpoint": "https://api.studio.thegraph.com/query/1744842/cairn/v1.0.0",
+      "ipfs_hash": "QmRLduEyd3UQCXLupHEYV7GNfCfBX6o5oxCKiYB7rU2W8p",
+      "deployed_at": "2026-03-21T20:00:00Z"
     }
   },
   "deliverables": [
@@ -84,7 +111,15 @@
     {"type": "sdk_tests", "path": "tests/", "status": "passing", "test_count": 126, "coverage": "88%", "test_types": ["unit", "integration", "e2e"]},
     {"type": "frontend", "path": "frontend/", "status": "complete", "framework": "Next.js 14", "components": ["Dashboard", "TaskList", "TaskDetail", "StateMachine", "Checkpoints", "Settlement", "DemoControls"]},
     {"type": "prd", "path": "PRDs/PRD-01B-BONFIRES-INTEGRATION/", "status": "planned", "scope": "bonfires_sponsor_integration", "priority": "P0", "sponsor": "Bonfires", "features": ["BonfiresClient", "BonfiresAdapter", "graph_visualization", "episode_feed"]},
-    {"type": "frontend_redesign", "path": "frontend/", "status": "complete", "pages": ["/", "/explorer", "/operators", "/integrate", "/intelligence", "/roadmap"], "design_strategy": "local-docs/FRONTEND_DESIGN_STRATEGY.md", "palette": "amber/stone"}
+    {"type": "frontend_redesign", "path": "frontend/", "status": "complete", "pages": ["/", "/explorer", "/operators", "/integrate", "/intelligence", "/roadmap"], "design_strategy": "local-docs/FRONTEND_DESIGN_STRATEGY.md", "palette": "amber/stone"},
+    {"type": "subgraph", "path": "subgraph/", "status": "deployed", "features": ["schema.graphql", "subgraph.yaml", "mapping.ts"], "entities": ["Task", "Checkpoint", "Agent", "Protocol", "FailurePattern", "DailyMetrics"], "studio_url": "https://thegraph.com/studio/subgraph/cairn", "query_endpoint": "https://api.studio.thegraph.com/query/1744842/cairn/v1.0.0"},
+    {"type": "bonfires_pipeline", "path": "contracts/pipeline/", "status": "complete", "features": ["event_listener", "episode_writer", "delve_query"], "api": "https://tnt-v2.api.bonfires.ai"},
+    {"type": "erc_interfaces", "path": "contracts/src/interfaces/", "status": "complete", "standards": ["IERC8004", "IERC7710", "IERC8183"]},
+    {"type": "olas_adapter", "path": "contracts/src/adapters/OlasMechAdapter.sol", "status": "complete", "features": ["task_type_mapping", "mech_eligibility", "fallback_integration"]},
+    {"type": "upgradeable_contracts", "path": "contracts/src/upgradeable/", "status": "complete", "contracts": ["CairnCoreUpgradeable", "FallbackPoolUpgradeable", "ArbiterRegistryUpgradeable", "RecoveryRouterUpgradeable"], "pattern": "UUPS", "oz_version": "5.x"},
+    {"type": "cli_tool", "path": "contracts/cli/", "status": "complete", "features": ["submit-task", "heartbeat", "checkpoint", "monitor", "recover"]},
+    {"type": "upgrade_tests", "path": "contracts/test/upgrades/", "status": "complete", "tests": 11, "coverage": ["deployment", "upgrade", "state_preservation", "authorization"]},
+    {"type": "multisig_governance", "path": "docs/MULTI_SIG_GOVERNANCE.md", "status": "complete", "features": ["gnosis_safe_integration", "transfer_script", "parameter_management", "emergency_controls", "timelock_48h"], "script": "contracts/script/TransferToMultisig.s.sol"}
   ],
   "branches": [
     {"name": "claude/contracts-core", "created_at": "2026-03-18T00:45:00Z", "purpose": "Phase 1: Core contract development", "status": "merged"},

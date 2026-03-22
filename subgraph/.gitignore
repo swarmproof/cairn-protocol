@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+build/
+generated/
+
+# The Graph
+.graph/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
