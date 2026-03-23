@@ -26,7 +26,7 @@ export function CairnLogo({
 
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      {/* Cairn Stone Stack Icon */}
+      {/* 3D Isometric Cairn Stack Icon */}
       <svg
         width={iconSize}
         height={iconSize}
@@ -35,95 +35,89 @@ export function CairnLogo({
         xmlns="http://www.w3.org/2000/svg"
         className={cn(animated && 'group')}
       >
-        {/* Base stone - largest */}
-        <ellipse
-          cx="24"
-          cy="40"
-          rx="14"
-          ry="5"
-          className={cn(
-            'fill-slate-600',
-            animated && 'group-hover:fill-slate-500 transition-colors'
-          )}
-        />
-        {/* Middle stone */}
-        <ellipse
-          cx="24"
-          cy="32"
-          rx="10"
-          ry="4"
-          className={cn(
-            'fill-slate-500',
-            animated && 'group-hover:fill-slate-400 transition-colors delay-75'
-          )}
-        />
-        {/* Upper middle stone */}
-        <ellipse
-          cx="24"
-          cy="25"
-          rx="7"
-          ry="3"
-          className={cn(
-            'fill-slate-400',
-            animated && 'group-hover:fill-slate-300 transition-colors delay-100'
-          )}
-        />
-        {/* Top stone with glow */}
-        <ellipse
-          cx="24"
-          cy="19"
-          rx="5"
-          ry="2.5"
-          className={cn(
-            'fill-emerald-500',
-            animated && 'group-hover:fill-emerald-400 transition-colors delay-150'
-          )}
-        />
-        {/* Glow effect on top stone */}
-        <ellipse
-          cx="24"
-          cy="19"
-          rx="5"
-          ry="2.5"
-          className="fill-emerald-400/30"
-          filter="url(#glow)"
-        />
-        {/* Pulse indicator */}
-        <circle
-          cx="24"
-          cy="12"
-          r="2"
-          className={cn(
-            'fill-emerald-400',
-            animated && 'animate-pulse'
-          )}
-        />
-        {/* Signal waves */}
-        <path
-          d="M18 8 Q24 4 30 8"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          className="text-emerald-500/60"
-          fill="none"
-        />
-        <path
-          d="M20 5 Q24 2 28 5"
-          stroke="currentColor"
-          strokeWidth="1"
-          strokeLinecap="round"
-          className="text-emerald-400/40"
-          fill="none"
-        />
-        <defs>
-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+        {/* Bottom block - largest */}
+        <g className={cn(animated && 'group-hover:translate-y-[-1px] transition-transform')}>
+          {/* Top face */}
+          <path
+            d="M24 32 L36 26 L24 20 L12 26 Z"
+            className={cn(
+              'fill-cyan-400',
+              animated && 'group-hover:fill-cyan-300 transition-colors'
+            )}
+          />
+          {/* Right face */}
+          <path
+            d="M24 32 L36 26 L36 34 L24 40 Z"
+            className={cn(
+              'fill-cyan-600',
+              animated && 'group-hover:fill-cyan-500 transition-colors'
+            )}
+          />
+          {/* Left face */}
+          <path
+            d="M24 32 L12 26 L12 34 L24 40 Z"
+            className={cn(
+              'fill-cyan-500',
+              animated && 'group-hover:fill-cyan-400 transition-colors'
+            )}
+          />
+        </g>
+
+        {/* Middle block */}
+        <g className={cn(animated && 'group-hover:translate-y-[-2px] transition-transform delay-75')}>
+          {/* Top face */}
+          <path
+            d="M24 22 L32 18 L24 14 L16 18 Z"
+            className={cn(
+              'fill-cyan-400',
+              animated && 'group-hover:fill-cyan-300 transition-colors delay-75'
+            )}
+          />
+          {/* Right face */}
+          <path
+            d="M24 22 L32 18 L32 24 L24 28 Z"
+            className={cn(
+              'fill-cyan-600',
+              animated && 'group-hover:fill-cyan-500 transition-colors delay-75'
+            )}
+          />
+          {/* Left face */}
+          <path
+            d="M24 22 L16 18 L16 24 L24 28 Z"
+            className={cn(
+              'fill-cyan-500',
+              animated && 'group-hover:fill-cyan-400 transition-colors delay-75'
+            )}
+          />
+        </g>
+
+        {/* Top block - smallest */}
+        <g className={cn(animated && 'group-hover:translate-y-[-3px] transition-transform delay-150')}>
+          {/* Top face */}
+          <path
+            d="M24 12 L28 10 L24 8 L20 10 Z"
+            className={cn(
+              'fill-cyan-300',
+              animated && 'group-hover:fill-cyan-200 transition-colors delay-150'
+            )}
+          />
+          {/* Right face */}
+          <path
+            d="M24 12 L28 10 L28 14 L24 16 Z"
+            className={cn(
+              'fill-cyan-500',
+              animated && 'group-hover:fill-cyan-400 transition-colors delay-150'
+            )}
+          />
+          {/* Left face */}
+          <path
+            d="M24 12 L20 10 L20 14 L24 16 Z"
+            className={cn(
+              'fill-cyan-400',
+              animated && 'group-hover:fill-cyan-300 transition-colors delay-150'
+            )}
+          />
+        </g>
       </svg>
 
       {/* Text logo */}
@@ -156,19 +150,20 @@ export function CairnIcon({
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      <ellipse cx="24" cy="40" rx="14" ry="5" className="fill-slate-600" />
-      <ellipse cx="24" cy="32" rx="10" ry="4" className="fill-slate-500" />
-      <ellipse cx="24" cy="25" rx="7" ry="3" className="fill-slate-400" />
-      <ellipse cx="24" cy="19" rx="5" ry="2.5" className="fill-emerald-500" />
-      <circle cx="24" cy="12" r="2" className="fill-emerald-400" />
-      <path
-        d="M18 8 Q24 4 30 8"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        className="text-emerald-500/60"
-        fill="none"
-      />
+      {/* Bottom block */}
+      <path d="M24 32 L36 26 L24 20 L12 26 Z" className="fill-cyan-400" />
+      <path d="M24 32 L36 26 L36 34 L24 40 Z" className="fill-cyan-600" />
+      <path d="M24 32 L12 26 L12 34 L24 40 Z" className="fill-cyan-500" />
+
+      {/* Middle block */}
+      <path d="M24 22 L32 18 L24 14 L16 18 Z" className="fill-cyan-400" />
+      <path d="M24 22 L32 18 L32 24 L24 28 Z" className="fill-cyan-600" />
+      <path d="M24 22 L16 18 L16 24 L24 28 Z" className="fill-cyan-500" />
+
+      {/* Top block */}
+      <path d="M24 12 L28 10 L24 8 L20 10 Z" className="fill-cyan-300" />
+      <path d="M24 12 L28 10 L28 14 L24 16 Z" className="fill-cyan-500" />
+      <path d="M24 12 L20 10 L20 14 L24 16 Z" className="fill-cyan-400" />
     </svg>
   );
 }
