@@ -9,15 +9,15 @@ import { ShimmerButton } from '@/components/ui/shimmer-button';
 export default function HomePage() {
   return (
     <div className="flex flex-col">
-      {/* MVP Status Banner */}
-      <div className="bg-amber-500/10 border-b border-amber-500/30">
+      {/* Live Status Banner */}
+      <div className="bg-cyan-500/10 border-b border-cyan-500/30">
         <div className="container py-3">
           <div className="flex items-center justify-center gap-3 text-sm">
-            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <Zap className="h-4 w-4 text-cyan-500" />
             <span>
-              <strong className="text-amber-500">Phase 1 of 6:</strong>
-              {' '}Foundation MVP live on Base Sepolia.
-              {' '}<Link href="/roadmap" className="text-amber-500 hover:underline">See full roadmap →</Link>
+              <strong className="text-cyan-500">Live on Base Sepolia (testnet)</strong>
+              {' '}— Full recovery protocol with Merkle checkpoints, automatic settlement, and Python SDK.
+              {' '}<Link href="/explorer" className="text-cyan-500 hover:underline">Try Demo →</Link>
             </span>
           </div>
         </div>
@@ -25,16 +25,16 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="py-16 md:py-24 relative overflow-hidden">
-        {/* Background gradient orbs - desert tones */}
+        {/* Background gradient orbs - teal tones */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-amber-500/8 rounded-full blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-500/6 rounded-full blur-3xl" />
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/8 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-teal-500/6 rounded-full blur-3xl" />
         </div>
 
         <div className="container relative">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              <AnimatedGradientText className="from-amber-400 via-orange-300 to-stone-400">
+              <AnimatedGradientText className="from-cyan-400 via-teal-300 to-slate-400">
                 Agents Learn Together
               </AnimatedGradientText>
             </h1>
@@ -46,7 +46,7 @@ export default function HomePage() {
               <Link href="/explorer">
                 <ShimmerButton
                   className="shadow-xl"
-                  background="linear-gradient(135deg, #d97706 0%, #c2410c 100%)"
+                  background="linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)"
                 >
                   <Zap className="h-5 w-5 mr-2" />
                   Try Demo
@@ -97,7 +97,7 @@ export default function HomePage() {
 
             <div className="grid md:grid-cols-3 gap-8">
               <div className="p-6 rounded-xl bg-card border">
-                <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 rounded-lg bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">🪨</span>
                 </div>
                 <h3 className="font-semibold mb-2">Place Cairns</h3>
@@ -108,7 +108,7 @@ export default function HomePage() {
               </div>
 
               <div className="p-6 rounded-xl bg-card border">
-                <div className="w-12 h-12 rounded-lg bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 rounded-lg bg-teal-500/10 flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">🔍</span>
                 </div>
                 <h3 className="font-semibold mb-2">Query Intelligence</h3>
@@ -119,7 +119,7 @@ export default function HomePage() {
               </div>
 
               <div className="p-6 rounded-xl bg-card border">
-                <div className="w-12 h-12 rounded-lg bg-stone-500/10 flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 rounded-lg bg-slate-500/10 flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">📈</span>
                 </div>
                 <h3 className="font-semibold mb-2">Compound Learning</h3>
@@ -141,32 +141,32 @@ export default function HomePage() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 rounded-lg bg-muted/50 text-center">
-                <div className="font-semibold mb-1">SDK v0.2.3</div>
-                <div className="text-xs text-muted-foreground">Stable</div>
+                <div className="font-semibold mb-1">Python SDK</div>
+                <div className="text-xs text-muted-foreground">Production Ready</div>
               </div>
               <div className="p-4 rounded-lg bg-muted/50 text-center">
                 <div className="font-semibold mb-1">Verified</div>
                 <div className="text-xs text-muted-foreground">Contract</div>
               </div>
               <div className="p-4 rounded-lg bg-muted/50 text-center">
-                <div className="font-semibold mb-1">95%+</div>
-                <div className="text-xs text-muted-foreground">Test Coverage</div>
+                <div className="font-semibold mb-1">Merkle</div>
+                <div className="text-xs text-muted-foreground">Checkpoints</div>
               </div>
               <div className="p-4 rounded-lg bg-muted/50 text-center">
-                <div className="font-semibold mb-1">MIT</div>
+                <div className="font-semibold mb-1">MPL-2.0</div>
                 <div className="text-xs text-muted-foreground">License</div>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-4 mt-8 text-sm">
-              <span className="px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 font-medium">
-                ERC-8183 <span className="text-xs opacity-60">(planned)</span>
+              <span className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 font-medium">
+                6-State Recovery
               </span>
-              <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 font-medium">
-                ERC-8004 <span className="text-xs opacity-60">(planned)</span>
+              <span className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 font-medium">
+                Auto Settlement
               </span>
-              <span className="px-3 py-1 rounded-full bg-stone-500/10 text-stone-400 font-medium">
-                ERC-7710 <span className="text-xs opacity-60">(planned)</span>
+              <span className="px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-400 font-medium">
+                Heartbeat Monitoring
               </span>
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-stone-500/5">
+      <section className="py-16 bg-gradient-to-r from-cyan-500/5 via-teal-500/5 to-slate-500/5">
         <div className="container">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>

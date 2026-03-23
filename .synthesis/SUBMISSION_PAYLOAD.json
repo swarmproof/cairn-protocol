@@ -1,0 +1,53 @@
+{
+  "teamUUID": "9374ee29ce794e4dbc6133f1378b4c0c",
+  "name": "CAIRN Protocol",
+  "description": "Agent failure and recovery protocol that turns every agent failure into a lesson every other agent inherits — enforced by escrow, validated by attestation, owned by no one. CAIRN standardizes how agents checkpoint progress, emit heartbeats, and recover from failures via fallback assignment with proportional escrow settlement.",
+  "problemStatement": "Agent workflows fail 80% of the time. At 85% success per action, a 10-step workflow completes only ~20% of the time. When failures happen today: work is lost (restart from zero), escrow locks (funds stuck for hours/days), no one learns (same failure repeats), and human intervention is required (2am pages). The ecosystem bleeds ~$5,300/month per operator to unrecovered failures. CAIRN solves this with automatic recovery, checkpoint preservation, and collective intelligence that compounds across the entire agent ecosystem.",
+  "repoURL": "https://github.com/MarouaBoud/cairn-protocol",
+  "deployedURL": "https://cairn-protocol-iona-78423aa1.vercel.app",
+  "trackUUIDs": ["REPLACE_WITH_PROTOCOL_LABS_UUID", "REPLACE_WITH_LET_AGENT_COOK_UUID"],
+  "conversationLog": "12 build sessions documented in .synthesis/CONVERSATION_LOG.md. Phases: Contract-Dev (Sessions 1-4, 302 tests, 98.95% coverage), SDK-Dev (Sessions 5-7, Python CairnClient/CairnAgent), Frontend-Dev (Sessions 8-10, Next.js 14 dashboard), Integration (Sessions 11-12, subgraph + polish). Key decisions: UUPS proxy pattern, CEI + ReentrancyGuard, Merkle checkpoint batching (89-99% gas savings), dual-write to IPFS. Blockers resolved: gas optimization via batching, real-time events via wagmi watches. Full chronological log: .synthesis/agent_log.json (70+ entries).",
+  "submissionMetadata": {
+    "agentFramework": "anthropic-agents-sdk",
+    "agentHarness": "claude-code",
+    "model": "claude-opus-4-5",
+    "skills": [
+      "contract-dev",
+      "sdk-dev",
+      "frontend-dev",
+      "code-reviewer",
+      "security-engineer"
+    ],
+    "tools": [
+      "Foundry",
+      "Vercel",
+      "The Graph",
+      "wagmi",
+      "Next.js",
+      "Python",
+      "IPFS/Pinata",
+      "Base Sepolia",
+      "OpenZeppelin"
+    ],
+    "helpfulResources": [
+      "https://eips.ethereum.org/EIPS/eip-8183",
+      "https://eips.ethereum.org/EIPS/eip-8004",
+      "https://eips.ethereum.org/EIPS/eip-7710",
+      "https://docs.base.org",
+      "https://book.getfoundry.sh",
+      "https://thegraph.com/docs"
+    ],
+    "helpfulSkills": [
+      {
+        "name": "contract-dev",
+        "reason": "Implemented 6-state machine, UUPS proxies, and 302 tests with 98.95% coverage"
+      },
+      {
+        "name": "security-engineer",
+        "reason": "CEI pattern, ReentrancyGuard, custom errors, input validation on all public functions"
+      }
+    ],
+    "intention": "continuing",
+    "intentionNotes": "Active development planned - mainnet launch Q2 2026. Roadmap includes PRD-02 through PRD-07: Core Recovery, Execution Intelligence, Fallback Ecosystem, Arbiter Network, Full Integration, Checkpoint Optimization."
+  }
+}

@@ -176,7 +176,7 @@ This is what makes CAIRN compound in value over time. The knowledge graph grows 
 | Subgraph | ✅ Deployed | The Graph Studio indexing |
 | Upgradeable | ✅ Complete | UUPS proxy pattern (OpenZeppelin 5.x) |
 | Frontend | ✅ Deployed | Next.js 14, wagmi |
-| PRD-07 Optimization | ✅ Planned | Merkle checkpoint batching |
+| PRD-07 Optimization | ✅ Complete | Merkle checkpoint batching (89-99% gas savings) |
 
 See [`PRDs/README.md`](./PRDs/README.md) for full roadmap.
 
@@ -195,7 +195,7 @@ See [`PRDs/README.md`](./PRDs/README.md) for full roadmap.
 
 | Resource | URL |
 |----------|-----|
-| **Frontend** | [frontend-8ymorar3b-iona-78423aa1.vercel.app](https://frontend-8ymorar3b-iona-78423aa1.vercel.app) |
+| **Frontend** | [cairn-protocol-iona-78423aa1.vercel.app](https://cairn-protocol-iona-78423aa1.vercel.app) |
 | **Subgraph** | [The Graph Studio](https://thegraph.com/studio/subgraph/cairn) |
 | **Query Endpoint** | `https://api.studio.thegraph.com/query/1744842/cairn/v1.0.0` |
 
@@ -222,6 +222,72 @@ CAIRN integrates with existing Ethereum standards rather than replacing them:
 | **Olas Mech Marketplace** | Registry of available agent services with staking | Provides the fallback agent pool; CAIRN queries for best-fit backup agents |
 
 For detailed integration guidance, see [Standards Documentation](./docs/standards.md).
+
+---
+
+## Hackathon Submission — Synthesis 2026
+
+**Tracks:** Protocol Labs: Agents With Receipts • Let the Agent Cook
+
+### Onchain Artifacts
+
+| Artifact | Value |
+|----------|-------|
+| **Chain** | Base Sepolia (Chain ID: 84532) |
+| **CairnCore Contract** | [`0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`](https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640) |
+| **CairnTaskMVP Contract** | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) |
+| **Deployment Tx (CairnCore)** | [`0x...`](https://sepolia.basescan.org/tx/) — See contracts/deployments/ |
+| **Test Coverage** | 98.95% (302 tests) |
+
+### Live Demo
+
+| Resource | URL |
+|----------|-----|
+| **Frontend** | [cairn-protocol-iona-78423aa1.vercel.app](https://cairn-protocol-iona-78423aa1.vercel.app) |
+| **Subgraph** | [The Graph Studio](https://thegraph.com/studio/subgraph/cairn) |
+| **Query Endpoint** | `https://api.studio.thegraph.com/query/1744842/cairn/v1.0.0` |
+
+### Agent Metadata
+
+| File | Description |
+|------|-------------|
+| [`.synthesis/agent.json`](./.synthesis/agent.json) | Agent identity, team structure, deployment info |
+| [`.synthesis/agent_log.json`](./.synthesis/agent_log.json) | Chronological build log (70+ entries) |
+| [`.synthesis/CONVERSATION_LOG.md`](./.synthesis/CONVERSATION_LOG.md) | Session summaries and decision log |
+
+### Track Requirements: "Agents With Receipts"
+
+CAIRN implements the complete agent receipts pattern:
+
+| Requirement | Implementation |
+|-------------|----------------|
+| **Execution Records** | Every task creates on-chain record with checkpoints, heartbeats, settlement |
+| **Failure Classification** | RecoveryRouter classifies failures (TIMEOUT, REVERTED, RESOURCE, LOGIC, UNKNOWN) |
+| **Recovery Scoring** | Computed recovery probability before fallback assignment |
+| **Settlement Receipts** | Proportional escrow splits with on-chain verification |
+| **Collective Intelligence** | Bonfires integration writes failure patterns to knowledge graph |
+
+### What Makes CAIRN Different
+
+1. **Not a framework** — Wraps any agent SDK (LangGraph, Olas, AgentKit)
+2. **Escrow-enforced** — Agents can't get paid without completing the protocol
+3. **Automatic recovery** — No human intervention needed for fallback assignment
+4. **Network effects** — Every failure teaches every future agent
+
+### Repository Structure
+
+```
+cairn-protocol/
+├── contracts/          # Solidity smart contracts (Foundry)
+│   ├── src/           # Core contracts (CairnCore, RecoveryRouter, FallbackPool)
+│   └── test/          # 302 tests, 98.95% coverage
+├── sdk/               # Python SDK (CairnClient, CairnAgent, CheckpointStore)
+├── frontend/          # Next.js 14 dashboard
+├── pipeline/          # Off-chain event listener
+├── subgraph/          # The Graph indexer
+├── PRDs/              # Product requirements documents
+└── docs/              # Technical documentation
+```
 
 ---
 

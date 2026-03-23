@@ -101,14 +101,14 @@ export default function ExplorerPage() {
     <div className="container py-8">
       {/* Page Header with Spotlight */}
       <div className="relative mb-8 p-6 rounded-2xl bg-black/[0.96] border border-slate-800 overflow-hidden">
-        <Spotlight className="-top-40 left-0 md:left-20 md:-top-20" fill="rgba(217, 119, 6, 0.12)" />
+        <Spotlight className="-top-40 left-0 md:left-20 md:-top-20" fill="rgba(6, 182, 212, 0.12)" />
         <div className="relative z-10">
           <h1 className="text-3xl font-bold mb-2 text-white">Task Explorer</h1>
           <p className="text-slate-400">
             Monitor live tasks and interact with the CAIRN Protocol on Base Sepolia
           </p>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
       </div>
 
       {/* Stats Grid */}
@@ -123,9 +123,9 @@ export default function ExplorerPage() {
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:border-amber-500/50 transition-colors" onClick={() => setStateFilter(TaskState.RUNNING)}>
+        <Card className="cursor-pointer hover:border-cyan-500/50 transition-colors" onClick={() => setStateFilter(TaskState.RUNNING)}>
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-amber-400 mb-1">
+            <div className="flex items-center gap-2 text-cyan-400 mb-1">
               <Activity className="h-4 w-4 animate-pulse" />
               <span className="text-xs">Running</span>
             </div>
@@ -133,9 +133,9 @@ export default function ExplorerPage() {
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:border-amber-500/50 transition-colors" onClick={() => setStateFilter(TaskState.RECOVERING)}>
+        <Card className="cursor-pointer hover:border-teal-500/50 transition-colors" onClick={() => setStateFilter(TaskState.RECOVERING)}>
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-amber-400 mb-1">
+            <div className="flex items-center gap-2 text-teal-400 mb-1">
               <RefreshCw className="h-4 w-4" />
               <span className="text-xs">Recovering</span>
             </div>
@@ -214,7 +214,7 @@ export default function ExplorerPage() {
 
           {/* Protocol info */}
           <Card className="relative overflow-hidden">
-            <BorderBeam size={100} duration={12} colorFrom="#d97706" colorTo="#f59e0b" />
+            <BorderBeam size={100} duration={12} colorFrom="#06b6d4" colorTo="#14b8a6" />
             <CardHeader>
               <CardTitle className="text-lg">Protocol Info</CardTitle>
             </CardHeader>
@@ -246,7 +246,7 @@ export default function ExplorerPage() {
                   href={`https://sepolia.basescan.org/address/${CAIRN_CONTRACT_ADDRESS}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-amber-400 hover:underline text-xs"
+                  className="text-cyan-400 hover:underline text-xs"
                 >
                   View on Basescan →
                 </a>
@@ -265,7 +265,7 @@ export default function ExplorerPage() {
                 <span><strong>IDLE</strong> → Task created, not started</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
                 <span><strong>RUNNING</strong> → Agent actively executing</span>
               </div>
               <div className="flex items-center gap-2">
@@ -273,15 +273,15 @@ export default function ExplorerPage() {
                 <span><strong>FAILED</strong> → Heartbeat missed</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <span className="w-2 h-2 rounded-full bg-teal-500" />
                 <span><strong>RECOVERING</strong> → Fallback agent active</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-stone-500" />
+                <span className="w-2 h-2 rounded-full bg-slate-500" />
                 <span><strong>DISPUTED</strong> → Arbiter reviewing</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-stone-400" />
+                <span className="w-2 h-2 rounded-full bg-slate-400" />
                 <span><strong>RESOLVED</strong> → Settled & complete</span>
               </div>
             </CardContent>

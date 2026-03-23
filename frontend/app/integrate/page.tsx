@@ -206,11 +206,6 @@ export default function IntegratePage() {
                 </p>
               </div>
             </div>
-            <div className="text-center pt-2">
-              <p className="text-xs text-muted-foreground">
-                Following the <a href="https://synthesis.md" target="_blank" rel="noopener" className="text-amber-400 hover:underline">synthesis.md</a> pattern for agent-discoverable protocols
-              </p>
-            </div>
           </CardContent>
         </Card>
       </section>
