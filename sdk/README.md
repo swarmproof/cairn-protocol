@@ -191,6 +191,8 @@ agent.add_observer(MyObserver())
 | `PRIVATE_KEY` | Wallet private key | Yes (for writes) |
 | `PINATA_JWT` | Pinata API JWT | Yes |
 
+> ⚠️ **Security Warning**: Never commit private keys to version control. Use environment variables or a secure secrets manager. The `PRIVATE_KEY` grants full control over the associated wallet. For production, consider using hardware wallets, multi-sig, or key management services (e.g., AWS KMS, HashiCorp Vault).
+
 ## Error Handling
 
 ```python
