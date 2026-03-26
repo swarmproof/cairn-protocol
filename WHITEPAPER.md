@@ -32,7 +32,7 @@ An operator initiates a task with a budget, deadline, and task type. Before the 
 
 ### 1.1 The Broken World
 
-The Ethereum agentic economy is generating real economic activity — $450M+ in AGDP, 45k+ active agents, 100M+ monthly transactions. But every agent is operationally isolated.
+The Ethereum agentic economy is generating real economic activity — $479M+ in aGDP (as of March 2026, per Olas network metrics), 45k+ active agents, 100M+ monthly transactions. But every agent is operationally isolated.
 
 When an agent fails mid-task — because an API rate-limits at 2am UTC, a budget is exceeded, a context window overflows, or a process crashes — **nothing standard happens**. The escrow sits in an ambiguous state. The human operator may or may not find out. Another agent does not automatically take over. The work is lost.
 

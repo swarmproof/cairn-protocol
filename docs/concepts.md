@@ -66,14 +66,15 @@ recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) +
 ```
 
 Where:
-- `failure_class_weight`: Liveness = 0.9 | Resource = 0.5 | Logic = 0.1
+- `failure_class_weight`: LIVENESS = 0.9 | RESOURCE = 0.5 | EXECUTION = 0.1
 - `budget_remaining_pct`: (budget_cap - cost_accrued) / budget_cap
 - `deadline_remaining_pct`: (deadline - current_block) / (deadline - start_block)
 
-Routing:
-- `score ≥ 0.6` → RECOVERING
-- `0.3 ≤ score < 0.6` → PARTIAL (attempt recovery with reduced budget)
-- `score < 0.3` → DISPUTED
+**Routing (v1 Implementation):**
+- `score ≥ 0.3` → **RECOVERING** (fallback agent assigned)
+- `score < 0.3` → **DISPUTED** (requires arbiter resolution)
+
+> **Note:** The `recoveryThreshold` constant is set to `0.3e18` (30%) in CairnCore.sol. Future versions may implement a PARTIAL state (0.3–0.6 range) for graduated recovery attempts.
 
 ### Escrow Split Rule
 
@@ -105,13 +106,29 @@ CAIRN applies this to agents. Every failure leaves a cairn — an execution reco
 
 CAIRN classifies failures by **recoverability**, not by symptom. Prior research identifies 14+ failure modes in multi-agent systems but most taxonomies describe surface symptoms ("step repetition") without prescribing what to do next. CAIRN's classification directly determines protocol behavior.
 
-### Three Classes
+### Three Classes (Spec Level)
 
-| Class | Failure Types | Recovery Score Weight |
-|-------|---------------|----------------------|
-| **LIVENESS** (agent stopped) | Heartbeat missed, Process crash, Network partition, Infrastructure timeout | 0.9 (HIGH) |
-| **RESOURCE** (agent exhausted) | Budget cap hit, Deadline exceeded, API rate limit, Context window overflow | 0.5 (MEDIUM) |
-| **LOGIC** (agent reasoning) | Step repetition loop, Wrong tool selected, Hallucinated output, Spec misalignment | 0.1 (LOW) |
+CAIRN's protocol-level taxonomy uses **three failure classes** for recovery scoring:
+
+| Class | Recovery Score Weight | Description |
+|-------|----------------------|-------------|
+| **LIVENESS** (agent stopped) | 0.9 (HIGH) | Agent stopped responding — highly recoverable |
+| **RESOURCE** (agent exhausted) | 0.5 (MEDIUM) | Budget/deadline/external limits hit — partially recoverable |
+| **EXECUTION** (agent reasoning) | 0.1 (LOW) | Invalid output or logic error — rarely recoverable |
+
+### Five Types (Contract Level)
+
+The `RecoveryRouter` contract implements five specific **failure types** that map to the three classes:
+
+| Failure Type | Maps To Class | Trigger |
+|--------------|---------------|---------|
+| `HEARTBEAT_MISS` | LIVENESS | Agent missed liveness signal deadline |
+| `NETWORK_PARTITION` | LIVENESS | Agent disconnected from network |
+| `RATE_LIMIT` | RESOURCE | External API rate limit exceeded |
+| `GAS_EXHAUSTED` | RESOURCE | Budget depleted during execution |
+| `VALIDATION_FAILED` | EXECUTION | Output failed schema validation |
+
+> **Note:** The FailureClass enum also includes `DEADLINE` for deadline-exceeded scenarios, which maps to RESOURCE behavior.
 
 ### Why Recoverability, Not Symptom
 
@@ -155,14 +172,14 @@ Six states. Every transition is deterministic. No human is required to trigger a
                     fault    │                        │ complete
                   detected   │                        │
                              ▼                        │
-                        ┌─────────┐   score≥0.6  ┌───┴──────┐
+                        ┌─────────┐   score≥0.3  ┌───┴──────┐
                         │         │ ────────────► │          │
                         │ FAILED  │               │RECOVERING│
                         │         │ ◄──────────── │          │
                         └────┬────┘  fallback     └──────────┘
                              │       fails
                       score  │
-                      <0.6   │
+                      <0.3   │
                              ▼
                         ┌──────────┐  arbiter  ┌──────────┐
                         │          │ ─────────► │          │
@@ -204,10 +221,10 @@ Six states. Every transition is deterministic. No human is required to trigger a
 | Entry trigger | Any RUNNING exit condition fires |
 | Who can enter | From RUNNING only |
 | Actions | Classify failure type. Compute recovery score. Write Failure Record to IPFS. Store CID on-chain (emit `TaskFailed(taskId, recordCID, recoveryScore)`). Hold escrow. |
-| Exit — recoverable | Score ≥ 0.6 → RECOVERING |
-| Exit — unrecoverable | Score < 0.6 → DISPUTED |
+| Exit — recoverable | Score ≥ 0.3 → RECOVERING |
+| Exit — unrecoverable | Score < 0.3 → DISPUTED |
 
-**FAILED is not terminal.** It is a routing state. The only actions that happen here are classification, scoring, and record writing. The routing to RECOVERING or DISPUTED happens automatically based on the score.
+**FAILED is not terminal.** It is a routing state. The only actions that happen here are classification, scoring, and record writing. The routing to RECOVERING or DISPUTED happens automatically based on the score. The threshold is defined by `recoveryThreshold` (30% in v1).
 
 ### RECOVERING
 
@@ -284,9 +301,10 @@ Six states. Every transition is deterministic. No human is required to trigger a
 
 | Score Range | Display | Routing Outcome |
 |-------------|---------|-----------------|
-| ≥ 0.6 | High (60-100%) | Automatic recovery via fallback agent |
-| 0.3 – 0.6 | Partial (30-60%) | Recovery attempted with reduced scope |
+| ≥ 0.3 | Recoverable (30-100%) | Automatic recovery via fallback agent |
 | < 0.3 | Low (0-30%) | Routed to dispute resolution |
+
+> **v1 Implementation:** Uses a single threshold at 30%. Future versions may introduce graduated thresholds for more nuanced recovery decisions.
 
 ---
 
