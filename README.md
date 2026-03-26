@@ -24,9 +24,9 @@
 
 <br/>
 
-> **One line:** CAIRN turns every agent failure into a lesson every other agent inherits — enforced by escrow, validated by attestation, owned by no one.
+> CAIRN turns every agent failure into a lesson every other agent inherits — enforced by escrow, validated by attestation, owned by no one.
 >
-> **Three words:** Agents learn together.
+> *Agents learn together.*
 
 <br/>
 
@@ -534,17 +534,35 @@ cairn-protocol/
 
 ## License
 
-This project uses a **multi-license structure**. See [LICENSE](./LICENSE) for details.
+See [LICENSE](./LICENSE) for details.
 
-| Component | License | Rationale |
-|-----------|---------|-----------|
-| [ERC-CAIRN.md](./ERC-CAIRN.md) | CC0-1.0 | ERC standards must be unencumbered |
-| [WHITEPAPER.md](./WHITEPAPER.md) | All Rights Reserved | IP protection with citation rights |
-| [contracts/](./contracts/) | GPL-3.0-or-later | Copyleft — forks must remain open source |
-| [sdk/](./sdk/), [cli/](./cli/) | Apache-2.0 | Permissive + patent grant for integrators |
-| [subgraph/](./subgraph/) | MIT | Simplest, no friction |
-| [frontend/](./frontend/) | AGPL-3.0-or-later | SaaS providers must share modifications |
-| [docs/](./docs/) | CC BY 4.0 | Freely shareable with attribution |
+| Component | License |
+|-----------|---------|
+| [ERC-CAIRN.md](./ERC-CAIRN.md) | CC0-1.0 |
+| [WHITEPAPER.md](./WHITEPAPER.md) | All Rights Reserved |
+| [contracts/](./contracts/) | GPL-3.0-or-later |
+| [sdk/](./sdk/), [cli/](./cli/) | Apache-2.0 |
+| [subgraph/](./subgraph/) | MIT |
+| [frontend/](./frontend/) | AGPL-3.0-or-later |
+| [docs/](./docs/) | CC BY 4.0 |
+
+---
+
+## Contributing
+
+Contributions are welcome! Whether it's bug fixes, new features, documentation improvements, or ideas — we'd love your help.
+
+**How to contribute:**
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes following [conventional commits](https://www.conventionalcommits.org/)
+4. Push to your branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+**By contributing, you agree to license your contributions under the same license as the component you're modifying** (see License table above).
+
+For questions or discussions, open an issue or reach out directly.
 
 ---
 
