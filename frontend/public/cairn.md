@@ -23,14 +23,20 @@ pip install cairn-sdk
 ```
 
 ```python
-from cairn import CairnAgent, CheckpointStore
+from sdk.client import CairnClient
+from sdk.agent import CairnAgent
+from sdk.checkpoint import CheckpointStore
 
-agent = CairnAgent(
+# Initialize
+client = CairnClient(
     rpc_url="https://sepolia.base.org",
     contract_address="0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640",
     private_key="YOUR_PRIVATE_KEY",
-    checkpoint_store=CheckpointStore(pinata_jwt="YOUR_PINATA_JWT")
 )
+ipfs = CheckpointStore(pinata_jwt="YOUR_PINATA_JWT")
+
+# Wrap your agent
+cairn_agent = CairnAgent(your_agent, client, ipfs)
 ```
 
 ---
@@ -39,59 +45,57 @@ agent = CairnAgent(
 
 ### 1. Accept a Task
 
-When assigned a task, call `start_task` to begin execution:
+The CairnAgent wraps your existing agent and handles checkpointing automatically:
 
 ```python
-async with agent.start_task(task_id) as ctx:
-    # Your execution logic here
-    await ctx.heartbeat()  # Signal liveness every 30s
-    await ctx.checkpoint({"step": 1, "data": result})  # Save progress
+class MyAgent:
+    async def execute_subtask(self, subtask: dict, context: dict) -> dict:
+        # Your execution logic here
+        return {"result": "done"}
+
+cairn_agent = CairnAgent(MyAgent(), client, ipfs)
+
+async with cairn_agent:
+    result = await cairn_agent.execute(task_id, subtasks)
+    await client.complete_task(task_id)
 ```
 
-### 2. Send Heartbeats
+### 2. Heartbeats (Automatic)
 
-Heartbeats prove you're alive. Miss 3 consecutive heartbeats = LIVENESS failure.
+The SDK sends heartbeats automatically in a background task. If `2 × heartbeatInterval` passes without a heartbeat, the task becomes **stale** and anyone can trigger failure detection.
 
 ```python
-# Automatic (recommended)
-async with agent.start_task(task_id, auto_heartbeat=True):
-    pass  # Heartbeats sent automatically every 30s
+# Heartbeats are automatic when using CairnAgent.execute()
+# No manual heartbeat calls needed!
 
-# Manual
-await agent.send_heartbeat(task_id)
+# If you need manual control:
+await client.heartbeat(task_id)
 ```
 
-### 3. Write Checkpoints
+### 3. Checkpoints (Automatic)
 
-Checkpoints save your progress to IPFS. If you fail, a fallback agent resumes from your last checkpoint.
+Checkpoints are committed automatically after each `execute_subtask()` call. If you fail, a fallback agent resumes from your last checkpoint.
 
 ```python
-# After completing a subtask
-cid = await agent.write_checkpoint(
-    task_id=task_id,
-    checkpoint_index=1,
-    data={
-        "step": "price_fetch",
-        "result": {"ETH": 3200.50, "BTC": 65000.00},
-        "timestamp": 1711234567
-    }
-)
-# Returns IPFS CID: "QmYx..."
+# Checkpoints happen automatically in CairnAgent.execute()
+# Each subtask result is pinned to IPFS and committed to the contract
+
+# For direct control via client:
+await client.commit_checkpoint(task_id, ipfs_cid)
 ```
 
 ### 4. Complete or Fail
 
 ```python
-# On success
-await agent.complete_task(task_id, result_cid="QmFinalResult...")
+# On success - call complete_task on contract
+await client.complete_task(task_id)
 
-# On failure (automatic if exception thrown)
-await agent.report_failure(
-    task_id=task_id,
-    failure_class="RESOURCE",  # LIVENESS | RESOURCE | EXECUTION | DEADLINE
-    details={"error": "API rate limited", "http_status": 429}
-)
+# On failure - the SDK handles graceful cleanup automatically
+# Failures are detected permissionlessly: if heartbeats stop,
+# anyone can call detectFailure() on the contract after 2x interval
 ```
+
+> **Note:** Agents don't "report" failure - the protocol detects it when heartbeats stop. This enables trustless failure detection without requiring the failing agent to cooperate.
 
 ---
 
@@ -103,20 +107,22 @@ If not using the SDK, call the contract directly:
 
 ```solidity
 function submitTask(
-    address primaryAgent,
     bytes32 taskType,
-    uint256 deadline,
-    string calldata metadataCID
+    bytes32 specHash,
+    address primaryAgent,
+    uint256 heartbeatInterval,
+    uint256 deadline
 ) external payable returns (bytes32 taskId);
 ```
 
 ```bash
 cast send 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
-  "submitTask(address,bytes32,uint256,string)" \
-  0xYOUR_AGENT_ADDRESS \
+  "submitTask(bytes32,bytes32,address,uint256,uint256)" \
   $(cast --format-bytes32 "defi.rebalance") \
+  $(cast keccak "QmTaskSpec...") \
+  0xYOUR_AGENT_ADDRESS \
+  60 \
   $(($(date +%s) + 3600)) \
-  "QmTaskMetadata..." \
   --value 0.01ether \
   --private-key $PRIVATE_KEY \
   --rpc-url https://sepolia.base.org
@@ -136,43 +142,72 @@ cast send 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
   --rpc-url https://sepolia.base.org
 ```
 
-### Write Checkpoint
+### Commit Checkpoint Batch (Merkle)
+
+CairnCore uses Merkle-batched checkpoints for gas efficiency. Multiple checkpoints are committed with a single Merkle root.
 
 ```solidity
-function checkpoint(
+function commitCheckpointBatch(
     bytes32 taskId,
-    uint256 index,
-    string calldata cid
+    uint256 count,
+    bytes32 merkleRoot,
+    bytes32 latestCID
 ) external;
 ```
 
 ```bash
+# Build Merkle tree off-chain from checkpoint CIDs, then commit root
 cast send 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
-  "checkpoint(bytes32,uint256,string)" \
+  "commitCheckpointBatch(bytes32,uint256,bytes32,bytes32)" \
   0xYOUR_TASK_ID \
-  1 \
-  "QmCheckpointCID..." \
+  5 \
+  0xMERKLE_ROOT \
+  0xLATEST_CID_HASH \
   --private-key $PRIVATE_KEY \
   --rpc-url https://sepolia.base.org
 ```
 
+> **Note:** The SDK handles Merkle tree construction automatically. Use `ctx.checkpoint()` in Python.
+
 ### Complete Task
 
 ```solidity
-function completeTask(bytes32 taskId, string calldata resultCID) external;
+function completeTask(bytes32 taskId) external;
 ```
 
-### Report Failure
+```bash
+cast send 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
+  "completeTask(bytes32)" \
+  0xYOUR_TASK_ID \
+  --private-key $PRIVATE_KEY \
+  --rpc-url https://sepolia.base.org
+```
+
+### Detect Failure (Permissionless)
+
+Anyone can call `detectFailure` on a stale task. This enables permissionless failure detection without trusted keepers.
 
 ```solidity
-function reportFailure(
-    bytes32 taskId,
-    uint8 failureClass,
-    string calldata detailsCID
-) external;
+function detectFailure(bytes32 taskId) external;
+function isStale(bytes32 taskId) public view returns (bool);
 ```
 
-Failure classes:
+```bash
+# Check if task is stale (2x heartbeat interval passed)
+cast call 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
+  "isStale(bytes32)" \
+  0xYOUR_TASK_ID \
+  --rpc-url https://sepolia.base.org
+
+# Trigger failure detection (anyone can call)
+cast send 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
+  "detectFailure(bytes32)" \
+  0xYOUR_TASK_ID \
+  --private-key $PRIVATE_KEY \
+  --rpc-url https://sepolia.base.org
+```
+
+Failure classes (set by RecoveryRouter):
 - `0` = LIVENESS (heartbeat missed, agent crashed)
 - `1` = RESOURCE (API unavailable, rate limited, insufficient funds)
 - `2` = EXECUTION (logic error, invalid input)
@@ -227,13 +262,13 @@ cast call 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
   --rpc-url https://sepolia.base.org
 ```
 
-Task states:
-- `0` = PENDING (submitted, not started)
+Task states (CairnCore 6-state machine):
+- `0` = IDLE (submitted, awaiting start)
 - `1` = RUNNING (agent executing)
-- `2` = RECOVERING (fallback agent assigned)
-- `3` = COMPLETED (success)
-- `4` = FAILED (unrecoverable)
-- `5` = DISPUTED (in arbitration)
+- `2` = FAILED (failure detected, routing)
+- `3` = RECOVERING (fallback agent assigned)
+- `4` = DISPUTED (requires arbiter resolution)
+- `5` = RESOLVED (completed, escrow settled)
 
 ---
 
@@ -278,10 +313,11 @@ cast send 0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0 \
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | Min Escrow | 0.001 ETH | Minimum task budget |
-| Protocol Fee | 0.5% | Fee on settlements |
-| Heartbeat Interval | 30 seconds | Max time between heartbeats |
-| Heartbeat Misses | 3 | Misses before LIVENESS failure |
-| Recovery Window | 1 hour | Time for fallback to complete |
+| Protocol Fee | 0.5% (50 bps) | Fee on settlements |
+| Min Heartbeat Interval | 30 seconds | Minimum time between heartbeats |
+| Staleness Threshold | 2× interval | Task becomes stale after 2× heartbeat interval |
+| Recovery Threshold | 30% | Recovery score below this → DISPUTED |
+| Dispute Timeout | 7 days | Time for arbiter to rule before auto-refund |
 
 ---
 
@@ -318,38 +354,64 @@ event FallbackAssigned(bytes32 indexed taskId, address indexed fallbackAgent);
 
 ```python
 import asyncio
-from cairn import CairnAgent, CheckpointStore, BonfiresClient
+import os
+from sdk.client import CairnClient
+from sdk.agent import CairnAgent
+from sdk.checkpoint import CheckpointStore
+
+class RebalanceAgent:
+    """Agent that executes DeFi rebalancing subtasks."""
+
+    async def execute_subtask(self, subtask: dict, context: dict) -> dict:
+        if subtask["type"] == "fetch_prices":
+            return await self.fetch_prices()
+        elif subtask["type"] == "calculate_allocation":
+            prices = context.get("subtask_0_result", {})
+            return self.calculate_allocation(prices)
+        elif subtask["type"] == "execute_swap":
+            return await self.execute_swap(subtask["swap"])
+        return {}
+
+    async def fetch_prices(self) -> dict:
+        # Your price fetching logic
+        return {"ETH": 3200.50, "BTC": 65000.00}
+
+    def calculate_allocation(self, prices: dict) -> dict:
+        # Your allocation logic
+        return {"swaps": [{"from": "ETH", "to": "BTC", "amount": 0.5}]}
+
+    async def execute_swap(self, swap: dict) -> dict:
+        # Your swap execution logic
+        return {"tx_hash": "0x...", "status": "success"}
+
 
 async def run_rebalance_task(task_id: str):
-    # Initialize
-    agent = CairnAgent(
+    # Initialize client and stores
+    client = CairnClient(
         rpc_url="https://sepolia.base.org",
         contract_address="0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640",
         private_key=os.environ["AGENT_PRIVATE_KEY"],
-        checkpoint_store=CheckpointStore(pinata_jwt=os.environ["PINATA_JWT"])
     )
+    ipfs = CheckpointStore(pinata_jwt=os.environ["PINATA_JWT"])
 
-    # Query past failures for this task type
-    bonfires = BonfiresClient(api_key=os.environ["BONFIRES_API_KEY"])
-    patterns = await bonfires.delve("defi.rebalance failure patterns")
+    # Define subtasks
+    subtasks = [
+        {"type": "fetch_prices"},
+        {"type": "calculate_allocation"},
+        {"type": "execute_swap", "swap": {"from": "ETH", "to": "BTC", "amount": 0.5}},
+    ]
 
-    # Execute with CAIRN protection
-    async with agent.start_task(task_id, auto_heartbeat=True) as ctx:
-        # Step 1: Fetch prices
-        prices = await fetch_prices()
-        await ctx.checkpoint({"step": "prices", "data": prices})
+    # Wrap your agent with CAIRN protection
+    my_agent = RebalanceAgent()
+    cairn_agent = CairnAgent(my_agent, client, ipfs)
 
-        # Step 2: Calculate rebalance
-        allocation = calculate_allocation(prices)
-        await ctx.checkpoint({"step": "allocation", "data": allocation})
+    # Execute with automatic heartbeat and checkpointing
+    async with cairn_agent:
+        result = await cairn_agent.execute(task_id, subtasks)
+        print(f"Completed {result['completed']}/{result['total']} subtasks")
 
-        # Step 3: Execute swaps
-        for swap in allocation["swaps"]:
-            result = await execute_swap(swap)
-            await ctx.checkpoint({"step": f"swap_{swap['id']}", "result": result})
-
-        # Complete
-        await ctx.complete({"final_allocation": allocation})
+        # Complete the task on contract
+        await client.complete_task(task_id)
 
 if __name__ == "__main__":
     asyncio.run(run_rebalance_task(os.environ["TASK_ID"]))
