@@ -4,6 +4,13 @@
 
 ### Version 1.0
 
+> **Copyright 2026 Maroua BOUDOUKHA. All rights reserved.**
+>
+> This document may be cited for academic and research purposes with proper attribution:
+> BOUDOUKHA, M. (2026). *CAIRN Protocol Whitepaper: Agent Failure and Recovery Protocol*. Version 1.0.
+>
+> Redistribution or commercial use requires written permission from the author.
+
 ---
 
 ## Abstract
@@ -405,10 +412,11 @@ Where:
 - `budget_remaining_pct`: (budget_cap - cost_accrued) / budget_cap
 - `deadline_remaining_pct`: (deadline - current_block) / (deadline - start_block)
 
-Routing:
-- `score ≥ 0.6` → RECOVERING
-- `0.3 ≤ score < 0.6` → PARTIAL (attempt recovery with reduced budget)
-- `score < 0.3` → DISPUTED
+Routing (v1 Implementation):
+- `score ≥ 0.3` → RECOVERING (automatic fallback assignment)
+- `score < 0.3` → DISPUTED (requires arbiter resolution)
+
+> **Note:** Future versions may implement a PARTIAL state (0.3–0.6 range) for graduated recovery attempts.
 
 ---
 
@@ -424,7 +432,7 @@ Routing:
 | Arbiter min stake | 15% | 5-50% | Stake as % of max ruleable dispute |
 | Arbiter fee | 3% | 1-10% | Fee as % of dispute value |
 | Arbiter timeout | 7 days | 1-30 days | Time for arbiter to rule |
-| Recovery threshold | 0.6 | 0.3-0.9 | Score threshold for RECOVERING |
+| Recovery threshold | 0.3 | 0.1-0.9 | Score threshold for RECOVERING (v1) |
 
 ### 7.2 Governance Model
 

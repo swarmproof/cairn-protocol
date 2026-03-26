@@ -7,7 +7,7 @@ name = "cairn-sdk"
 version = "0.1.0"
 description = "Python SDK for CAIRN Protocol - Agent Failure and Recovery"
 readme = "README.md"
-license = { text = "BSL-1.1" }
+license = { text = "Apache-2.0" }
 requires-python = ">=3.10"
 authors = [
     { name = "CAIRN Protocol", email = "cairn@example.com" }

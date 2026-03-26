@@ -8,6 +8,7 @@ type: Standards Track
 category: ERC
 created: 2025-03-16
 requires: 8183, 8004, 7710
+license: CC0-1.0
 ---
 
 ## Abstract
@@ -156,14 +157,14 @@ Six states. Every transition is deterministic. No human is required to trigger a
                     fault    │                        │ complete
                   detected   │                        │
                              ▼                        │
-                        ┌─────────┐   score≥0.6  ┌───┴──────┐
+                        ┌─────────┐   score≥0.3  ┌───┴──────┐
                         │         │ ────────────► │          │
                         │ FAILED  │               │RECOVERING│
                         │         │ ◄──────────── │          │
                         └────┬────┘  fallback     └──────────┘
                              │       fails
                       score  │
-                      <0.6   │
+                      <0.3   │
                              ▼
                         ┌──────────┐  arbiter  ┌──────────┐
                         │          │ ─────────► │          │
@@ -199,14 +200,14 @@ Six states. Every transition is deterministic. No human is required to trigger a
 | Entry trigger | Any RUNNING exit condition fires |
 | Who can enter | From RUNNING only |
 | Actions | Classify failure type. Compute recovery score. Write Failure Record to IPFS. Store CID on-chain. Hold escrow. |
-| Exit — recoverable | Score ≥ 0.6 → RECOVERING |
-| Exit — unrecoverable | Score < 0.6 → DISPUTED |
+| Exit — recoverable | Score ≥ 0.3 → RECOVERING |
+| Exit — unrecoverable | Score < 0.3 → DISPUTED |
 
 #### RECOVERING State
 
 | Attribute | Value |
 |---|---|
-| Entry trigger | Recovery score ≥ 0.6 from FAILED |
+| Entry trigger | Recovery score ≥ 0.3 from FAILED |
 | Who can enter | From FAILED only |
 | Preconditions | Budget headroom. Deadline headroom. Fallback agent available. |
 | Actions | Select fallback agent. Transfer task state (checkpoint CIDs, remaining budget, permissions). Fallback resumes from last checkpoint. |
@@ -226,7 +227,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 
 | Attribute | Value |
 |---|---|
-| Entry trigger | Score < 0.6, no fallback, or fallback failed |
+| Entry trigger | Score < 0.3, no fallback, or fallback failed |
 | Who can enter | From FAILED only |
 | Actions | Hold escrow. Write negative reputation. Expose Failure Record. Start arbiter timeout. |
 | Exit — arbiter rules | Arbiter submits ruling → RESOLVED |
@@ -257,7 +258,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 | Action | Actor | Description |
 |---|---|---|
 | A7 | Protocol | Classify failure. Compute recovery score. Write Failure Record. |
-| A8 | Protocol | Route: score ≥ 0.6 → RECOVERING; score < 0.6 → DISPUTED. |
+| A8 | Protocol | Route: score ≥ 0.3 → RECOVERING; score < 0.3 → DISPUTED. |
 
 #### Phase 4: Recovering (A9-A11)
 
@@ -558,7 +559,7 @@ When: Agent misses heartbeat by 1 block
 And: Anyone calls checkLiveness(taskId)
 Then: State transitions RUNNING → FAILED
 And: Recovery score = 0.9 × 0.5 + budget_pct × 0.3 + deadline_pct × 0.2
-And: If score ≥ 0.6: State → RECOVERING
+And: If score ≥ 0.3: State → RECOVERING
 And: Fallback assigned, resumes from checkpoint 3
 ```
 
@@ -690,4 +691,4 @@ See [contracts documentation](./docs/contracts.md) for full implementation detai
 
 ## Copyright
 
-Copyright (c) 2025 Maroua BOUDOUKHA. Licensed under [BSL 1.1](./LICENSE).
+Copyright (c) 2025 Maroua BOUDOUKHA. Licensed under [MPL-2.0](./LICENSE).
