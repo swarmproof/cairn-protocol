@@ -4,6 +4,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/Status-Live%20on%20Base%20Sepolia-00CED1?style=flat-square&logo=ethereum&logoColor=white"/>
+  <img src="https://github.com/MarouaBoud/cairn-protocol/actions/workflows/tests.yml/badge.svg" alt="Tests"/>
   <img src="https://img.shields.io/badge/Contracts-6%20Deployed-008B8B?style=flat-square"/>
   <img src="https://img.shields.io/badge/Tests-315%20%7C%2098.95%25%20coverage-00CED1?style=flat-square"/>
   <img src="https://img.shields.io/badge/Chain%20ID-84532-0052FF?style=flat-square&logo=coinbase&logoColor=white"/>
@@ -11,16 +12,16 @@
 </p>
 
 <p>
-  <a href="https://cairn-protocol-iona-78423aa1.vercel.app"><img src="https://img.shields.io/badge/🌐%20Live%20Demo-Frontend-00CED1?style=flat-square"/></a>
-  <a href="./WHITEPAPER.md"><img src="https://img.shields.io/badge/📄%20Whitepaper-Read-008B8B?style=flat-square"/></a>
-  <a href="./ERC-CAIRN.md"><img src="https://img.shields.io/badge/📋%20ERC%20Spec-Draft-20B2AA?style=flat-square"/></a>
-  <a href="./docs/architecture.md"><img src="https://img.shields.io/badge/🏗️%20Architecture-Docs-008B8B?style=flat-square"/></a>
-  <a href="https://thegraph.com/studio/subgraph/cairn"><img src="https://img.shields.io/badge/📊%20Subgraph-The%20Graph-6748fe?style=flat-square"/></a>
+  <a href="https://cairn-protocol-iona-78423aa1.vercel.app"><img src="https://img.shields.io/badge/Live%20Demo-Frontend-00CED1?style=flat-square"/></a>
+  <a href="./WHITEPAPER.md"><img src="https://img.shields.io/badge/Whitepaper-Read-008B8B?style=flat-square"/></a>
+  <a href="./ERC-CAIRN.md"><img src="https://img.shields.io/badge/ERC%20Spec-Draft-20B2AA?style=flat-square"/></a>
+  <a href="./docs/architecture.md"><img src="https://img.shields.io/badge/Architecture-Docs-008B8B?style=flat-square"/></a>
+  <a href="https://thegraph.com/studio/subgraph/cairn"><img src="https://img.shields.io/badge/Subgraph-The%20Graph-6748fe?style=flat-square"/></a>
 </p>
 
 <br/>
 
-> ⚠️ **Currently deployed on Base Sepolia Testnet** — This is a hackathon MVP. Mainnet deployment pending security audit.
+> ⚠️ **Testnet only.** Deployed on Base Sepolia (Chain ID: 84532). Mainnet deployment pending security audit.
 
 <br/>
 
@@ -442,7 +443,7 @@ These endpoints return markdown that AI agents can parse to integrate CAIRN into
 | Subgraph | ✅ Deployed | The Graph Studio indexing |
 | Upgradeable | ✅ Complete | UUPS proxy pattern (OpenZeppelin 5.x) |
 | Frontend | ✅ Deployed | Next.js 14, wagmi |
-| PRD-07 Optimization | ✅ Complete | Merkle checkpoint batching (see `forge test --gas-report`) |
+| PRD-07 Optimization | ✅ Complete | Merkle checkpoint batching — significant gas reduction |
 
 See [`PRDs/README.md`](./PRDs/README.md) for full roadmap.
 
@@ -493,7 +494,9 @@ For detailed integration guidance, see [Standards Documentation](./docs/standard
 
 ---
 
-## Hackathon Submission — Synthesis 2026
+<details>
+<summary><b>Hackathon Submission — Synthesis 2026</b></summary>
+<br/>
 
 **Tracks:** Protocol Labs: Agents With Receipts • Let the Agent Cook
 
@@ -550,6 +553,8 @@ cairn-protocol/
 ├── PRDs/              # Product requirements documents
 └── docs/              # Technical documentation
 ```
+
+</details>
 
 ---
 
