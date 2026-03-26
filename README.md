@@ -34,6 +34,13 @@
 
 ---
 
+**→ Evaluating the protocol?** [Whitepaper](./WHITEPAPER.md) → [ERC Spec](./ERC-CAIRN.md)
+**→ Integrating CAIRN?** [Quick Start](#quick-start) → [Integration Guide](./docs/integration.md)
+**→ Auditing contracts?** [Contracts](#deployed-contracts-base-sepolia) → [Security](./SECURITY.md)
+**→ Hackathon judges?** [Submission](#hackathon-submission--synthesis-2026) → [Live Demo](https://cairn-protocol-iona-78423aa1.vercel.app)
+
+---
+
 ## The Problem: Invisible Failures, Wasted Work
 
 **Agent workflows fail 80% of the time.** At 85% success per action, a 10-step workflow completes only ~20% of the time. When failures happen today:
@@ -187,7 +194,7 @@ Every task moves through exactly one of these states. No silent failures. No amb
                     │   ┌─────────┐                           │
                     │   │ FAILED  │                           │
                     │   └────┬────┘                           │
-                    │  score ≥ 0.3        score < 0.3         │
+                    │  score ≥ 0.6        score < 0.6         │
                     │        │                  │             │
                     │        ▼                  ▼             │
                     │  ┌───────────┐     ┌──────────┐         │
@@ -226,7 +233,7 @@ Every task moves through exactly one of these states. No silent failures. No amb
 recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) + (deadline_remaining_pct × 0.2)
 ```
 
-Routing: `score ≥ 0.3` → RECOVERING | `score < 0.3` → DISPUTED
+Routing: `score ≥ 0.6` → RECOVERING | `score < 0.6` → DISPUTED
 
 ---
 
@@ -262,7 +269,7 @@ Routing: `score ≥ 0.3` → RECOVERING | `score < 0.3` → DISPUTED
 
 **A7** · Protocol classifies failure type (LIVENESS / RESOURCE / LOGIC). Computes `recovery_score`. Writes Failure Record to IPFS. Emits `TaskFailed(taskId, recordCID, recoveryScore)`.
 
-**A8** · Routes: `score ≥ 0.3` → RECOVERING. `score < 0.3` → DISPUTED.
+**A8** · Routes: `score ≥ 0.6` → RECOVERING. `score < 0.6` → DISPUTED.
 
 </details>
 
@@ -435,7 +442,7 @@ These endpoints return markdown that AI agents can parse to integrate CAIRN into
 | Subgraph | ✅ Deployed | The Graph Studio indexing |
 | Upgradeable | ✅ Complete | UUPS proxy pattern (OpenZeppelin 5.x) |
 | Frontend | ✅ Deployed | Next.js 14, wagmi |
-| PRD-07 Optimization | ✅ Complete | Merkle checkpoint batching (89-99% gas savings) |
+| PRD-07 Optimization | ✅ Complete | Merkle checkpoint batching (see `forge test --gas-report`) |
 
 See [`PRDs/README.md`](./PRDs/README.md) for full roadmap.
 
@@ -495,9 +502,8 @@ For detailed integration guidance, see [Standards Documentation](./docs/standard
 | Artifact | Value |
 |----------|-------|
 | **Chain** | Base Sepolia (Chain ID: 84532) |
-| **CairnCore Contract** | [`0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`](https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640) |
-| **CairnTaskMVP Contract** | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) |
-| **Deployment Tx (CairnCore)** | [`0xeeee5fc6...`](https://sepolia.basescan.org/tx/0xeeee5fc6281d95e14b8362ba950407b83818b31ba04813489dd5a0120cea825b) |
+| **Contracts** | 6 deployed — see [Deployed Contracts](#deployed-contracts-base-sepolia) above |
+| **Deployment Tx** | [`0xeeee5fc6...`](https://sepolia.basescan.org/tx/0xeeee5fc6281d95e14b8362ba950407b83818b31ba04813489dd5a0120cea825b) |
 | **Test Coverage** | 98.95% (315 tests) |
 
 ### Agent Metadata
