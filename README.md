@@ -371,6 +371,22 @@ await agent.heartbeat(task.id)
 
 ---
 
+## AI Agent Skill Endpoint
+
+CAIRN exposes machine-readable endpoints for AI agents to fetch integration instructions:
+
+```bash
+# Quick integration guide (5-minute setup)
+curl -s https://cairn-protocol-iona-78423aa1.vercel.app/skill.md
+
+# Full protocol documentation
+curl -s https://cairn-protocol-iona-78423aa1.vercel.app/cairn.md
+```
+
+These endpoints return markdown that AI agents can parse to integrate CAIRN into their workflows automatically.
+
+---
+
 ## Documentation
 
 | Document | Description |
