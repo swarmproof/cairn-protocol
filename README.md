@@ -293,4 +293,14 @@ cairn-protocol/
 
 ## License
 
-[MPL 2.0](./LICENSE) — Mozilla Public License 2.0. Copyleft license that allows commercial use while requiring source disclosure for modifications to MPL-covered files.
+This project uses a **multi-license structure**. See [LICENSE](./LICENSE) for details.
+
+| Component | License |
+|-----------|---------|
+| ERC-CAIRN.md | CC0-1.0 |
+| WHITEPAPER.md | All Rights Reserved |
+| contracts/ | GPL-3.0-or-later |
+| sdk/, cli/ | Apache-2.0 |
+| subgraph/ | MIT |
+| frontend/ | AGPL-3.0-or-later |
+| docs/ | CC BY 4.0 |
