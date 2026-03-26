@@ -60,7 +60,7 @@ curl -X POST https://synthesis.md/api/projects \
   "repoURL": "https://github.com/MarouaBoud/cairn-protocol",
   "deployedURL": "https://cairn-protocol-iona-78423aa1.vercel.app",
   "trackUUIDs": ["PROTOCOL_LABS_UUID", "LET_AGENT_COOK_UUID"],
-  "conversationLog": "12 build sessions documented in .synthesis/CONVERSATION_LOG.md. Phases: Contract-Dev (Sessions 1-4, 302 tests, 98.95% coverage), SDK-Dev (Sessions 5-7, Python CairnClient/CairnAgent), Frontend-Dev (Sessions 8-10, Next.js 14 dashboard), Integration (Sessions 11-12, subgraph + polish). Key decisions: UUPS proxy pattern, CEI + ReentrancyGuard, Merkle checkpoint batching (89-99% gas savings), dual-write to IPFS. Blockers resolved: gas optimization via batching, real-time events via wagmi watches. Full chronological log: .synthesis/agent_log.json (70+ entries).",
+  "conversationLog": "12 build sessions documented in .synthesis/CONVERSATION_LOG.md. Phases: Contract-Dev (Sessions 1-4, 315 tests, 98.95% coverage), SDK-Dev (Sessions 5-7, Python CairnClient/CairnAgent), Frontend-Dev (Sessions 8-10, Next.js 14 dashboard), Integration (Sessions 11-12, subgraph + polish). Key decisions: UUPS proxy pattern, CEI + ReentrancyGuard, Merkle checkpoint batching (89-99% gas savings), dual-write to IPFS. Blockers resolved: gas optimization via batching, real-time events via wagmi watches. Full chronological log: .synthesis/agent_log.json (70+ entries).",
   "submissionMetadata": {
     "agentFramework": "anthropic-agents-sdk",
     "agentHarness": "claude-code",
@@ -76,7 +76,7 @@ curl -X POST https://synthesis.md/api/projects \
       "https://thegraph.com/docs"
     ],
     "helpfulSkills": [
-      {"name": "contract-dev", "reason": "Implemented 6-state machine, UUPS proxies, and 302 tests with 98.95% coverage"},
+      {"name": "contract-dev", "reason": "Implemented 6-state machine, UUPS proxies, and 315 tests with 98.95% coverage"},
       {"name": "security-engineer", "reason": "CEI pattern, ReentrancyGuard, custom errors, input validation on all public functions"}
     ],
     "intention": "continuing",

@@ -169,7 +169,7 @@ This is what makes CAIRN compound in value over time. The knowledge graph grows 
 |-----------|--------|-------|
 | PRD-00 Vision | ✅ Complete | Full protocol specification |
 | PRD-01 MVP | ✅ Complete | Hackathon submission |
-| Smart Contracts | ✅ Deployed | 302 tests, 98.95% coverage |
+| Smart Contracts | ✅ Deployed | 315 tests, 98.95% coverage |
 | Deployment | ✅ Live | Base Sepolia (6 contracts) |
 | SDK (Python) | ✅ Complete | CairnClient, CairnAgent, CheckpointStore, Observers |
 | CLI Tool | ✅ Complete | submit-task, heartbeat, checkpoint, monitor, recover |
@@ -189,7 +189,7 @@ See [`PRDs/README.md`](./PRDs/README.md) for full roadmap.
 | RecoveryRouter | [`0xE52703946cb44c12A6A38A41f638BA2D7197a84d`](https://sepolia.basescan.org/address/0xE52703946cb44c12A6A38A41f638BA2D7197a84d) | Failure classification, recovery scoring |
 | FallbackPool | [`0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0`](https://sepolia.basescan.org/address/0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0) | Agent registration, selection algorithm |
 | ArbiterRegistry | [`0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68`](https://sepolia.basescan.org/address/0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68) | Dispute resolution, appeals |
-| CairnTaskMVP | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) | Simplified MVP (4-state) |
+| CairnTaskMVP *(legacy)* | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) | Legacy MVP (4-state) — use CairnCore for production |
 
 ### Live Demo
 
@@ -237,7 +237,7 @@ For detailed integration guidance, see [Standards Documentation](./docs/standard
 | **CairnCore Contract** | [`0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`](https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640) |
 | **CairnTaskMVP Contract** | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) |
 | **Deployment Tx (CairnCore)** | [`0x...`](https://sepolia.basescan.org/tx/) — See contracts/deployments/ |
-| **Test Coverage** | 98.95% (302 tests) |
+| **Test Coverage** | 98.95% (315 tests) |
 
 ### Live Demo
 
@@ -252,7 +252,7 @@ For detailed integration guidance, see [Standards Documentation](./docs/standard
 | File | Description |
 |------|-------------|
 | [`.synthesis/agent.json`](./.synthesis/agent.json) | Agent identity, team structure, deployment info |
-| [`.synthesis/agent_log.json`](./.synthesis/agent_log.json) | Chronological build log (70+ entries) |
+| [`.synthesis/agent_log.json`](./.synthesis/agent_log.json) | Chronological build log |
 | [`.synthesis/CONVERSATION_LOG.md`](./.synthesis/CONVERSATION_LOG.md) | Session summaries and decision log |
 
 ### Track Requirements: "Agents With Receipts"
@@ -280,7 +280,7 @@ CAIRN implements the complete agent receipts pattern:
 cairn-protocol/
 ├── contracts/          # Solidity smart contracts (Foundry)
 │   ├── src/           # Core contracts (CairnCore, RecoveryRouter, FallbackPool)
-│   └── test/          # 302 tests, 98.95% coverage
+│   └── test/          # 315 tests, 98.95% coverage
 ├── sdk/               # Python SDK (CairnClient, CairnAgent, CheckpointStore)
 ├── frontend/          # Next.js 14 dashboard
 ├── pipeline/          # Off-chain event listener

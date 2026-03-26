@@ -256,7 +256,7 @@ ERC-8183 hook implementation. ~80 lines.
 
 Off-chain component. ~150 lines Python.
 
-- Listens for `TaskFailed` events with `score ≥ 0.6`
+- Listens for `TaskFailed` events with `score ≥ 0.3`
 - Queries Bonfires API for best fallback agent by `task_type`
 - Queries Olas Mech Marketplace for agent availability
 - Calls `assignFallback(taskId, fallbackAgentId)` on CairnTask
@@ -314,3 +314,7 @@ result = await cairn_agent.invoke({
 ---
 
 *See also: [Concepts](./concepts.md) · [Architecture](./architecture.md) · [Contracts](./contracts.md) · [Standards](./standards.md)*
+
+---
+
+*This documentation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution: CAIRN Protocol.*

@@ -144,3 +144,7 @@ cast call 0x7A09567e0348889Cc14264bEcf08F8d72Dc6987f \
   $(cast keccak "PROTOCOL_FEE_BPS") \
   --rpc-url https://sepolia.base.org
 ```
+
+---
+
+*This documentation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution: CAIRN Protocol.*

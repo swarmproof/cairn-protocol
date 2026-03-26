@@ -333,7 +333,7 @@ dataSources:
 
 ## 📝 License
 
-BSL-1.1 (Business Source License)
+MPL-2.0 — Mozilla Public License 2.0
 
 ## 🤝 Contributing
 

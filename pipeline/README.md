@@ -144,7 +144,7 @@ BONFIRES_API_URL=https://api.bonfires.ai/v1
 BONFIRES_ROOM=cairn-failures
 
 # Contract & RPC
-CAIRN_CONTRACT_ADDRESS=0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417
+CAIRN_CONTRACT_ADDRESS=0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640  # CairnCore (production)
 RPC_URL=https://sepolia.base.org
 
 # IPFS
@@ -353,7 +353,7 @@ See main project [CLAUDE.md](../CLAUDE.md) for contribution guidelines.
 
 ## License
 
-MIT License - see main project LICENSE file.
+MPL-2.0 — see main project LICENSE file.
 
 ---
 

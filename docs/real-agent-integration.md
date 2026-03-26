@@ -576,3 +576,7 @@ groups:
 ---
 
 *See also: [Integration Guide](./integration.md) · [Observer](./observer.md) · [Concepts](./concepts.md)*
+
+---
+
+*This documentation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution: CAIRN Protocol.*

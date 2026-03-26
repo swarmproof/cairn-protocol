@@ -23,7 +23,7 @@ async def main():
     # Initialize components
     client = CairnClient(
         rpc_url="https://sepolia.base.org",
-        contract_address="0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417",
+        contract_address="0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640",  # CairnCore
         private_key=os.environ["PRIVATE_KEY"],
     )
 
@@ -57,14 +57,14 @@ asyncio.run(main())
 
 ### CairnClient
 
-Interacts with the CairnTaskMVP smart contract.
+Interacts with the CairnCore smart contract (production 6-state machine).
 
 ```python
 from sdk import CairnClient
 
 client = CairnClient(
     rpc_url="https://sepolia.base.org",
-    contract_address="0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417",
+    contract_address="0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640",  # CairnCore
     private_key="0x...",  # Optional for read-only
 )
 
@@ -187,7 +187,7 @@ agent.add_observer(MyObserver())
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `CAIRN_RPC_URL` | Base Sepolia RPC URL | Yes |
-| `CAIRN_CONTRACT` | CairnTaskMVP address | Yes |
+| `CAIRN_CONTRACT` | CairnCore contract address | Yes |
 | `PRIVATE_KEY` | Wallet private key | Yes (for writes) |
 | `PINATA_JWT` | Pinata API JWT | Yes |
 
@@ -260,12 +260,22 @@ Examples demonstrate:
 - Resume from checkpoint (fallback scenario)
 - Concurrent checkpoint operations
 
-## Contract Address
+## Contract Addresses
+
+### CairnCore (Production)
+
+**Base Sepolia**: `0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`
+
+[View on Basescan](https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640)
+
+### CairnTaskMVP (Legacy)
 
 **Base Sepolia**: `0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`
 
 [View on Basescan](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417)
 
+> **Note**: Use CairnCore for all new integrations. CairnTaskMVP is retained for backwards compatibility.
+
 ## License
 
-BSL-1.1 — See [LICENSE](../LICENSE)
+MPL-2.0 — See [LICENSE](../LICENSE)

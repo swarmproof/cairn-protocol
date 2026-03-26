@@ -284,3 +284,7 @@ The integrations are not decorative — they are structural.
 ---
 
 *See also: [Concepts](./concepts.md) · [Architecture](./architecture.md) · [Integration](./integration.md) · [Contracts](./contracts.md)*
+
+---
+
+*This documentation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution: CAIRN Protocol.*

@@ -230,7 +230,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 
 | Attribute | Value |
 |---|---|
-| Entry trigger | Recovery score ≥ 0.6 from FAILED |
+| Entry trigger | Recovery score ≥ 0.3 from FAILED |
 | Who can enter | From FAILED only |
 | Preconditions | Budget headroom must remain. Deadline headroom must remain. At least one fallback agent available in pool for this task_type above admission threshold. |
 | Actions | Query execution intelligence layer for best fallback agent by task_type + reputation score. Select top available agent. Transfer task state: checkpoint CID list + remaining budget + remaining deadline. Transfer scoped permissions (pre-authorized caveat from IDLE). Fallback agent resumes from last committed checkpoint. New liveness clock starts for fallback. |
@@ -251,7 +251,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 
 | Attribute | Value |
 |---|---|
-| Entry trigger | Score < 0.6, no fallback available, all fallbacks failed |
+| Entry trigger | Score < 0.3, no fallback available, all fallbacks failed |
 | Who can enter | From FAILED only |
 | Actions | Hold escrow — funds do not move. Write negative reputation signal to ERC-8004 ReputationRegistry for failing agent. Expose Failure Record CID publicly as arbitration evidence. Start arbiter timeout clock (N blocks, configurable). Any registered arbiter agent (staked, above reputation threshold) may call `rule(taskId, outcome)` within timeout window. Arbiter receives fee from held escrow on successful ruling. |
 | Exit — arbiter rules | Arbiter submits ruling → RESOLVED (escrow distributed per ruling) |
@@ -309,3 +309,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 ---
 
 *See also: [Architecture](./architecture.md) · [Integration](./integration.md) · [Contracts](./contracts.md)*
+
+---
+
+*This documentation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution: CAIRN Protocol.*

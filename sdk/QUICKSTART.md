@@ -32,7 +32,7 @@ PINATA_JWT=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 # Required for CairnClient
 BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
-CAIRN_CONTRACT_ADDRESS=0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417
+CAIRN_CONTRACT_ADDRESS=0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640  # CairnCore (production)
 
 # Required for agent operations (testnet keys only!)
 PRIMARY_AGENT_PRIVATE_KEY=0x...
@@ -106,7 +106,7 @@ async def main():
     # Initialize CAIRN components
     client = CairnClient(
         rpc_url="https://sepolia.base.org",
-        contract_address="0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417",
+        contract_address="0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640",  # CairnCore
         private_key="0x...",  # Your agent's private key
     )
 

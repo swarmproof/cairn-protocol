@@ -4,19 +4,19 @@
 
 ---
 
-> **Note: Full Protocol vs MVP**
+> **Note: Full Protocol Implementation**
 >
-> This document describes the **full protocol vision** (PRD-00). The current **MVP implementation** (PRD-01) is simplified:
+> This document describes the CAIRN protocol contracts deployed on Base Sepolia.
 >
-> | Feature | Full Protocol | MVP |
-> |---------|---------------|-----|
+> | Feature | CairnCore (Production) | CairnTaskMVP (Legacy) |
+> |---------|------------------------|------------------------|
 > | States | 6 (IDLE, RUNNING, FAILED, RECOVERING, RESOLVED, DISPUTED) | 4 (RUNNING, FAILED, RECOVERING, RESOLVED) |
 > | Failure Classification | FailureClass enum | Not implemented |
-> | Arbiter | Full dispute resolution | Deferred to PRD-05 |
-> | Recovery Score | Computed on-chain | Deferred to PRD-02 |
+> | Arbiter | Full dispute resolution via ArbiterRegistry | Not available |
+> | Recovery Score | Computed on-chain (threshold 0.3) | Not implemented |
 > | Schema Validation | Hash-based | CID storage only |
 >
-> See `contracts/src/interfaces/ICairnTaskMVP.sol` for the current MVP interface.
+> See `contracts/src/CairnCore.sol` for the production implementation.
 
 ---
 
@@ -321,3 +321,7 @@ interface ICairnHook {
 ---
 
 *See also: [Concepts](./concepts.md) · [Architecture](./architecture.md) · [Integration](./integration.md) · [Standards](./standards.md)*
+
+---
+
+*This documentation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution: CAIRN Protocol.*
