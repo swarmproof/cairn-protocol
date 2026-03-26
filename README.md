@@ -482,7 +482,7 @@ For detailed integration guidance, see [Standards Documentation](./docs/standard
 | **Chain** | Base Sepolia (Chain ID: 84532) |
 | **CairnCore Contract** | [`0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`](https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640) |
 | **CairnTaskMVP Contract** | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) |
-| **Deployment Tx (CairnCore)** | [`0x...`](https://sepolia.basescan.org/tx/) — See contracts/deployments/ |
+| **Deployment Tx (CairnCore)** | [`0xeeee5fc6...`](https://sepolia.basescan.org/tx/0xeeee5fc6281d95e14b8362ba950407b83818b31ba04813489dd5a0120cea825b) |
 | **Test Coverage** | 98.95% (315 tests) |
 
 ### Agent Metadata
