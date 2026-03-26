@@ -73,6 +73,8 @@ Fallback agent receives task state:
 
 ## Checkpoint Protocol
 
+> ⚠️ **Centralization Note**: The default CAIRN SDK uses Pinata for IPFS pinning. While checkpoint CIDs are stored on-chain (decentralized), the actual checkpoint data depends on Pinata's availability for pinning and retrieval. For production deployments, consider running your own IPFS node or using multiple pinning services for redundancy.
+
 ### Schema Validation
 
 The output schema for each subtask is declared by the operator at task init. CAIRN stores the schema hash. On checkpoint commit, CAIRN verifies the CID content matches the schema hash. This is deterministic — no AI, no oracle.
