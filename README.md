@@ -390,7 +390,6 @@ await agent.heartbeat(task.id)
 | [Integration](./docs/integration.md) | Checkpoint protocol, fallback pool, guides |
 | [Contracts](./docs/contracts.md) | Interfaces, schemas, component reference |
 | [Standards](./docs/standards.md) | ERC-8183, ERC-8004, ERC-7710, Olas integration |
-| [Alternatives](./docs/alternatives.md) | Comparison with LangGraph, Temporal, Kubernetes, LangSmith |
 | [Observer](./docs/observer.md) | CAIRN Observer — failure cost visibility layer |
 | [CLI Usage](./cli/CLI_IMPLEMENTATION.md) | Command-line tool for task management |
 | [Multi-Sig Governance](./docs/MULTI_SIG_GOVERNANCE.md) | Gnosis Safe setup, parameter management |
