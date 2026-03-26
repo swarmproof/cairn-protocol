@@ -3,20 +3,20 @@
 <img src="./.synthesis/cover.png" alt="CAIRN Protocol - Agent Failure and Recovery Protocol" width="100%"/>
 
 <p>
-  <img src="https://img.shields.io/badge/Status-Live%20on%20Base%20Sepolia-00CED1?style=flat-square&logo=ethereum&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Status-Live_on_Base_Sepolia-00CED1?style=flat-square&logo=ethereum&logoColor=white" alt="Status"/>
   <img src="https://github.com/MarouaBoud/cairn-protocol/actions/workflows/tests.yml/badge.svg" alt="Tests"/>
-  <img src="https://img.shields.io/badge/Contracts-6%20Deployed-008B8B?style=flat-square"/>
-  <img src="https://img.shields.io/badge/Tests-315%20%7C%2098.95%25%20coverage-00CED1?style=flat-square"/>
-  <img src="https://img.shields.io/badge/Chain%20ID-84532-0052FF?style=flat-square&logo=coinbase&logoColor=white"/>
-  <img src="https://img.shields.io/badge/ERC-CAIRN%20Proposal-008B8B?style=flat-square"/>
+  <img src="https://img.shields.io/badge/Contracts-6_Deployed-008B8B?style=flat-square" alt="Contracts"/>
+  <img src="https://img.shields.io/badge/Tests-315_|_98.95%25_coverage-00CED1?style=flat-square" alt="Coverage"/>
+  <img src="https://img.shields.io/badge/Chain_ID-84532-0052FF?style=flat-square&logo=coinbase&logoColor=white" alt="Chain ID"/>
+  <img src="https://img.shields.io/badge/ERC-CAIRN_Proposal-008B8B?style=flat-square" alt="ERC"/>
 </p>
 
 <p>
-  <a href="https://cairn-protocol-iona-78423aa1.vercel.app"><img src="https://img.shields.io/badge/Live%20Demo-Frontend-00CED1?style=flat-square"/></a>
-  <a href="./WHITEPAPER.md"><img src="https://img.shields.io/badge/Whitepaper-Read-008B8B?style=flat-square"/></a>
-  <a href="./ERC-CAIRN.md"><img src="https://img.shields.io/badge/ERC%20Spec-Draft-20B2AA?style=flat-square"/></a>
-  <a href="./docs/architecture.md"><img src="https://img.shields.io/badge/Architecture-Docs-008B8B?style=flat-square"/></a>
-  <a href="https://thegraph.com/studio/subgraph/cairn"><img src="https://img.shields.io/badge/Subgraph-The%20Graph-6748fe?style=flat-square"/></a>
+  <a href="https://cairn-protocol-iona-78423aa1.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-Frontend-00CED1?style=flat-square" alt="Live Demo"/></a>
+  <a href="./WHITEPAPER.md"><img src="https://img.shields.io/badge/Whitepaper-Read-008B8B?style=flat-square" alt="Whitepaper"/></a>
+  <a href="./ERC-CAIRN.md"><img src="https://img.shields.io/badge/ERC_Spec-Draft-20B2AA?style=flat-square" alt="ERC Spec"/></a>
+  <a href="./docs/architecture.md"><img src="https://img.shields.io/badge/Architecture-Docs-008B8B?style=flat-square" alt="Architecture"/></a>
+  <a href="https://thegraph.com/studio/subgraph/cairn"><img src="https://img.shields.io/badge/Subgraph-The_Graph-6748fe?style=flat-square" alt="Subgraph"/></a>
 </p>
 
 <br/>
