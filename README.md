@@ -551,17 +551,13 @@ See [LICENSE](./LICENSE) for details.
 
 Contributions are welcome! Whether it's bug fixes, new features, documentation improvements, or ideas — we'd love your help.
 
-**How to contribute:**
+See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for:
+- Development setup (Foundry, Python, Node.js)
+- Code style guidelines
+- Testing requirements
+- Pull request process
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes following [conventional commits](https://www.conventionalcommits.org/)
-4. Push to your branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-**By contributing, you agree to license your contributions under the same license as the component you're modifying** (see License table above).
-
-For questions or discussions, open an issue or reach out directly.
+By contributing, you agree to license your contributions under the same license as the component you're modifying.
 
 ---
 
