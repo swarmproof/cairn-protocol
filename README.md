@@ -148,9 +148,9 @@ This is what makes CAIRN compound in value over time. The knowledge graph grows 
 | [Standards](./docs/standards.md) | ERC-8183, ERC-8004, ERC-7710, Olas integration |
 | [Alternatives](./docs/alternatives.md) | Comparison with LangGraph, Temporal, Kubernetes, LangSmith |
 | [Observer](./docs/observer.md) | CAIRN Observer — failure cost visibility layer |
-| [CLI Usage](./docs/CLI_USAGE.md) | Command-line tool for task management |
+| [CLI Usage](./cli/CLI_IMPLEMENTATION.md) | Command-line tool for task management |
 | [Multi-Sig Governance](./docs/MULTI_SIG_GOVERNANCE.md) | Gnosis Safe setup, parameter management |
-| [Olas Integration](./docs/OLAS_INTEGRATION.md) | Mech marketplace adapter, fallback pool |
+| [Olas Integration](./docs/olas-integration.md) | Mech marketplace adapter, fallback pool |
 
 ---
 
