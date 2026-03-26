@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0a0a0f,50:1a1a2e,100:00CED1&height=180&section=header&text=CAIRN%20Protocol&fontSize=52&fontColor=ffffff&animation=fadeIn&fontAlignY=42&desc=Agent%20Failure%20%26%20Recovery%20Protocol&descAlignY=62&descSize=16&descColor=7FFFD4" width="100%"/>
+<img src="./.synthesis/cover.png" alt="CAIRN Protocol - Agent Failure and Recovery Protocol" width="100%"/>
 
 <p>
   <img src="https://img.shields.io/badge/Status-Live%20on%20Base%20Sepolia-00CED1?style=flat-square&logo=ethereum&logoColor=white"/>
@@ -20,8 +20,11 @@
 
 <br/>
 
-> **One line:** CAIRN turns every agent failure into a lesson every other agent inherits —
-> enforced by escrow, validated by attestation, owned by no one.
+> ⚠️ **Currently deployed on Base Sepolia Testnet** — This is a hackathon MVP. Mainnet deployment pending security audit.
+
+<br/>
+
+> **One line:** CAIRN turns every agent failure into a lesson every other agent inherits — enforced by escrow, validated by attestation, owned by no one.
 >
 > **Three words:** Agents learn together.
 
@@ -31,7 +34,7 @@
 
 ---
 
-## The Problem
+## The Problem: Invisible Failures, Wasted Work
 
 **Agent workflows fail 80% of the time.** At 85% success per action, a 10-step workflow completes only ~20% of the time. When failures happen today:
 
@@ -51,17 +54,18 @@ Monthly failure cost = failures × avg_escrow × (1 - recovery_rate) + restart_c
 
 Example (single operator):
 - 20 failures/month × $50 avg escrow × 100% loss rate = $1,000 direct loss
-- 20 restarts × $15 gas (duplicate work)              =   $300 gas waste
-- 20 failures × 4 hours delay × $50/hour opportunity  = $4,000 opportunity cost
-─────────────────────────────────────────────────────────────────────────────
-  Total: ~$5,300/month lost to unrecovered failures
+- 20 restarts × $15 gas (duplicate work) = $300 gas waste
+- 20 failures × 4 hours avg delay × $50/hour opportunity = $4,000 opportunity cost
+- Total: ~$5,300/month lost to unrecovered failures
 ```
 
 ---
 
-## A Real Failure: Before and After
+## A Failure Story: What Happens Today
 
-**Scenario:** DeFi rebalancing agent on Base · $12,000 across 3 pools · 2:47am UTC, Saturday
+**Scenario:** DeFi rebalancing agent on Base
+**Time:** 2:47am UTC, Saturday
+**Task:** Rebalance $12,000 across 3 pools
 
 <table>
 <tr>
@@ -71,17 +75,18 @@ Example (single operator):
 
 | Step | Action | Result |
 |------|--------|--------|
-| 1 | Price fetch | ✅ success |
-| 2 | Approve token A | ✅ success |
-| 3 | Swap on DEX | ❌ rate limit (429) |
+| 1 | Price fetch | ✅ SUCCESS |
+| 2 | Approve token A | ✅ SUCCESS |
+| 3 | Swap on DEX | ❌ **FAILED** — rate limit (429) |
 
-Agent stopped. No heartbeat for 45 minutes.
-Escrow: $45 locked in ambiguous state.
-Operator notified: 7:15am (+4.5h).
-Resolution: manual restart from scratch.
-Approvals (step 2) must be re-done.
+**What happened next:**
+- Agent stopped. No heartbeat for 45 minutes.
+- Escrow: $45 locked in ambiguous state
+- Operator notified: 7:15am (4.5 hours later)
+- Resolution: Manual restart from scratch
+- Work lost: Approvals (Step 2) must be re-done
 
-**Total cost: $57 + 4.5 hours**
+**Total cost:** $45 escrow delay + $12 gas + 4.5 hours
 
 </td>
 <td width="50%" valign="top">
@@ -92,16 +97,15 @@ Approvals (step 2) must be re-done.
 |------|-------|
 | 2:47am | Agent fails (rate limit) |
 | 2:52am | CAIRN detects (liveness timeout) |
-| 2:52am | Classified: RESOURCE · score 0.74 |
-| 2:53am | Fallback assigned from pool |
-| 2:53am | Fallback reads checkpoint 2, resumes |
+| 2:52am | Classified: RESOURCE failure, score: 0.74 |
+| 2:53am | Fallback agent assigned from pool |
+| 2:53am | Fallback reads checkpoints — approvals preserved |
 | 3:08am | Task completed by fallback |
-| 3:08am | Escrow split: original 66% / fallback 33% |
+| 3:08am | Escrow split: Original 66% / Fallback 33% |
 
-Work preserved. Escrow settled proportionally.
-Zero human intervention.
-
-**Total delay: 21 minutes**
+**Total delay: 21 minutes** (vs. 4.5 hours)
+**Work preserved:** Yes (checkpoint 2)
+**Escrow settled:** Fairly, proportional to verified work
 
 </td>
 </tr>
@@ -118,21 +122,24 @@ Zero human intervention.
 | **$479M aGDP** | Real money flowing through agent transactions |
 | **80% workflow failure rate** | At 85% per-action success, most multi-step tasks fail |
 
+
 The infrastructure is ready. The problem is severe. The gap is real.
 
 ---
 
 ## The Cairn Metaphor
 
-Travelers in wilderness stack stones — **cairns** — to mark where they have been, which paths are safe, and which lead nowhere. Each cairn is left by one traveler but read by every traveler who comes after. No traveler owns the cairn network. Every traveler benefits from it.
+A cairn is a stack of stones left by travelers to mark the path — so the next traveler knows where to go, and where not to. Every agent failure leaves a cairn. Every future agent reads it.
+
+Travelers in wilderness stack stones — cairns — to mark where they have been, which paths are safe, and which lead nowhere. Each cairn is left by one traveler but read by every traveler who comes after. No traveler owns the cairn network. Every traveler benefits from it.
 
 CAIRN applies this to agents. Every failure leaves a cairn — an execution record that marks this exact task type, this exact failure mode, this exact cost. Every future agent reads the cairns before setting out. The ecosystem navigates by accumulated failure intelligence, not blind optimism.
 
 ---
 
-## What CAIRN Is
+## What is CAIRN?
 
-**A standardized agent failure and recovery protocol.**
+**CAIRN is a standardized agent failure and recovery protocol.**
 
 It defines the exact sequence of events that must occur when an agent fails mid-task — from detection, through classification, through fallback assignment, through settlement — without requiring any human intervention and without requiring trust between agents.
 
@@ -142,7 +149,9 @@ An operator initiates a task with a budget, deadline, and task type. Before the 
 
 ### Secondary Output: Execution Intelligence
 
-As a byproduct of the recovery protocol running, CAIRN accumulates an **execution intelligence layer** — a shared, queryable record of every failure, every recovery, and every successful completion across the ecosystem. The knowledge graph grows automatically. The more agents integrate CAIRN, the richer the intelligence layer becomes.
+As a byproduct of the recovery protocol running, CAIRN accumulates an **execution intelligence layer** — a shared, queryable record of every failure, every recovery, and every successful completion across the ecosystem.
+
+This is what makes CAIRN compound in value over time. The knowledge graph grows automatically. The more agents integrate CAIRN, the richer the intelligence layer becomes. Agents query it before starting tasks. The ecosystem gets smarter from every failure.
 
 **The knowledge graph is the byproduct. The recovery protocol is the core.**
 
@@ -150,13 +159,11 @@ As a byproduct of the recovery protocol running, CAIRN accumulates an **executio
 
 ## What CAIRN is NOT
 
-| ❌ Not This | ✅ Instead |
-|-------------|-----------|
-| A new agent framework | Wraps any framework — LangGraph, Olas SDK, AgentKit, custom builds |
-| A knowledge graph product | Bonfires is a window into the intelligence layer, not the protocol |
-| A centralized service | Every state transition enforced on-chain. No server. No admin key |
-| A replacement for ERC-8183/8004 | Integrates and extends both as a Hook and reputation writer |
-| Optional infrastructure | Escrow-enforced — agents can't get paid without completing the protocol |
+- **Not a new agent framework.** CAIRN wraps any existing framework — LangGraph, Olas SDK, AgentKit, custom builds.
+- **Not a knowledge graph product.** Bonfires (the visualization layer) is a window into the intelligence layer, not the protocol itself.
+- **Not a centralized service.** Every state transition is enforced by the CAIRN state machine contract. No server. No admin key. No human required.
+- **Not a replacement for ERC-8183 or ERC-8004.** CAIRN integrates and extends both. It is an ERC-8183 Hook and an ERC-8004 reputation writer.
+- **Not optional infrastructure.** The escrow condition makes record-writing mandatory — agents cannot receive payment without completing the protocol.
 
 ---
 
@@ -219,6 +226,8 @@ Every task moves through exactly one of these states. No silent failures. No amb
 recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) + (deadline_remaining_pct × 0.2)
 ```
 
+Routing: `score ≥ 0.3` → RECOVERING | `score < 0.3` → DISPUTED
+
 ---
 
 ## The 14-Action Protocol
@@ -229,9 +238,9 @@ recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) +
 
 **A1** · Operator submits task spec: `task_type`, `budget_cap`, `deadline`, `heartbeat_interval`, output schemas per subtask.
 
-**A2** · Protocol queries execution intelligence layer by `task_type` → known failure patterns, real cost distribution, recommended agent (highest success rate + reputation), known-bad time windows.
+**A2** · Protocol queries execution intelligence layer by `task_type` → known failure patterns, real cost distribution from prior executions, recommended agent (highest success rate + reputation), known-bad time windows.
 
-**A3** · Operator confirms. Locks escrow. Pre-authorizes CAIRN for fallback sub-delegation (ERC-7710 caveat). State → `RUNNING`.
+**A3** · Operator confirms. Locks escrow. Pre-authorizes CAIRN for fallback sub-delegation (ERC-7710 caveat: allowed actions + budget cap + fallback pool). State → `RUNNING`.
 
 </details>
 
@@ -243,7 +252,7 @@ recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) +
 
 **A5** · Agent emits liveness ping: `heartbeat(taskId)`. Resets liveness timer every `heartbeat_interval`.
 
-**A6** · Protocol enforces (permissionless — anyone can call): `checkLiveness()` · `checkBudget()` · `checkDeadline()`.
+**A6** · Protocol enforces (public, permissionless — anyone can call): `checkLiveness()` · `checkBudget()` · `checkDeadline()`.
 
 </details>
 
@@ -263,7 +272,7 @@ recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) +
 
 **A9** · Queries execution intelligence for best fallback: `task_type` match + reputation + availability.
 
-**A10** · Transfers state to fallback: checkpoint CID list, `next_subtask_index`, remaining budget, remaining deadline, scoped permissions.
+**A10** · Transfers state to fallback: checkpoint CID list, `next_subtask_index`, remaining budget, remaining deadline, scoped permissions (ERC-7710 pre-authorized caveat from A3).
 
 **A11** · Fallback reads checkpoint list from IPFS, resumes from `next_subtask_index`. New liveness clock starts. Continues A4/A5/A6 cycle.
 
@@ -281,9 +290,9 @@ recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) +
 <summary><b>Phase 6 — Disputed (A13–A14)</b></summary>
 <br/>
 
-**A13** · Holds escrow. Writes negative reputation to ERC-8004. Exposes Failure Record CID publicly. Starts `arbiter_timeout` clock.
+**A13** · Holds escrow. Writes negative reputation to ERC-8004. Exposes Failure Record CID publicly. Starts `arbiter_timeout` clock. Emits `TaskDisputed(taskId, recordCID, arbiterTimeout)`.
 
-**A14** · Registered arbiter reads Failure Record, calls `rule(taskId, outcome)`. Arbiter fee deducted from escrow. If timeout expires: auto-refund operator. Either path → RESOLVED.
+**A14** · Registered arbiter reads Failure Record, calls `rule(taskId, outcome)`. Arbiter fee deducted from escrow. If timeout expires with no arbiter: auto-refund operator. Either path → RESOLVED.
 
 </details>
 
@@ -291,7 +300,7 @@ recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) +
 
 ## Architecture
 
-Four layers. Only the **CAIRN Protocol Layer** is new code. Everything else integrates live existing infrastructure.
+Four layers. Only the CAIRN Protocol Layer is new code. Everything else integrates live existing infrastructure.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -306,8 +315,8 @@ Four layers. Only the **CAIRN Protocol Layer** is new code. Everything else inte
                               │ integrates with
 ┌─────────────────────────────▼────────────────────────────────┐
 │ ETHEREUM STANDARDS LAYER                ← existing live infra │
-│ ERC-8183 (escrow) · ERC-8004 (identity) · ERC-7710 (delegation)│
-│ Olas Mech Marketplace                                         │
+│ ERC-8183 (escrow + hooks) · ERC-8004 (identity + reputation)  │
+│ ERC-7710 (delegation) · Olas Mech Marketplace                 │
 └─────────────────────────────┬────────────────────────────────┘
                               │ writes to / reads from
 ┌─────────────────────────────▼────────────────────────────────┐
@@ -320,19 +329,6 @@ Four layers. Only the **CAIRN Protocol Layer** is new code. Everything else inte
 │ ~2s block time · low gas · AgentKit native · ERC-8183 live    │
 └──────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## Standards Integration
-
-CAIRN is a **compositor** of existing primitives, not a replacement.
-
-| Standard | What It Provides | CAIRN's Role |
-|----------|------------------|--------------|
-| **ERC-8183** | Standardized escrow for agent jobs with lifecycle hooks | Registers as lifecycle hook — intercepts failures, controls settlement |
-| **ERC-8004** | On-chain agent identity and reputation registry | Writes success/failure signals to reputation scores post-resolution |
-| **ERC-7710** | Scoped permission delegation with caveats | Enables pre-authorized fallback assignment without new signatures |
-| **Olas Mech** | 600+ registered agents with staking | Live fallback pool — CAIRN queries for best-fit backup agents |
 
 ---
 
@@ -375,20 +371,73 @@ await agent.heartbeat(task.id)
 
 ---
 
-## Deployed Contracts — Base Sepolia
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Whitepaper](./WHITEPAPER.md) | Why CAIRN exists — problem, philosophy, economics |
+| [ERC Specification](./ERC-CAIRN.md) | Technical standard (EIP format) |
+| [Security](./SECURITY.md) | Security model, attack vectors, mitigations |
+| [Changelog](./CHANGELOG.md) | Version history |
+
+### Technical Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Concepts](./docs/concepts.md) | Failure taxonomy, state machine, glossary |
+| [Architecture](./docs/architecture.md) | System design, protocol flow diagrams |
+| [Execution Intelligence](./docs/execution-intelligence.md) | Knowledge graph, queries, network effects |
+| [Integration](./docs/integration.md) | Checkpoint protocol, fallback pool, guides |
+| [Contracts](./docs/contracts.md) | Interfaces, schemas, component reference |
+| [Standards](./docs/standards.md) | ERC-8183, ERC-8004, ERC-7710, Olas integration |
+| [Alternatives](./docs/alternatives.md) | Comparison with LangGraph, Temporal, Kubernetes, LangSmith |
+| [Observer](./docs/observer.md) | CAIRN Observer — failure cost visibility layer |
+| [CLI Usage](./cli/CLI_IMPLEMENTATION.md) | Command-line tool for task management |
+| [Multi-Sig Governance](./docs/MULTI_SIG_GOVERNANCE.md) | Gnosis Safe setup, parameter management |
+| [Olas Integration](./docs/olas-integration.md) | Mech marketplace adapter, fallback pool |
+
+---
+
+## Protocol Status
+
+| Property | Value |
+|----------|-------|
+| Version | 1.0 |
+| Status | **Live on Base Sepolia** |
+| Network | Base Sepolia (Chain ID: 84532) |
+| ERC Dependencies | ERC-8183, ERC-8004, ERC-7710 |
+
+### Implementation Progress (Synthesis Hackathon 2026)
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| PRD-00 Vision | ✅ Complete | Full protocol specification |
+| PRD-01 MVP | ✅ Complete | Hackathon submission |
+| Smart Contracts | ✅ Deployed | 315 tests, 98.95% coverage |
+| Deployment | ✅ Live | Base Sepolia (6 contracts) |
+| SDK (Python) | ✅ Complete | CairnClient, CairnAgent, CheckpointStore, Observers |
+| CLI Tool | ✅ Complete | submit-task, heartbeat, checkpoint, monitor, recover |
+| Subgraph | ✅ Deployed | The Graph Studio indexing |
+| Upgradeable | ✅ Complete | UUPS proxy pattern (OpenZeppelin 5.x) |
+| Frontend | ✅ Deployed | Next.js 14, wagmi |
+| PRD-07 Optimization | ✅ Complete | Merkle checkpoint batching (89-99% gas savings) |
+
+See [`PRDs/README.md`](./PRDs/README.md) for full roadmap.
+
+### Deployed Contracts (Base Sepolia)
 
 | Contract | Address | Description |
 |----------|---------|-------------|
-| **CairnCore** | [`0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`](https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640) | Main entry point — 6-state machine, full task lifecycle |
+| **CairnCore** | [`0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`](https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640) | Main entry point — 6-state machine, task lifecycle |
 | CairnGovernance | [`0x7A09567e0348889Cc14264bEcf08F8d72Dc6987f`](https://sepolia.basescan.org/address/0x7A09567e0348889Cc14264bEcf08F8d72Dc6987f) | Protocol parameters, admin controls |
 | RecoveryRouter | [`0xE52703946cb44c12A6A38A41f638BA2D7197a84d`](https://sepolia.basescan.org/address/0xE52703946cb44c12A6A38A41f638BA2D7197a84d) | Failure classification, recovery scoring |
 | FallbackPool | [`0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0`](https://sepolia.basescan.org/address/0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0) | Agent registration, selection algorithm |
 | ArbiterRegistry | [`0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68`](https://sepolia.basescan.org/address/0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68) | Dispute resolution, appeals |
-| CairnTaskMVP *(legacy)* | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) | Simplified 4-state MVP — use CairnCore for production |
+| CairnTaskMVP *(legacy)* | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) | Legacy MVP (4-state) — use CairnCore for production |
 
 All contracts use **UUPS proxy pattern** (OpenZeppelin 5.x). Upgradeable without redeployment.
 
-### Live Resources
+### Live Demo
 
 | Resource | URL |
 |----------|-----|
@@ -398,93 +447,63 @@ All contracts use **UUPS proxy pattern** (OpenZeppelin 5.x). Upgradeable without
 
 ---
 
-## Protocol Status
+## Quick Links
 
-| Property | Value |
-|----------|-------|
-| **Version** | 1.0 |
-| **Network** | Base Sepolia (Chain ID: 84532) |
-| **ERC Dependencies** | ERC-8183 · ERC-8004 · ERC-7710 |
-
-### Implementation Progress — Synthesis Hackathon 2026
-
-| Component | Status | Notes |
-|-----------|--------|-------|
-| PRD-00 Vision | ✅ Complete | Full protocol specification |
-| PRD-01 MVP | ✅ Complete | Hackathon submission |
-| Smart Contracts | ✅ Deployed | **315 tests · 98.95% coverage** |
-| Deployment | ✅ Live | Base Sepolia — 6 contracts |
-| SDK (Python) | ✅ Complete | CairnClient · CairnAgent · CheckpointStore · Observers |
-| CLI Tool | ✅ Complete | submit-task · heartbeat · checkpoint · monitor · recover |
-| Subgraph | ✅ Deployed | The Graph Studio indexing |
-| Upgradeable | ✅ Complete | UUPS proxy pattern (OpenZeppelin 5.x) |
-| Frontend | ✅ Deployed | Next.js 14 · wagmi · real-time events |
-| PRD-07 Optimization | ✅ Complete | **Merkle checkpoint batching (89-99% gas savings)** |
-
-See [`PRDs/README.md`](./PRDs/README.md) for full roadmap.
+- **Understand CAIRN:** [Whitepaper](./WHITEPAPER.md) → [Concepts](./docs/concepts.md)
+- **Technical Spec:** [ERC-CAIRN](./ERC-CAIRN.md) → [Contracts](./docs/contracts.md)
+- **Build with CAIRN:** [Integration Guide](./docs/integration.md)
+- **Security:** [Security Model](./SECURITY.md)
 
 ---
 
-## Repository Structure
+## Standards Integration
 
-```
-cairn-protocol/
-├── contracts/           # Solidity — 6 deployed contracts, UUPS proxies
-│   ├── src/            # Core: CairnCore, RecoveryRouter, FallbackPool, ArbiterRegistry
-│   └── test/           # 315 tests · 98.95% coverage
-├── sdk/                 # Python SDK — CairnClient, CairnAgent, CheckpointStore
-├── cli/                 # CLI tool — task management, monitoring
-├── subgraph/            # The Graph — indexes all CAIRN events
-├── frontend/            # Next.js 14 dashboard — live on Vercel
-├── pipeline/            # Off-chain recovery orchestration
-├── docs/                # Technical documentation
-├── PRDs/                # Product requirements documents
-├── ERC-CAIRN.md         # ERC proposal (CC0 licensed)
-├── WHITEPAPER.md        # Protocol philosophy and economics
-├── SECURITY.md          # Threat model and mitigations
-└── CHANGELOG.md         # Version history
-```
+CAIRN integrates with existing Ethereum standards rather than replacing them:
 
----
+| Standard | What It Provides | Role in CAIRN |
+|----------|------------------|---------------|
+| **ERC-8183** | Standardized escrow for agent jobs with lifecycle hooks | Holds payment until task completes; CAIRN registers as a lifecycle hook to intercept failures |
+| **ERC-8004** | On-chain agent identity and reputation registry | Verifies agent identity; CAIRN writes success/failure signals to reputation scores |
+| **ERC-7710** | Scoped permission delegation with caveats | Enables pre-authorized fallback assignment without requiring new signatures at recovery time |
+| **Olas Mech Marketplace** | Registry of available agent services with staking | Provides the fallback agent pool; CAIRN queries for best-fit backup agents |
 
-## Documentation
-
-### Core Documents
-
-| Document | Description |
-|----------|-------------|
-| [Whitepaper](./WHITEPAPER.md) | Why CAIRN exists — problem, philosophy, economics |
-| [ERC Specification](./ERC-CAIRN.md) | Technical standard in EIP format |
-| [Security](./SECURITY.md) | Security model, attack vectors, mitigations |
-
-### Technical Documentation
-
-| Document | Description |
-|----------|-------------|
-| [Concepts](./docs/concepts.md) | Failure taxonomy, state machine, glossary |
-| [Architecture](./docs/architecture.md) | System design, 4-layer stack, protocol flow |
-| [Contracts](./docs/contracts.md) | Interfaces, schemas, component reference |
-| [Integration](./docs/integration.md) | Checkpoint protocol, fallback pool, SDK guides |
-| [Standards](./docs/standards.md) | ERC-8183, ERC-8004, ERC-7710, Olas integration |
-| [Execution Intelligence](./docs/execution-intelligence.md) | Knowledge graph, queries, network effects |
-| [Observer](./docs/observer.md) | Failure cost visibility layer |
-| [Multi-Sig Governance](./docs/MULTI_SIG_GOVERNANCE.md) | Gnosis Safe setup, parameter management |
-| [Olas Integration](./docs/olas-integration.md) | Mech marketplace adapter |
-
-### Quick Navigation
-
-| Goal | Path |
-|------|------|
-| **Understand CAIRN** | [Whitepaper](./WHITEPAPER.md) → [Concepts](./docs/concepts.md) |
-| **Technical Spec** | [ERC-CAIRN](./ERC-CAIRN.md) → [Contracts](./docs/contracts.md) |
-| **Build with CAIRN** | [Integration](./docs/integration.md) → [SDK Quickstart](./sdk/QUICKSTART.md) |
-| **Security** | [Security Model](./SECURITY.md) |
+For detailed integration guidance, see [Standards Documentation](./docs/standards.md).
 
 ---
 
 ## Hackathon Submission — Synthesis 2026
 
 **Tracks:** Protocol Labs: Agents With Receipts • Let the Agent Cook
+
+### Onchain Artifacts
+
+| Artifact | Value |
+|----------|-------|
+| **Chain** | Base Sepolia (Chain ID: 84532) |
+| **CairnCore Contract** | [`0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`](https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640) |
+| **CairnTaskMVP Contract** | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) |
+| **Deployment Tx (CairnCore)** | [`0x...`](https://sepolia.basescan.org/tx/) — See contracts/deployments/ |
+| **Test Coverage** | 98.95% (315 tests) |
+
+### Agent Metadata
+
+| File | Description |
+|------|-------------|
+| [`.synthesis/agent.json`](./.synthesis/agent.json) | Agent identity, team structure, deployment info |
+| [`.synthesis/agent_log.json`](./.synthesis/agent_log.json) | Chronological build log |
+| [`.synthesis/CONVERSATION_LOG.md`](./.synthesis/CONVERSATION_LOG.md) | Session summaries and decision log |
+
+### Track Requirements: "Agents With Receipts"
+
+CAIRN implements the complete agent receipts pattern:
+
+| Requirement | Implementation |
+|-------------|----------------|
+| **Execution Records** | Every task creates on-chain record with checkpoints, heartbeats, settlement |
+| **Failure Classification** | RecoveryRouter classifies failures (TIMEOUT, REVERTED, RESOURCE, LOGIC, UNKNOWN) |
+| **Recovery Scoring** | Computed recovery probability before fallback assignment |
+| **Settlement Receipts** | Proportional escrow splits with on-chain verification |
+| **Collective Intelligence** | Bonfires integration writes failure patterns to knowledge graph |
 
 ### What Makes CAIRN Different
 
@@ -495,29 +514,27 @@ cairn-protocol/
 | 3 | **Automatic recovery** — No human intervention needed for fallback assignment |
 | 4 | **Network effects** — Every failure teaches every future agent |
 
-### Track Requirements: "Agents With Receipts"
+### Repository Structure
 
-| Requirement | Implementation |
-|-------------|----------------|
-| **Execution Records** | Every task creates on-chain record with checkpoints, heartbeats, settlement |
-| **Failure Classification** | RecoveryRouter classifies (TIMEOUT, REVERTED, RESOURCE, LOGIC, UNKNOWN) |
-| **Recovery Scoring** | Computed recovery probability before fallback assignment |
-| **Settlement Receipts** | Proportional escrow splits with on-chain verification |
-| **Collective Intelligence** | Bonfires integration writes failure patterns to knowledge graph |
-
-### Agent Metadata
-
-| File | Description |
-|------|-------------|
-| [`.synthesis/agent.json`](./.synthesis/agent.json) | Agent identity, team structure, deployment info |
-| [`.synthesis/agent_log.json`](./.synthesis/agent_log.json) | Chronological build log |
-| [`.synthesis/CONVERSATION_LOG.md`](./.synthesis/CONVERSATION_LOG.md) | Session summaries and decision log |
+```
+cairn-protocol/
+├── contracts/          # Solidity smart contracts (Foundry)
+│   ├── src/           # Core contracts (CairnCore, RecoveryRouter, FallbackPool)
+│   └── test/          # 315 tests, 98.95% coverage
+├── sdk/               # Python SDK (CairnClient, CairnAgent, CheckpointStore)
+├── cli/               # CLI tool — task management, monitoring
+├── frontend/          # Next.js 14 dashboard
+├── pipeline/          # Off-chain event listener
+├── subgraph/          # The Graph indexer
+├── PRDs/              # Product requirements documents
+└── docs/              # Technical documentation
+```
 
 ---
 
 ## License
 
-This project uses a **multi-license structure** to balance openness, protection, and ecosystem compatibility.
+This project uses a **multi-license structure**. See [LICENSE](./LICENSE) for details.
 
 | Component | License | Rationale |
 |-----------|---------|-----------|
@@ -528,8 +545,6 @@ This project uses a **multi-license structure** to balance openness, protection,
 | [subgraph/](./subgraph/) | MIT | Simplest, no friction |
 | [frontend/](./frontend/) | AGPL-3.0-or-later | SaaS providers must share modifications |
 | [docs/](./docs/) | CC BY 4.0 | Freely shareable with attribution |
-
-See [LICENSE](./LICENSE) for full details.
 
 ---
 
