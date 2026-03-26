@@ -226,3 +226,7 @@ The escrow condition is the forcing function that bootstraps this loop without r
 ---
 
 *See also: [Concepts](./concepts.md) · [Architecture](./architecture.md) · [Integration](./integration.md)*
+
+---
+
+*This documentation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution: CAIRN Protocol.*

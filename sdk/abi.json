@@ -3,73 +3,53 @@
     "type": "constructor",
     "inputs": [
       {
-        "name": "_owner",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
         "name": "_feeRecipient",
         "type": "address",
         "internalType": "address"
+      },
+      {
+        "name": "_recoveryRouter",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_fallbackPool",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_arbiterRegistry",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_governance",
+        "type": "address",
+        "internalType": "address"
       }
     ],
     "stateMutability": "nonpayable"
   },
   {
+    "type": "receive",
+    "stateMutability": "payable"
+  },
+  {
     "type": "function",
-    "name": "MIN_ESCROW",
+    "name": "arbiterRegistry",
     "inputs": [],
     "outputs": [
       {
         "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "address",
+        "internalType": "contract IArbiterRegistry"
       }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "MIN_HEARTBEAT_INTERVAL",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "PROTOCOL_FEE_BPS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "checkLiveness",
-    "inputs": [
-      {
-        "name": "taskId",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "commitCheckpoint",
+    "name": "commitCheckpointBatch",
     "inputs": [
       {
         "name": "taskId",
@@ -77,7 +57,17 @@
         "internalType": "bytes32"
       },
       {
-        "name": "cid",
+        "name": "count",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "merkleRoot",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "latestCID",
         "type": "bytes32",
         "internalType": "bytes32"
       }
@@ -100,6 +90,58 @@
   },
   {
     "type": "function",
+    "name": "detectFailure",
+    "inputs": [
+      {
+        "name": "taskId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "disputeTimeout",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "escrowHook",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IERC8183"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "fallbackPool",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IFallbackPool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "feeRecipient",
     "inputs": [],
     "outputs": [
@@ -113,7 +155,26 @@
   },
   {
     "type": "function",
-    "name": "getCheckpoints",
+    "name": "getAgentTasks",
+    "inputs": [
+      {
+        "name": "agent",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getBatchRoots",
     "inputs": [
       {
         "name": "taskId",
@@ -123,7 +184,7 @@
     ],
     "outputs": [
       {
-        "name": "cids",
+        "name": "",
         "type": "bytes32[]",
         "internalType": "bytes32[]"
       }
@@ -142,49 +203,173 @@
     ],
     "outputs": [
       {
-        "name": "state",
-        "type": "uint8",
-        "internalType": "enum ICairnTaskMVP.State"
-      },
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct ICairnCore.Task",
+        "components": [
+          {
+            "name": "id",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "taskType",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "specHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "operator",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "primaryAgent",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "fallbackAgent",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "currentAgent",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "state",
+            "type": "uint8",
+            "internalType": "enum ICairnTypes.TaskState"
+          },
+          {
+            "name": "createdAt",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "startedAt",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "deadline",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "escrowAmount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "settledPrimary",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "settledFallback",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "heartbeatInterval",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "lastHeartbeat",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "checkpointCount",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "primaryCheckpoints",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "fallbackCheckpoints",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "latestCheckpointCID",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "failureClass",
+            "type": "uint8",
+            "internalType": "enum ICairnTypes.FailureClass"
+          },
+          {
+            "name": "failureType",
+            "type": "uint8",
+            "internalType": "enum ICairnTypes.FailureType"
+          },
+          {
+            "name": "failureRecordCID",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "recoveryScore",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "resolutionType",
+            "type": "uint8",
+            "internalType": "enum ICairnTypes.ResolutionType"
+          },
+          {
+            "name": "resolutionRecordCID",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getTaskTypeHistory",
+    "inputs": [
       {
-        "name": "operator",
+        "name": "taskType",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "governance",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
         "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "primaryAgent",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "fallbackAgent",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "escrow",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "primaryCheckpoints",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "fallbackCheckpoints",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "lastHeartbeat",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "deadline",
-        "type": "uint256",
-        "internalType": "uint256"
+        "internalType": "contract IGovernance"
       }
     ],
     "stateMutability": "view"
@@ -232,7 +417,7 @@
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -245,17 +430,24 @@
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "owner",
+    "name": "pause",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "paused",
     "inputs": [],
     "outputs": [
       {
         "name": "",
-        "type": "address",
-        "internalType": "address"
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -271,12 +463,115 @@
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "pure"
+    "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "renounceOwnership",
+    "name": "recoveryRouter",
     "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IRecoveryRouter"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "recoveryThreshold",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "resolveDispute",
+    "inputs": [
+      {
+        "name": "taskId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "ruling",
+        "type": "tuple",
+        "internalType": "struct ICairnTypes.Ruling",
+        "components": [
+          {
+            "name": "outcome",
+            "type": "uint8",
+            "internalType": "enum ICairnTypes.RulingOutcome"
+          },
+          {
+            "name": "agentShare",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "rationaleCID",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ]
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "resolveDisputeTimeout",
+    "inputs": [
+      {
+        "name": "taskId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setContracts",
+    "inputs": [
+      {
+        "name": "_recoveryRouter",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_fallbackPool",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_arbiterRegistry",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setEscrowHook",
+    "inputs": [
+      {
+        "name": "_escrowHook",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -295,7 +590,7 @@
   },
   {
     "type": "function",
-    "name": "settle",
+    "name": "startTask",
     "inputs": [
       {
         "name": "taskId",
@@ -311,19 +606,19 @@
     "name": "submitTask",
     "inputs": [
       {
-        "name": "primaryAgent",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "fallbackAgent",
-        "type": "address",
-        "internalType": "address"
+        "name": "taskType",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
         "name": "specHash",
         "type": "bytes32",
         "internalType": "bytes32"
+      },
+      {
+        "name": "primaryAgent",
+        "type": "address",
+        "internalType": "address"
       },
       {
         "name": "heartbeatInterval",
@@ -347,51 +642,135 @@
   },
   {
     "type": "function",
-    "name": "transferOwnership",
-    "inputs": [
+    "name": "totalEscrowLocked",
+    "inputs": [],
+    "outputs": [
       {
-        "name": "newOwner",
-        "type": "address",
-        "internalType": "address"
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalTasksCreated",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "totalTasksResolved",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "unpause",
+    "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
+    "type": "function",
+    "name": "verifyCheckpoint",
+    "inputs": [
+      {
+        "name": "taskId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "cid",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "batchIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "leafIndex",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "proof",
+        "type": "bytes32[]",
+        "internalType": "bytes32[]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
     "type": "event",
-    "name": "CheckpointCommitted",
+    "name": "CheckpointBatchCommitted",
     "inputs": [
       {
         "name": "taskId",
         "type": "bytes32",
         "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "index",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "cid",
-        "type": "bytes32",
-        "indexed": false,
         "internalType": "bytes32"
       },
       {
         "name": "agent",
         "type": "address",
-        "indexed": false,
+        "indexed": true,
         "internalType": "address"
+      },
+      {
+        "name": "batchStartIndex",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "batchEndIndex",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "merkleRoot",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "latestCID",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "FallbackAssigned",
+    "name": "Heartbeat",
     "inputs": [
       {
         "name": "taskId",
@@ -400,23 +779,10 @@
         "internalType": "bytes32"
       },
       {
-        "name": "fallbackAgent",
+        "name": "agent",
         "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "HeartbeatReceived",
-    "inputs": [
-      {
-        "name": "taskId",
-        "type": "bytes32",
         "indexed": true,
-        "internalType": "bytes32"
+        "internalType": "address"
       },
       {
         "name": "timestamp",
@@ -429,19 +795,38 @@
   },
   {
     "type": "event",
-    "name": "OwnershipTransferred",
+    "name": "Paused",
     "inputs": [
       {
-        "name": "previousOwner",
+        "name": "account",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RecoveryStarted",
+    "inputs": [
+      {
+        "name": "taskId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "fallbackAgent",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "newOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
+        "name": "resumeFromCheckpoint",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -457,17 +842,23 @@
         "internalType": "bytes32"
       },
       {
-        "name": "completedBy",
+        "name": "agent",
         "type": "address",
-        "indexed": false,
+        "indexed": true,
         "internalType": "address"
+      },
+      {
+        "name": "checkpointCount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "TaskFailed",
+    "name": "TaskCreated",
     "inputs": [
       {
         "name": "taskId",
@@ -476,51 +867,7 @@
         "internalType": "bytes32"
       },
       {
-        "name": "reason",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "TaskResolved",
-    "inputs": [
-      {
-        "name": "taskId",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "primaryShare",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "fallbackShare",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "protocolFee",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "TaskSubmitted",
-    "inputs": [
-      {
-        "name": "taskId",
+        "name": "taskType",
         "type": "bytes32",
         "indexed": true,
         "internalType": "bytes32"
@@ -548,26 +895,176 @@
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
+      },
+      {
+        "name": "deadline",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TaskDisputed",
+    "inputs": [
+      {
+        "name": "taskId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "recoveryScore",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "disputeDeadline",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TaskFailed",
+    "inputs": [
+      {
+        "name": "taskId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "agent",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "failureClass",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum ICairnTypes.FailureClass"
+      },
+      {
+        "name": "failureType",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum ICairnTypes.FailureType"
+      },
+      {
+        "name": "recoveryScore",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "failureRecordCID",
+        "type": "bytes32",
+        "indexed": false,
+        "internalType": "bytes32"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TaskSettled",
+    "inputs": [
+      {
+        "name": "taskId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "resolutionType",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "enum ICairnTypes.ResolutionType"
+      },
+      {
+        "name": "primaryPayout",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "fallbackPayout",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "protocolFee",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TaskStarted",
+    "inputs": [
+      {
+        "name": "taskId",
+        "type": "bytes32",
+        "indexed": true,
+        "internalType": "bytes32"
+      },
+      {
+        "name": "agent",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "successRate",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "avgCheckpoints",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Unpaused",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
       }
     ],
     "anonymous": false
   },
   {
     "type": "error",
-    "name": "AlreadySettled",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "CheckpointGap",
+    "name": "DeadlineExceeded",
     "inputs": [
       {
-        "name": "expected",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "taskId",
+        "type": "bytes32",
+        "internalType": "bytes32"
       },
       {
-        "name": "provided",
+        "name": "deadline",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -575,99 +1072,99 @@
   },
   {
     "type": "error",
-    "name": "DeadlineExceeded",
+    "name": "DisputeTimeoutNotReached",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "DeadlineNotReached",
+    "name": "EnforcedPause",
     "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ExpectedPause",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "HeartbeatTooFrequent",
+    "inputs": [
+      {
+        "name": "lastHeartbeat",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "minInterval",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
   },
   {
     "type": "error",
     "name": "InsufficientEscrow",
     "inputs": [
       {
-        "name": "required",
+        "name": "provided",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "provided",
+        "name": "minimum",
         "type": "uint256",
         "internalType": "uint256"
       }
     ]
-  },
-  {
-    "type": "error",
-    "name": "InvalidAddress",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidCID",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidDeadline",
-    "inputs": []
   },
   {
     "type": "error",
     "name": "InvalidHeartbeatInterval",
     "inputs": [
       {
-        "name": "minimum",
+        "name": "provided",
         "type": "uint256",
         "internalType": "uint256"
       },
       {
-        "name": "provided",
+        "name": "minimum",
         "type": "uint256",
         "internalType": "uint256"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidMerkleProof",
+    "inputs": []
   },
   {
     "type": "error",
     "name": "InvalidState",
     "inputs": [
       {
-        "name": "expected",
+        "name": "current",
         "type": "uint8",
-        "internalType": "enum ICairnTaskMVP.State"
+        "internalType": "enum ICairnTypes.TaskState"
       },
       {
-        "name": "actual",
+        "name": "expected",
         "type": "uint8",
-        "internalType": "enum ICairnTaskMVP.State"
+        "internalType": "enum ICairnTypes.TaskState"
       }
     ]
   },
   {
     "type": "error",
-    "name": "NotStale",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "OwnableInvalidOwner",
+    "name": "NotAuthorized",
     "inputs": [
       {
-        "name": "owner",
+        "name": "caller",
         "type": "address",
         "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "OwnableUnauthorizedAccount",
-    "inputs": [
+      },
       {
-        "name": "account",
+        "name": "expected",
         "type": "address",
         "internalType": "address"
       }
@@ -681,16 +1178,28 @@
   {
     "type": "error",
     "name": "TaskNotFound",
-    "inputs": []
+    "inputs": [
+      {
+        "name": "taskId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ]
   },
   {
     "type": "error",
-    "name": "TransferFailed",
-    "inputs": []
+    "name": "TaskNotStale",
+    "inputs": [
+      {
+        "name": "taskId",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ]
   },
   {
     "type": "error",
-    "name": "Unauthorized",
+    "name": "ZeroAddress",
     "inputs": []
   }
 ]

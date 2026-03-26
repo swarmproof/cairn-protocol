@@ -365,3 +365,7 @@ dashboard:
 ---
 
 *See also: [Architecture](./architecture.md) · [Integration](./integration.md) · [Execution Intelligence](./execution-intelligence.md)*
+
+---
+
+*This documentation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution: CAIRN Protocol.*

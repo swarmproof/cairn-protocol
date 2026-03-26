@@ -207,7 +207,8 @@ enum TaskState {
 enum FailureClass {
   LIVENESS
   RESOURCE
-  LOGIC
+  EXECUTION
+  DEADLINE
 }
 
 enum FailureType {

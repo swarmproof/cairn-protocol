@@ -50,7 +50,7 @@ async def run_pipeline():
         logger.info(f"✅ Configuration loaded:")
         logger.info(f"   Contract: {config.contract_address}")
         logger.info(f"   RPC: {config.rpc_url}")
-        logger.info(f"   Bonfires Room: {config.bonfires_room}")
+        logger.info(f"   Bonfires Bonfire ID: {config.bonfires_bonfire_id}")
         logger.info(f"   Poll Interval: {config.poll_interval}s")
 
     except ValueError as e:

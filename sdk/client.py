@@ -1,9 +1,10 @@
 """
 CAIRN SDK Client
 
-Web3 client for interacting with the CairnTaskMVP contract.
+Web3 client for interacting with the CairnCore contract.
 """
 
+import asyncio
 import json
 import logging
 import os
@@ -38,12 +39,18 @@ def _load_abi() -> list[dict[str, Any]]:
 
 class CairnClient:
     """
-    Client for interacting with CairnTaskMVP contract.
+    Client for interacting with CairnCore contract.
+
+    CairnCore is the full protocol implementation with:
+    - 6-state machine (IDLE, RUNNING, FAILED, RECOVERING, DISPUTED, RESOLVED)
+    - Merkle checkpoint batching for gas efficiency
+    - Dispute resolution via ArbiterRegistry
+    - Recovery routing via RecoveryRouter
 
     Example:
         client = CairnClient(
             rpc_url="https://sepolia.base.org",
-            contract_address="0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417",
+            contract_address="0x...",
             private_key=os.environ["PRIVATE_KEY"],
         )
 
@@ -59,6 +66,13 @@ class CairnClient:
 
         # Get task state
         task = await client.get_task(task_id)
+
+        # Watch for events with timeout
+        await client.watch_events(
+            "TaskStarted",
+            callback=handle_event,
+            timeout=300,  # 5 minute timeout
+        )
     """
 
     def __init__(
@@ -72,7 +86,7 @@ class CairnClient:
 
         Args:
             rpc_url: Base Sepolia RPC URL
-            contract_address: Deployed CairnTaskMVP address
+            contract_address: Deployed CairnCore contract address
             private_key: Private key for signing transactions (optional for read-only)
         """
         self._rpc_url = rpc_url
@@ -489,22 +503,76 @@ class CairnClient:
         event_name: str,
         callback: Callable[[dict], None],
         from_block: int | str = "latest",
-    ) -> None:
+        timeout: float | None = None,
+        poll_interval: float = 2.0,
+        max_iterations: int | None = None,
+    ) -> int:
         """
-        Watch for contract events.
+        Watch for contract events with timeout and iteration limits.
 
         Args:
-            event_name: Name of event to watch (e.g., "TaskSubmitted")
+            event_name: Name of event to watch (e.g., "TaskSubmitted", "TaskStarted",
+                       "TaskFailed", "TaskResolved", "CheckpointCommitted")
             callback: Function to call with event data
             from_block: Block to start watching from
+            timeout: Maximum time to watch in seconds (None = no timeout)
+            poll_interval: Seconds between polls (default: 2.0)
+            max_iterations: Maximum poll iterations (None = unlimited)
+
+        Returns:
+            Number of events processed
+
+        Raises:
+            asyncio.TimeoutError: If timeout is reached
+            ContractError: If event filter creation fails
+
+        Example:
+            # Watch for 5 minutes max
+            count = await client.watch_events(
+                "TaskStarted",
+                callback=lambda e: print(e),
+                timeout=300,
+            )
+            print(f"Processed {count} events")
         """
-        event = getattr(self._contract.events, event_name)
-        event_filter = await event.create_filter(from_block=from_block)
+        try:
+            event = getattr(self._contract.events, event_name)
+            event_filter = await event.create_filter(from_block=from_block)
+        except AttributeError:
+            raise ContractError(f"Unknown event: {event_name}")
+        except Exception as e:
+            raise ContractError(f"Failed to create event filter: {e}") from e
+
+        start_time = asyncio.get_event_loop().time()
+        events_processed = 0
+        iterations = 0
 
         while True:
-            entries = await event_filter.get_new_entries()
-            for entry in entries:
-                callback(dict(entry))
+            # Check timeout
+            if timeout is not None:
+                elapsed = asyncio.get_event_loop().time() - start_time
+                if elapsed >= timeout:
+                    logger.info(f"watch_events timeout after {elapsed:.1f}s, processed {events_processed} events")
+                    break
+
+            # Check max iterations
+            if max_iterations is not None and iterations >= max_iterations:
+                logger.info(f"watch_events max iterations ({max_iterations}) reached, processed {events_processed} events")
+                break
+
+            # Poll for new events
+            try:
+                entries = await event_filter.get_new_entries()
+                for entry in entries:
+                    callback(dict(entry))
+                    events_processed += 1
+            except Exception as e:
+                logger.warning(f"Error polling events: {e}")
+
+            iterations += 1
+            await asyncio.sleep(poll_interval)
+
+        return events_processed
 
     # ─────────────────────────────────────────────────────────────────────────
     # Private Helpers

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "The Graph subgraph for CAIRN Protocol execution intelligence",
   "repository": "https://github.com/cairn-protocol/subgraph",
-  "license": "BSL-1.1",
+  "license": "MIT",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",

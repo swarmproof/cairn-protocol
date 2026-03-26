@@ -121,8 +121,8 @@ A7:                          → classify(failure_type)
                              → emit TaskFailed(taskId, recordCID, score)
                              ← BonfiresAdapter indexes record ◄──────────────── event
 
-A8:        score≥0.6 ─────────────────────────────────────────────────────► [RECOVERING]
-           score<0.6 ─────────────────────────────────────────────────────► [DISPUTED]
+A8:        score≥0.3 ─────────────────────────────────────────────────────► [RECOVERING]
+           score<0.3 ─────────────────────────────────────────────────────► [DISPUTED]
 
 ── RECOVERING ────────────────────────────────────────────────────────────────────────────
 
@@ -188,7 +188,7 @@ A14:       [arbiter]         rule(taskId, outcome)
 | Action | Actor | Description |
 |--------|-------|-------------|
 | **A7** | Protocol classifies | Classifies failure type (liveness / resource / logic). Computes recovery_score using formula. Writes Failure Record to IPFS. Stores CID on-chain. Emits TaskFailed(taskId, recordCID, recoveryScore). Escrow held. |
-| **A8** | Protocol routes | Routes based on recovery_score: score ≥ 0.6 → A9 (RECOVERING path). score < 0.6 → A13 (DISPUTED path) |
+| **A8** | Protocol routes | Routes based on recovery_score: score ≥ 0.3 → A9 (RECOVERING path). score < 0.3 → A13 (DISPUTED path) |
 
 ### Phase 4: Recovering
 
@@ -214,3 +214,7 @@ A14:       [arbiter]         rule(taskId, outcome)
 ---
 
 *See also: [Concepts](./concepts.md) · [Integration](./integration.md) · [Contracts](./contracts.md)*
+
+---
+
+*This documentation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution: CAIRN Protocol.*

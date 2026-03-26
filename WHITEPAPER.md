@@ -4,6 +4,13 @@
 
 ### Version 1.0
 
+> **Copyright 2026 Maroua BOUDOUKHA. All rights reserved.**
+>
+> This document may be cited for academic and research purposes with proper attribution:
+> BOUDOUKHA, M. (2026). *CAIRN Protocol Whitepaper: Agent Failure and Recovery Protocol*. Version 1.0.
+>
+> Redistribution or commercial use requires written permission from the author.
+
 ---
 
 ## Abstract
@@ -32,7 +39,7 @@ An operator initiates a task with a budget, deadline, and task type. Before the 
 
 ### 1.1 The Broken World
 
-The Ethereum agentic economy is generating real economic activity — $450M+ in AGDP, 45k+ active agents, 100M+ monthly transactions. But every agent is operationally isolated.
+The Ethereum agentic economy is generating real economic activity — $479M+ in aGDP (as of March 2026, per Olas network metrics), 45k+ active agents, 100M+ monthly transactions. But every agent is operationally isolated.
 
 When an agent fails mid-task — because an API rate-limits at 2am UTC, a budget is exceeded, a context window overflows, or a process crashes — **nothing standard happens**. The escrow sits in an ambiguous state. The human operator may or may not find out. Another agent does not automatically take over. The work is lost.
 
@@ -405,10 +412,11 @@ Where:
 - `budget_remaining_pct`: (budget_cap - cost_accrued) / budget_cap
 - `deadline_remaining_pct`: (deadline - current_block) / (deadline - start_block)
 
-Routing:
-- `score ≥ 0.6` → RECOVERING
-- `0.3 ≤ score < 0.6` → PARTIAL (attempt recovery with reduced budget)
-- `score < 0.3` → DISPUTED
+Routing (v1 Implementation):
+- `score ≥ 0.3` → RECOVERING (automatic fallback assignment)
+- `score < 0.3` → DISPUTED (requires arbiter resolution)
+
+> **Note:** Future versions may implement a PARTIAL state (0.3–0.6 range) for graduated recovery attempts.
 
 ---
 
@@ -424,7 +432,7 @@ Routing:
 | Arbiter min stake | 15% | 5-50% | Stake as % of max ruleable dispute |
 | Arbiter fee | 3% | 1-10% | Fee as % of dispute value |
 | Arbiter timeout | 7 days | 1-30 days | Time for arbiter to rule |
-| Recovery threshold | 0.6 | 0.3-0.9 | Score threshold for RECOVERING |
+| Recovery threshold | 0.3 | 0.1-0.9 | Score threshold for RECOVERING (v1) |
 
 ### 7.2 Governance Model
 

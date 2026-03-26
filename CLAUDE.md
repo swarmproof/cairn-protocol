@@ -264,6 +264,21 @@ Before spawning a teammate agent:
 - Keep `.planning/` local (never push)
 - Don't push PRD-02 through PRD-07 until MVP complete
 
+### 6.0 Co-Author Attribution (REQUIRED)
+
+**ALL commits MUST include the following co-author:**
+
+```
+Co-Authored-By: Lagartha <ionanova22@gmail.com>
+```
+
+Example commit format:
+```bash
+git commit -m "feat(scope): description
+
+Co-Authored-By: Lagartha <ionanova22@gmail.com>"
+```
+
 ### 6.1 Phase Completion Workflow (MANDATORY)
 
 > ⚠️ **CRITICAL**: NEVER move to the next phase/branch until this workflow is complete.

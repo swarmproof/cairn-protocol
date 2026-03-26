@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSL-1.1
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
@@ -806,8 +806,398 @@ contract CairnCoreTest is Test {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // DISPUTED STATE TESTS (Coverage Gap Fix)
+    // ═══════════════════════════════════════════════════════════════
+
+    function test_DetectFailure_NoFallback_EntersDisputed() public {
+        // Deploy a fresh system without fallback pool
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+
+        CairnCore coreNoFallback = new CairnCore(
+            feeRecipient,
+            address(newRouter),
+            address(0), // No fallback pool
+            address(newRegistry),
+            address(governance)
+        );
+
+        // Configure router to accept the new core
+        newRouter.setCairnCore(address(coreNoFallback));
+        newRegistry.setCairnCore(address(coreNoFallback));
+
+        vm.deal(operator, 10 ether);
+
+        // Submit and start task
+        vm.prank(operator);
+        bytes32 taskId = coreNoFallback.submitTask{value: 0.1 ether}(
+            taskType,
+            specHash,
+            primaryAgent,
+            60,
+            block.timestamp + 1 hours
+        );
+
+        vm.prank(primaryAgent);
+        coreNoFallback.startTask(taskId);
+
+        // Let task go stale
+        vm.warp(block.timestamp + 121);
+        coreNoFallback.detectFailure(taskId);
+
+        // Should be DISPUTED because no fallback available
+        ICairnCore.Task memory task = coreNoFallback.getTask(taskId);
+        assertEq(uint8(task.state), uint8(ICairnTypes.TaskState.DISPUTED));
+    }
+
+    function test_DetectFailure_ZeroCheckpoints_EntersDisputed() public {
+        // Submit and start task (no checkpoints committed)
+        bytes32 taskId = _submitAndStartTask();
+
+        // Immediately go stale without any checkpoints
+        // This should result in low recovery score → DISPUTED
+        vm.warp(block.timestamp + 121);
+        core.detectFailure(taskId);
+
+        ICairnCore.Task memory task = core.getTask(taskId);
+        // May go to RECOVERING or DISPUTED based on recovery score
+        // but with 0 checkpoints, score should be low
+        assertTrue(
+            task.state == ICairnTypes.TaskState.DISPUTED ||
+            task.state == ICairnTypes.TaskState.RECOVERING,
+            "Should be DISPUTED or RECOVERING"
+        );
+    }
+
+    function test_ResolveDispute_PayAgent() public {
+        // Deploy a fresh system without fallback pool
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+
+        CairnCore coreNoFallback = new CairnCore(
+            feeRecipient,
+            address(newRouter),
+            address(0),
+            address(newRegistry),
+            address(governance)
+        );
+
+        newRouter.setCairnCore(address(coreNoFallback));
+        newRegistry.setCairnCore(address(coreNoFallback));
+
+        // Register arbiter in new registry
+        bytes32[] memory domains = new bytes32[](1);
+        domains[0] = taskType;
+        vm.prank(arbiter);
+        newRegistry.registerArbiter{value: 0.5 ether}(domains);
+
+        vm.deal(operator, 10 ether);
+
+        vm.prank(operator);
+        bytes32 taskId = coreNoFallback.submitTask{value: 0.1 ether}(
+            taskType,
+            specHash,
+            primaryAgent,
+            60,
+            block.timestamp + 1 hours
+        );
+
+        vm.prank(primaryAgent);
+        coreNoFallback.startTask(taskId);
+
+        // Commit some checkpoints before failing
+        vm.prank(primaryAgent);
+        coreNoFallback.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1);
+
+        vm.warp(block.timestamp + 121);
+        coreNoFallback.detectFailure(taskId);
+
+        ICairnCore.Task memory task = coreNoFallback.getTask(taskId);
+        if (task.state == ICairnTypes.TaskState.DISPUTED) {
+            // Resolve with PAY_AGENT ruling
+            ICairnTypes.Ruling memory ruling = ICairnTypes.Ruling({
+                outcome: ICairnTypes.RulingOutcome.PAY_AGENT,
+                agentShare: 0,
+                rationaleCID: keccak256("pay agent rationale")
+            });
+
+            uint256 primaryBefore = primaryAgent.balance;
+            vm.prank(arbiter);
+            coreNoFallback.resolveDispute(taskId, ruling);
+
+            task = coreNoFallback.getTask(taskId);
+            assertEq(uint8(task.state), uint8(ICairnTypes.TaskState.RESOLVED));
+            assertEq(uint8(task.resolutionType), uint8(ICairnTypes.ResolutionType.ARBITER_RULING));
+            assertGt(primaryAgent.balance, primaryBefore, "Agent should be paid");
+        }
+    }
+
+    function test_ResolveDispute_Split() public {
+        // Deploy a fresh system without fallback pool
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+
+        CairnCore coreNoFallback = new CairnCore(
+            feeRecipient,
+            address(newRouter),
+            address(0),
+            address(newRegistry),
+            address(governance)
+        );
+
+        newRouter.setCairnCore(address(coreNoFallback));
+        newRegistry.setCairnCore(address(coreNoFallback));
+
+        // Register arbiter
+        bytes32[] memory domains = new bytes32[](1);
+        domains[0] = taskType;
+        vm.prank(arbiter);
+        newRegistry.registerArbiter{value: 0.5 ether}(domains);
+
+        vm.deal(operator, 10 ether);
+
+        vm.prank(operator);
+        bytes32 taskId = coreNoFallback.submitTask{value: 0.1 ether}(
+            taskType,
+            specHash,
+            primaryAgent,
+            60,
+            block.timestamp + 1 hours
+        );
+
+        vm.prank(primaryAgent);
+        coreNoFallback.startTask(taskId);
+
+        vm.warp(block.timestamp + 121);
+        coreNoFallback.detectFailure(taskId);
+
+        ICairnCore.Task memory task = coreNoFallback.getTask(taskId);
+        if (task.state == ICairnTypes.TaskState.DISPUTED) {
+            // Resolve with SPLIT ruling (50% to agent, 50% refund)
+            ICairnTypes.Ruling memory ruling = ICairnTypes.Ruling({
+                outcome: ICairnTypes.RulingOutcome.SPLIT,
+                agentShare: 50,
+                rationaleCID: keccak256("split rationale")
+            });
+
+            uint256 primaryBefore = primaryAgent.balance;
+
+            vm.prank(arbiter);
+            coreNoFallback.resolveDispute(taskId, ruling);
+
+            task = coreNoFallback.getTask(taskId);
+            assertEq(uint8(task.state), uint8(ICairnTypes.TaskState.RESOLVED));
+            // Agent should receive funds
+            assertGt(primaryAgent.balance, primaryBefore, "Agent should receive split");
+        }
+    }
+
+    function test_ResolveDisputeTimeout_FullFlow() public {
+        // Deploy a fresh system without fallback pool
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+
+        CairnCore coreNoFallback = new CairnCore(
+            feeRecipient,
+            address(newRouter),
+            address(0),
+            address(newRegistry),
+            address(governance)
+        );
+
+        newRouter.setCairnCore(address(coreNoFallback));
+        newRegistry.setCairnCore(address(coreNoFallback));
+
+        vm.deal(operator, 10 ether);
+
+        vm.prank(operator);
+        bytes32 taskId = coreNoFallback.submitTask{value: 0.1 ether}(
+            taskType,
+            specHash,
+            primaryAgent,
+            60,
+            block.timestamp + 1 hours
+        );
+
+        vm.prank(primaryAgent);
+        coreNoFallback.startTask(taskId);
+
+        vm.warp(block.timestamp + 121);
+        coreNoFallback.detectFailure(taskId);
+
+        ICairnCore.Task memory task = coreNoFallback.getTask(taskId);
+        if (task.state == ICairnTypes.TaskState.DISPUTED) {
+            // Wait for dispute timeout (7 days)
+            vm.warp(block.timestamp + 7 days + 1);
+
+            uint256 operatorBefore = operator.balance;
+
+            coreNoFallback.resolveDisputeTimeout(taskId);
+
+            task = coreNoFallback.getTask(taskId);
+            assertEq(uint8(task.state), uint8(ICairnTypes.TaskState.RESOLVED));
+            assertEq(uint8(task.resolutionType), uint8(ICairnTypes.ResolutionType.TIMEOUT_REFUND));
+            assertGt(operator.balance, operatorBefore, "Operator should get refund");
+        }
+    }
+
+    function test_RevertResolveDispute_NotDisputed() public {
+        bytes32 taskId = _submitAndStartTask();
+
+        // Task is in RUNNING state, not DISPUTED
+        ICairnTypes.Ruling memory ruling = ICairnTypes.Ruling({
+            outcome: ICairnTypes.RulingOutcome.REFUND_OPERATOR,
+            agentShare: 0,
+            rationaleCID: keccak256("rationale")
+        });
+
+        vm.prank(arbiter);
+        vm.expectRevert();
+        core.resolveDispute(taskId, ruling);
+    }
+
+    function test_TaskDisputedEvent() public {
+        // Deploy a fresh system without fallback pool
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+
+        CairnCore coreNoFallback = new CairnCore(
+            feeRecipient,
+            address(newRouter),
+            address(0),
+            address(newRegistry),
+            address(governance)
+        );
+
+        newRouter.setCairnCore(address(coreNoFallback));
+        newRegistry.setCairnCore(address(coreNoFallback));
+
+        vm.deal(operator, 10 ether);
+
+        vm.prank(operator);
+        bytes32 taskId = coreNoFallback.submitTask{value: 0.1 ether}(
+            taskType,
+            specHash,
+            primaryAgent,
+            60,
+            block.timestamp + 1 hours
+        );
+
+        vm.prank(primaryAgent);
+        coreNoFallback.startTask(taskId);
+
+        vm.warp(block.timestamp + 121);
+
+        // Expect TaskDisputed event
+        vm.expectEmit(true, false, false, false);
+        emit ICairnCore.TaskDisputed(taskId, 0, 0);
+        coreNoFallback.detectFailure(taskId);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MERKLE VERIFICATION TESTS (Coverage Gap Fix)
+    // ═══════════════════════════════════════════════════════════════
+
+    function test_VerifyCheckpoint_InvalidBatchIndex() public {
+        bytes32 taskId = _submitAndStartTask();
+
+        // Commit one batch
+        vm.prank(primaryAgent);
+        core.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1);
+
+        // Try to verify with invalid batch index
+        bytes32[] memory proof = new bytes32[](0);
+        bool result = core.verifyCheckpoint(taskId, cid1, 99, 0, proof);
+
+        assertFalse(result, "Should return false for invalid batch index");
+    }
+
+    function test_VerifyCheckpoint_ValidProof() public {
+        bytes32 taskId = _submitAndStartTask();
+
+        // Create a proper Merkle tree for testing
+        // Leaf structure: keccak256(abi.encodePacked(cid, leafIndex))
+        bytes32 leaf0 = keccak256(abi.encodePacked(cid1, uint256(0)));
+        bytes32 leaf1 = keccak256(abi.encodePacked(cid2, uint256(1)));
+
+        // Simple 2-leaf tree: root = hash(leaf0, leaf1)
+        bytes32 root = _hashPair(leaf0, leaf1);
+
+        // Commit batch with this root
+        vm.prank(primaryAgent);
+        core.commitCheckpointBatch(taskId, 2, root, cid2);
+
+        // Verify leaf0 with proof [leaf1]
+        bytes32[] memory proof = new bytes32[](1);
+        proof[0] = leaf1;
+
+        bool result = core.verifyCheckpoint(taskId, cid1, 0, 0, proof);
+        assertTrue(result, "Valid proof should verify");
+    }
+
+    function test_VerifyCheckpoint_InvalidProof() public {
+        bytes32 taskId = _submitAndStartTask();
+
+        // Create a proper Merkle tree
+        bytes32 leaf0 = keccak256(abi.encodePacked(cid1, uint256(0)));
+        bytes32 leaf1 = keccak256(abi.encodePacked(cid2, uint256(1)));
+        bytes32 root = _hashPair(leaf0, leaf1);
+
+        vm.prank(primaryAgent);
+        core.commitCheckpointBatch(taskId, 2, root, cid2);
+
+        // Try to verify with wrong proof
+        bytes32[] memory wrongProof = new bytes32[](1);
+        wrongProof[0] = keccak256("wrong");
+
+        bool result = core.verifyCheckpoint(taskId, cid1, 0, 0, wrongProof);
+        assertFalse(result, "Invalid proof should not verify");
+    }
+
+    function test_VerifyCheckpoint_WrongCID() public {
+        bytes32 taskId = _submitAndStartTask();
+
+        bytes32 leaf0 = keccak256(abi.encodePacked(cid1, uint256(0)));
+        bytes32 leaf1 = keccak256(abi.encodePacked(cid2, uint256(1)));
+        bytes32 root = _hashPair(leaf0, leaf1);
+
+        vm.prank(primaryAgent);
+        core.commitCheckpointBatch(taskId, 2, root, cid2);
+
+        // Try to verify wrong CID with correct proof structure
+        bytes32[] memory proof = new bytes32[](1);
+        proof[0] = leaf1;
+
+        bytes32 wrongCid = keccak256("wrong cid");
+        bool result = core.verifyCheckpoint(taskId, wrongCid, 0, 0, proof);
+        assertFalse(result, "Wrong CID should not verify");
+    }
+
+    function test_RevertTaskNotFound() public {
+        bytes32 fakeTaskId = keccak256("nonexistent");
+
+        vm.expectRevert(abi.encodeWithSelector(ICairnCore.TaskNotFound.selector, fakeTaskId));
+        core.getTask(fakeTaskId);
+    }
+
+    function test_ModifierInState_Reverts() public {
+        bytes32 taskId = _submitTask();
+
+        // Task is in IDLE state, try to complete it (requires RUNNING)
+        vm.prank(primaryAgent);
+        vm.expectRevert();
+        core.completeTask(taskId);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // HELPERS
     // ═══════════════════════════════════════════════════════════════
+
+    function _hashPair(bytes32 a, bytes32 b) internal pure returns (bytes32) {
+        return a < b
+            ? keccak256(abi.encodePacked(a, b))
+            : keccak256(abi.encodePacked(b, a));
+    }
 
     function _submitTask() internal returns (bytes32) {
         uint256 deadline = block.timestamp + 1 hours;

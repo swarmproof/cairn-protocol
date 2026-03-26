@@ -437,3 +437,7 @@ Implementation based on:
 - [Mech Marketplace](https://marketplace.olas.network/gnosis/ai-agents)
 - [Olas GitHub (valory-xyz)](https://github.com/valory-xyz)
 - [Code4rena 2026 Olas Audit](https://github.com/code-423n4/2026-01-olas)
+
+---
+
+*This documentation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution: CAIRN Protocol.*

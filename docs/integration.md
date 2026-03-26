@@ -73,6 +73,8 @@ Fallback agent receives task state:
 
 ## Checkpoint Protocol
 
+> ⚠️ **Centralization Note**: The default CAIRN SDK uses Pinata for IPFS pinning. While checkpoint CIDs are stored on-chain (decentralized), the actual checkpoint data depends on Pinata's availability for pinning and retrieval. For production deployments, consider running your own IPFS node or using multiple pinning services for redundancy.
+
 ### Schema Validation
 
 The output schema for each subtask is declared by the operator at task init. CAIRN stores the schema hash. On checkpoint commit, CAIRN verifies the CID content matches the schema hash. This is deterministic — no AI, no oracle.
@@ -254,7 +256,7 @@ ERC-8183 hook implementation. ~80 lines.
 
 Off-chain component. ~150 lines Python.
 
-- Listens for `TaskFailed` events with `score ≥ 0.6`
+- Listens for `TaskFailed` events with `score ≥ 0.3`
 - Queries Bonfires API for best fallback agent by `task_type`
 - Queries Olas Mech Marketplace for agent availability
 - Calls `assignFallback(taskId, fallbackAgentId)` on CairnTask
@@ -312,3 +314,7 @@ result = await cairn_agent.invoke({
 ---
 
 *See also: [Concepts](./concepts.md) · [Architecture](./architecture.md) · [Contracts](./contracts.md) · [Standards](./standards.md)*
+
+---
+
+*This documentation is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Attribution: CAIRN Protocol.*
