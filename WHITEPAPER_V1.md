@@ -2,7 +2,7 @@
 
 ## Agent Failure and Recovery Protocol
 
-### Version 1.0
+### Version 1.0 — March 2026
 
 > **Copyright 2026 Maroua BOUDOUKHA. All rights reserved.**
 >
