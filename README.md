@@ -234,7 +234,7 @@ Every task moves through exactly one of these states. No silent failures. No amb
 recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) + (deadline_remaining_pct × 0.2)
 ```
 
-Routing: `score ≥ 0.6` → RECOVERING | `score < 0.6` → DISPUTED
+Routing: `score ≥ 0.6` → RECOVERING (full) | `0.3 ≤ score < 0.6` → RECOVERING (reduced) | `score < 0.3` → DISPUTED
 
 ---
 
@@ -270,7 +270,7 @@ Routing: `score ≥ 0.6` → RECOVERING | `score < 0.6` → DISPUTED
 
 **A7** · Protocol classifies failure type (LIVENESS / RESOURCE / LOGIC). Computes `recovery_score`. Writes Failure Record to IPFS. Emits `TaskFailed(taskId, recordCID, recoveryScore)`.
 
-**A8** · Routes: `score ≥ 0.6` → RECOVERING. `score < 0.6` → DISPUTED.
+**A8** · Routes: `score ≥ 0.6` → RECOVERING (full). `0.3 ≤ score < 0.6` → RECOVERING (reduced). `score < 0.3` → DISPUTED.
 
 </details>
 

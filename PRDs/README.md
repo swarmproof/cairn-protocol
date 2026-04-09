@@ -45,8 +45,8 @@ This folder contains the Product Requirements Documents (PRDs) for CAIRN protoco
 |-----|------|-------|----------|--------|
 | [PRD-00](./PRD-00-PROTOCOL-VISION/PRD.md) | Protocol Vision | Full CAIRN specification | Reference | 📋 Draft |
 | [PRD-01](./PRD-01-MVP-HACKATHON/PRD.md) | MVP Hackathon | Synthesis-ready demo | 1 weeks | 🚧 In Progress |
-| [PRD-02](./PRD-02-CORE-RECOVERY/PRD.md) | Core Recovery | Enhanced recovery scoring | +2 weeks | ⏳ Planned |
-| [PRD-03](./PRD-03-EXECUTION-INTELLIGENCE/PRD.md) | Execution Intelligence | Knowledge graph layer | +3 weeks | ⏳ Planned |
+| [PRD-02](./PRD-02-AUDIT-HARDENING/PRD.md) | Audit Hardening | Security fixes, SDK alignment, production readiness | ~4-5 weeks | 🚧 In Progress |
+| [PRD-03](./PRD-03-RECOVERY-CALIBRATION/PRD.md) | Recovery Score Calibration | Monte Carlo simulation for formula validation | ~2 weeks | 📋 Draft |
 | [PRD-04](./PRD-04-FALLBACK-ECOSYSTEM/PRD.md) | Fallback Ecosystem | Full pool + reputation | +3 weeks | ⏳ Planned |
 | [PRD-05](./PRD-05-ARBITER-NETWORK/PRD.md) | Arbiter Network | Dispute resolution | +2 weeks | ⏳ Planned |
 | [PRD-06](./PRD-06-FULL-INTEGRATION/PRD.md) | Full Integration | Complete protocol | +2 weeks | ⏳ Planned |

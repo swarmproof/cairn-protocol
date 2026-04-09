@@ -2,7 +2,7 @@
 eip: TBD
 title: Agent Failure and Recovery Standard
 description: A standard interface for agent task lifecycle, failure classification, checkpoint-based recovery, and execution intelligence accumulation
-author: Maroua BOUDOUKHA (@marouaboudoukha)
+author: Maroua BOUDOUKHA (@MarouaBoud)
 status: Draft
 type: Standards Track
 category: ERC
@@ -159,11 +159,11 @@ Six states. Every transition is deterministic. No human is required to trigger a
                              ▼                        │
                         ┌─────────┐   score≥0.3  ┌───┴──────┐
                         │         │ ────────────► │          │
-                        │ FAILED  │               │RECOVERING│
-                        │         │ ◄──────────── │          │
-                        └────┬────┘  fallback     └──────────┘
-                             │       fails
-                      score  │
+                        │ FAILED  │  (≥0.6 full  │RECOVERING│
+                        │         │ ◄──────────── │ (full or │
+                        └────┬────┘  0.3-0.6     │ reduced) │
+                             │       reduced or   └──────────┘
+                      score  │       fallback fails
                       <0.3   │
                              ▼
                         ┌──────────┐  arbiter  ┌──────────┐
@@ -200,14 +200,14 @@ Six states. Every transition is deterministic. No human is required to trigger a
 | Entry trigger | Any RUNNING exit condition fires |
 | Who can enter | From RUNNING only |
 | Actions | Classify failure type. Compute recovery score. Write Failure Record to IPFS. Store CID on-chain. Hold escrow. |
-| Exit — recoverable | Score ≥ 0.3 → RECOVERING |
+| Exit — recoverable | Score ≥ 0.6 → RECOVERING (full scope); 0.3 ≤ Score < 0.6 → RECOVERING (reduced scope) |
 | Exit — unrecoverable | Score < 0.3 → DISPUTED |
 
 #### RECOVERING State
 
 | Attribute | Value |
 |---|---|
-| Entry trigger | Recovery score ≥ 0.3 from FAILED |
+| Entry trigger | Recovery score ≥ 0.3 from FAILED (full scope if ≥ 0.6, reduced scope if 0.3-0.6) |
 | Who can enter | From FAILED only |
 | Preconditions | Budget headroom. Deadline headroom. Fallback agent available. |
 | Actions | Select fallback agent. Transfer task state (checkpoint CIDs, remaining budget, permissions). Fallback resumes from last checkpoint. |
@@ -227,7 +227,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 
 | Attribute | Value |
 |---|---|
-| Entry trigger | Score < 0.3, no fallback, or fallback failed |
+| Entry trigger | Score < 0.3, no fallback available, or fallback failed |
 | Who can enter | From FAILED only |
 | Actions | Hold escrow. Write negative reputation. Expose Failure Record. Start arbiter timeout. |
 | Exit — arbiter rules | Arbiter submits ruling → RESOLVED |
@@ -258,7 +258,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 | Action | Actor | Description |
 |---|---|---|
 | A7 | Protocol | Classify failure. Compute recovery score. Write Failure Record. |
-| A8 | Protocol | Route: score ≥ 0.3 → RECOVERING; score < 0.3 → DISPUTED. |
+| A8 | Protocol | Route: score ≥ 0.6 → RECOVERING (full); 0.3 ≤ score < 0.6 → RECOVERING (reduced); score < 0.3 → DISPUTED. |
 
 #### Phase 4: Recovering (A9-A11)
 
