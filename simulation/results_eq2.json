@@ -1,0 +1,47 @@
+{
+  "run": 2,
+  "formula": "Eq2: r = w_f*F + w_b*B_adj + w_d*D_adj + w_int*B_adj*D_adj",
+  "seed": 42,
+  "total_trials": 100000,
+  "run1_comparison": {
+    "current_misrouting": 0.47564,
+    "optimal_linear_misrouting": 0.33815
+  },
+  "eq2_optimal": {
+    "params": {
+      "w_f": 0.3,
+      "w_b": 0.2,
+      "w_d": 0.25,
+      "w_int": 0.25,
+      "b_crit": 0.1,
+      "d_crit": 0.05,
+      "penalty_b": 0.15,
+      "penalty_d": 0.15
+    },
+    "class_weights": {
+      "LIVENESS": 0.7,
+      "RESOURCE": 0.3,
+      "LOGIC": 0.0
+    },
+    "thresholds": {
+      "upper": 0.45,
+      "lower": 0.4
+    },
+    "misrouting_rate": 0.33171,
+    "false_positive_rate": 0.4574023383622976,
+    "false_negative_rate": 0.21967734004123088
+  },
+  "ablation": {
+    "eq1_linear": 0.33815,
+    "eq2_piecewise_only": 0.33826,
+    "eq2_full": 0.33171,
+    "piecewise_contribution_pp": -0.00010999999999999899,
+    "interaction_contribution_pp": 0.00655,
+    "total_improvement_pp": 0.006440000000000001
+  },
+  "sensitivity": {
+    "max_10pct": 0.006359999999999977
+  },
+  "total_improvement_pp": 0.14393,
+  "runtime_seconds": 31.324403285980225
+}
