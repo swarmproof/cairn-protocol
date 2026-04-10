@@ -121,14 +121,14 @@ Six states. Every transition is deterministic. No human is required to trigger a
                     fault    │                          │ complete
                   detected   │                          │
                              ▼                          │
-                        ┌─────────┐   score ≥ 0.3  ┌───┴──────┐
+                        ┌─────────┐  score ≥ 0.35  ┌───┴──────┐
                         │         │ ──────────────► │          │
-                        │ FAILED  │   (≥0.6 full   │RECOVERING│
-                        │         │ ◄──0.3-0.6──── │ (full or │
+                        │ FAILED  │  (≥0.40 full   │RECOVERING│
+                        │         │ ◄─0.35-0.40─── │ (full or │
                         └────┬────┘  reduced scope) │ reduced) │
                              │       or fallback    └──────────┘
                       score  │       fails
-                      < 0.3  │
+                     < 0.35  │
                              ▼
                         ┌──────────┐  arbiter   ┌──────────┐
                         │          │ ──────────► │          │
@@ -144,9 +144,9 @@ Six states. Every transition is deterministic. No human is required to trigger a
 |-------|---------------|---------|-----------------|
 | **IDLE** | Operator submits task | Query intelligence layer; lock escrow; pre-authorize delegation | Operator confirms → RUNNING |
 | **RUNNING** | Operator confirmation | Agent executes subtasks; writes checkpoints; emits heartbeats | Success → RESOLVED; Fault → FAILED |
-| **FAILED** | Liveness miss, budget hit, or deadline exceeded | Classify failure; compute recovery score; write failure record | Score ≥ 0.3 → RECOVERING (full or reduced scope); Score < 0.3 → DISPUTED |
-| **RECOVERING** | Recovery score ≥ 0.3 | Select fallback; transfer checkpoint state; fallback resumes (full or reduced scope) | Success → RESOLVED; Failure → DISPUTED |
-| **DISPUTED** | Score < 0.3 or fallback failure | Hold escrow; expose evidence; start arbiter timeout | Arbiter ruling → RESOLVED; Timeout → auto-refund |
+| **FAILED** | Liveness miss, budget hit, or deadline exceeded | Classify failure; compute recovery score; write failure record | Score ≥ 0.35 → RECOVERING (full or reduced scope); Score < 0.35 → DISPUTED |
+| **RECOVERING** | Recovery score ≥ 0.35 | Select fallback; transfer checkpoint state; fallback resumes (full or reduced scope) | Success → RESOLVED; Failure → DISPUTED |
+| **DISPUTED** | Score < 0.35 or fallback failure | Hold escrow; expose evidence; start arbiter timeout | Arbiter ruling → RESOLVED; Timeout → auto-refund |
 | **RESOLVED** | Completion or ruling | Settle escrow proportionally; write resolution record; update reputation | Terminal |
 
 ### 2.2.1 Formal Properties
@@ -160,8 +160,8 @@ Six states. Every transition is deterministic. No human is required to trigger a
 | RUNNING | HeartbeatMiss | block.timestamp > lastHeartbeat + *H* | FAILED |
 | RUNNING | BudgetExceeded | *κ* ≥ *E* | FAILED |
 | RUNNING | DeadlineExceeded | block.timestamp ≥ *δ* | FAILED |
-| FAILED | RecoveryRoute | *r* ≥ 0.3 | RECOVERING |
-| FAILED | RecoveryRoute | *r* < 0.3 | DISPUTED |
+| FAILED | RecoveryRoute | *r* ≥ 0.35 | RECOVERING |
+| FAILED | RecoveryRoute | *r* < 0.35 | DISPUTED |
 | RECOVERING | Complete | Fallback completes remaining subtasks | RESOLVED |
 | RECOVERING | FallbackFailed | Fallback fails or deadline exceeded | DISPUTED |
 | DISPUTED | ArbiterRuling | Arbiter submits valid ruling | RESOLVED |
@@ -190,7 +190,7 @@ Total maximum: (*δ* − *t*<sub>0</sub>) + 0 + (*δ* − *t*<sub>fail</sub>) + 
 
 **Theorem 4 (Determinism).** *For any task T in state σ and event e, τ(σ, e) produces at most one successor state.*
 
-*Proof.* The only branching transition is *τ*(FAILED, RecoveryRoute(*r*)), which depends on the recovery score *r*. Since *r* is computed as a pure function of on-chain state (Equation 1 in Section 6.4), and the threshold comparisons (*r* ≥ 0.6, 0.3 ≤ *r* < 0.6, *r* < 0.3) partition ℝ into disjoint intervals, exactly one branch is taken. All other transitions in the table map to a unique successor. ∎
+*Proof.* The only branching transition is *τ*(FAILED, RecoveryRoute(*r*)), which depends on the recovery score *r*. Since *r* is computed as a pure function of on-chain state (Equation 1 in Section 6.4), and the threshold comparisons (*r* ≥ 0.40, 0.35 ≤ *r* < 0.40, *r* < 0.35) partition ℝ into disjoint intervals, exactly one branch is taken. All other transitions in the table map to a unique successor. ∎
 
 ### 2.3 Architecture
 
@@ -253,9 +253,9 @@ A DeFi operator submits a 5-step portfolio rebalancing task with 0.01 ETH escrow
 | T+95s | Agent completes step 3 → checkpoint 3 committed | RUNNING |
 | T+120s | Agent calls CoinGecko API → HTTP 429 (rate limit) → agent process crashes | RUNNING |
 | T+185s | Heartbeat missed (120s + 65s > 60s interval) → anyone calls `checkLiveness` | **FAILED** |
-| T+186s | RecoveryRouter classifies: **LIVENESS** (0.9 weight); budget 85% remaining; deadline 88% remaining | FAILED |
-| T+186s | Recovery score = (0.9 × 0.5) + (0.85 × 0.3) + (0.88 × 0.2) = **0.45 + 0.255 + 0.176 = 0.881** | FAILED |
-| T+186s | Score 0.881 ≥ 0.6 → route to RECOVERING | **RECOVERING** |
+| T+186s | RecoveryRouter classifies: **LIVENESS** (*F* = 0.70); budget 85% remaining; deadline 88% remaining | FAILED |
+| T+186s | Recovery score = *F*^0.80 × *B*^0.35 × *D*^0.15 = 0.70^0.80 × 0.85^0.35 × 0.88^0.15 = **0.752 × 0.945 × 0.981 = 0.697** | FAILED |
+| T+186s | Score 0.697 ≥ 0.40 → route to RECOVERING (full scope) | **RECOVERING** |
 | T+190s | FallbackPool selects highest-reputation agent for `defi.trade_execute` | RECOVERING |
 | T+195s | Fallback reads checkpoints 1-3 from IPFS; resumes at step 4 | RECOVERING |
 | T+230s | Fallback completes step 4 → checkpoint 4 committed | RECOVERING |
@@ -306,11 +306,11 @@ With CAIRN, the original agent is compensated for verified work. Without CAIRN, 
 
 Prior research identifies 14+ failure modes in multi-agent systems [1], but existing taxonomies describe surface symptoms ("step repetition," "wrong tool selected") without prescribing what to do next. CAIRN's classification directly determines protocol behavior:
 
-**LIVENESS failures** (weight: 0.9) — the agent stopped responding. A heartbeat was missed, a process crashed, or a network partition occurred. These are almost always recoverable: the task is not impossible, the agent simply died. A fallback can resume from the last checkpoint immediately.
+**LIVENESS failures** (*F* = 0.70) — the agent stopped responding. A heartbeat was missed, a process crashed, or a network partition occurred. These are almost always recoverable (~92% base rate): the task is not impossible, the agent simply died. A fallback can resume from the last checkpoint immediately.
 
-**RESOURCE failures** (weight: 0.5) — the agent exhausted a resource. Budget exceeded, deadline hit, API rate-limited, or context window overflowed. These are partially recoverable: success depends on whether sufficient budget and deadline remain for the fallback.
+**RESOURCE failures** (*F* = 0.30) — the agent exhausted a resource. Budget exceeded, deadline hit, API rate-limited, or context window overflowed. These are partially recoverable (~48% base rate): success depends on whether sufficient budget and deadline remain for the fallback.
 
-**LOGIC failures** (weight: 0.1) — the agent reasoned incorrectly. Step repetition loops, hallucinated outputs, or specification mismatches. These are rarely recoverable: a fallback with the same task specification will likely fail the same way. Route to dispute.
+**LOGIC failures** (*F* = 0.00) — the agent reasoned incorrectly. Step repetition loops, hallucinated outputs, or specification mismatches. These are rarely recoverable (~8% base rate): a fallback with the same task specification will likely fail the same way. Setting *F* = 0.00 routes all LOGIC failures directly to dispute.
 
 This mapping is analogous to the foundational distinction between **crash faults** and **Byzantine faults** in distributed systems [8]. A crashed agent needs a different recovery path than an agent producing wrong outputs. CAIRN operationalizes this insight for the AI agent domain.
 
@@ -478,13 +478,13 @@ Record-writing is mandatory for escrow settlement — not optional.
   "task_id": "0x...",
   "agent_id": "erc8004://base/0x...",
   "task_type": "defi.price_fetch",
-  "failure_class": "RESOURCE",
-  "failure_type": "RATE_LIMIT",
+  "failure_class": "LIVENESS",
+  "failure_type": "HEARTBEAT_MISS",
   "checkpoint_count_at_failure": 3,
   "cost_at_failure": "0.0023 ETH",
   "budget_remaining_pct": 0.42,
   "deadline_remaining_pct": 0.31,
-  "recovery_score": 0.71,
+  "recovery_score": 0.47,
   "timestamp": 1742000000
 }
 ```
@@ -594,29 +594,38 @@ If no recovery occurred (original agent completed solo): 100% of distributable t
 
 **Equation 1:**
 ```
-r = w_f × F + w_b × B + w_d × D
+r = F^a × B^b × D^c
 ```
 
-Where *r* is the recovery score, expanded as:
+Where *r* is the recovery score, expanded with default parameters as:
 ```
-r = (0.5 × failure_class_weight) + (0.3 × budget_remaining_pct) + (0.2 × deadline_remaining_pct)
+r = F^0.80 × B^0.35 × D^0.15
 ```
 
 Where:
-- `failure_class_weight`: LIVENESS = 0.9, RESOURCE = 0.5, LOGIC = 0.1
-- `budget_remaining_pct`: (budget_cap - cost_accrued) / budget_cap
-- `deadline_remaining_pct`: (deadline - current_block) / (deadline - start_block)
+- *F* = `failure_class_weight`: LIVENESS = 0.70, RESOURCE = 0.30, LOGIC = 0.00
+- *B* = `budget_remaining_pct`: (budget_cap - cost_accrued) / budget_cap
+- *D* = `deadline_remaining_pct`: (deadline - current_block) / (deadline - start_block)
+- (*a*, *b*, *c*) = governance-adjustable exponents; default (0.80, 0.35, 0.15)
 
 **Three-tier routing:**
-- Score ≥ 0.6 → **RECOVERING** (high confidence — automatic fallback, full remaining budget)
-- 0.3 ≤ Score < 0.6 → **RECOVERING (reduced scope)** (attempt with constraints — fallback receives capped budget)
-- Score < 0.3 → **DISPUTED** (requires arbiter resolution)
+- Score ≥ 0.40 → **RECOVERING** (high confidence — automatic fallback, full remaining budget)
+- 0.35 ≤ Score < 0.40 → **RECOVERING (reduced scope)** (attempt with constraints — fallback receives capped budget)
+- Score < 0.35 → **DISPUTED** (requires arbiter resolution)
 
 The three-tier model enables graduated recovery: high-confidence failures get full resources, medium-confidence failures get a constrained attempt before escalating to dispute, and low-confidence failures go directly to arbitration.
 
-**Weight rationale:** The failure class contributes 50% of the score because the nature of the failure is the strongest predictor of recovery success — a LIVENESS failure (agent crashed) is fundamentally different from a LOGIC failure (agent reasoning incorrectly), regardless of remaining budget or time. Budget contributes 30% because resource availability is the next constraint — even a recoverable failure type cannot be resolved without sufficient remaining budget. Deadline contributes 20% because time pressure is real but secondary — an agent can often complete remaining work faster if the failure type is favorable and budget exists.
+**Why multiplicative.** The formula uses a product rather than a weighted sum because recovery success depends on *all* factors being adequate simultaneously. If budget is zero, recovery is impossible regardless of failure type or deadline. If the failure is a LOGIC error (*F* = 0.00), no amount of budget or time helps. The multiplicative structure captures this "any-factor-kills-it" dynamic: when any input approaches zero, the score approaches zero — matching empirical recovery dynamics.
 
-The upper threshold of 0.6 requires either a LIVENESS failure with any resource headroom, or a RESOURCE failure with substantial headroom. The lower threshold of 0.3 catches RESOURCE failures with minimal headroom — worth attempting but with reduced budget allocation. LOGIC failures (0.1 weight) almost never reach 0.3 — which is correct, since they rarely benefit from retry. All thresholds are governance-adjustable parameters (see Section 8).
+This design choice is empirically validated. Monte Carlo simulation across 100,000 synthetic task-failure events systematically compared four formula structures: (1) linear weighted sum, (2) piecewise-linear with interaction terms, (3) 5-variable linear with complexity and skill inputs, and (4) multiplicative. The first three formulas all converge to a ~33% misrouting floor — a structural ceiling intrinsic to additive formulas. The multiplicative formula breaks through to 23.46% misrouting, within 0.93 percentage points of the Bayes-optimal theoretical minimum (22.53%). A hybrid sweep (blending linear and multiplicative at ratios from 0.0 to 1.0) confirms that pure multiplicative is strictly optimal — every increment of linear component degrades routing accuracy. Full methodology and results are documented in Section 10.1 and `simulation/RESULTS_EQ4.md`.
+
+**Exponent rationale.** The failure class exponent *a* = 0.80 makes *F* the dominant factor: a LIVENESS failure (*F* = 0.70) produces *F*^0.80 = 0.75, while a RESOURCE failure (*F* = 0.30) produces *F*^0.80 = 0.36 — a 2× separation. The sub-linear exponent provides diminishing returns above *F* = 0.5, preventing the class signal from overwhelming resource signals. The budget exponent *b* = 0.35 assigns moderate influence: 50% budget remaining yields *B*^0.35 = 0.79, while 10% yields *B*^0.35 = 0.47 — a meaningful but not catastrophic penalty. The deadline exponent *c* = 0.15 assigns the least weight: in the multiplicative context, deadline contributes through the product interaction (low deadline × low budget is catastrophic) more than through its individual exponent. All exponents are governance-adjustable parameters (see Section 8).
+
+**Class weight rationale.** LIVENESS failures (agent crashes, API timeouts) have the highest base recovery rate (~92% when resources are available), justifying *F*<sub>LIVENESS</sub> = 0.70. RESOURCE failures (budget exhaustion, context overflow) are partially recoverable (~48%), justifying *F*<sub>RESOURCE</sub> = 0.30. LOGIC failures (reasoning errors, hallucinations, spec mismatches) have ~8% base recovery rate — a different agent retrying the same reasoning task rarely succeeds. Setting *F*<sub>LOGIC</sub> = 0.00 routes all LOGIC failures directly to dispute, which is the economically correct decision: the expected value of a recovery attempt (8% × escrow saved) is less than the expected cost (92% × wasted fallback budget).
+
+**Threshold rationale.** The upper threshold of 0.40 and lower threshold of 0.35 create a narrow routing band. This reflects the simulation finding that the multiplicative formula's primary value is in the binary recover/dispute decision, not in distinguishing full from reduced scope. LIVENESS failures with any resource headroom score well above 0.40 (e.g., *F*=0.70, *B*=0.85, *D*=0.88 → *r*=0.697). RESOURCE failures score in the 0.25-0.45 range depending on resources. LOGIC failures score 0 regardless. All thresholds are governance-adjustable parameters (see Section 8).
+
+**Solidity implementation.** The multiplicative formula requires fixed-point exponentiation. Since only three failure class weights exist (0.70, 0.30, 0.00), the *F*^*a* term is implemented as a lookup (3 pre-computed values), eliminating the most expensive `pow` call. The remaining *B*^*b* and *D*^*c* terms use PRBMath's `pow` function (~3,000 gas each) or a binned lookup table for further gas savings. Total cost: ~2,500-6,200 gas depending on implementation — negligible on Base L2 (see Section 6.5).
 
 ### 6.5 Gas Costs
 
@@ -629,6 +638,10 @@ All operations are designed for Base L2, where gas is inexpensive:
 | `commitCheckpointBatch` (10 checkpoints) | ~100,000 | 1.0 × 10⁻⁶ ETH | $0.0025 |
 | `heartbeat` | ~45,000 | 4.5 × 10⁻⁷ ETH | $0.0011 |
 | `settle` (escrow distribution) | ~140,000 | 1.4 × 10⁻⁶ ETH | $0.0035 |
+| `recoveryScore` (multiplicative, with PRBMath) | ~6,200 | 6.2 × 10⁻⁸ ETH | $0.00016 |
+| `recoveryScore` (multiplicative, with lookup table) | ~2,500 | 2.5 × 10⁻⁸ ETH | $0.00006 |
+
+The multiplicative recovery score formula (Section 6.4) requires fixed-point exponentiation for *B*^*b* and *D*^*c*. Two implementation strategies are available: PRBMath's `pow` function (~3,000 gas per call × 2 = ~6,000 gas plus lookup overhead) or a precomputed lookup table that bins *B* and *D* into discrete buckets (~2,500 gas total). The *F*^*a* term is always a lookup (only 3 possible class weights). Both approaches are negligible on Base L2.
 
 Merkle batching reduces checkpoint gas by ~95% compared to per-CID storage. A 50-checkpoint task costs approximately 100,000 gas total for checkpoints (one batch) versus 3,350,000 gas without batching.
 
@@ -756,8 +769,14 @@ The commit-reveal scheme provides an additional layer: the arbiter commits a has
 | Arbiter min stake | 20% | 5-50% | Stake as % of max ruleable dispute |
 | Arbiter fee | 3% | 1-10% | Fee as % of dispute value |
 | Arbiter timeout | 7 days | 1-30 days | Time for arbiter to rule before auto-refund |
-| Recovery threshold (upper) | 0.6 | 0.1-0.9 | Score threshold for full-scope RECOVERING |
-| Recovery threshold (lower) | 0.3 | 0.1-0.9 | Score threshold for reduced-scope RECOVERING vs DISPUTED |
+| Recovery threshold (upper) | 0.40 | 0.1-0.9 | Score threshold for full-scope RECOVERING |
+| Recovery threshold (lower) | 0.35 | 0.1-0.9 | Score threshold for reduced-scope RECOVERING vs DISPUTED |
+| Recovery exponent *a* | 0.80 | 0.1-2.0 | Exponent for failure class weight in Equation 1 |
+| Recovery exponent *b* | 0.35 | 0.1-2.0 | Exponent for budget remaining in Equation 1 |
+| Recovery exponent *c* | 0.15 | 0.1-2.0 | Exponent for deadline remaining in Equation 1 |
+| *F*<sub>LIVENESS</sub> | 0.70 | 0-1.0 | Failure class weight for LIVENESS failures |
+| *F*<sub>RESOURCE</sub> | 0.30 | 0-1.0 | Failure class weight for RESOURCE failures |
+| *F*<sub>LOGIC</sub> | 0.00 | 0-1.0 | Failure class weight for LOGIC failures |
 
 ### 8.2 Governance Model
 
@@ -826,7 +845,23 @@ CAIRN builds on established theory:
 
 **Checkpoint semantic portability.** CAIRN's checkpoint format is portable across frameworks (schema-validated IPFS CIDs), and Section 4.1.1 establishes that fully portable and portable-with-context checkpoints cover the majority of practical task types (data fetches, API calls, multi-step computations, stateful queries). However, for complex reasoning chains with implicit context (chain-of-thought, multi-turn dialogue), semantic portability remains unproven. Empirical study of checkpoint portability across LangGraph, CrewAI, and Olas agent architectures is planned.
 
-**Recovery score calibration.** The current weights (*w*<sub>f</sub> = 0.5, *w*<sub>b</sub> = 0.3, *w*<sub>d</sub> = 0.2) and class weights (*F*<sub>LIVENESS</sub> = 0.9, *F*<sub>RESOURCE</sub> = 0.5, *F*<sub>LOGIC</sub> = 0.1) are based on domain reasoning and the boundary analysis in Section 6.4, not empirical data. A Monte Carlo simulation across synthetic task distributions is planned to validate that these weights maximize the F1 score for recovery routing decisions — minimizing both false positives (attempting recovery that fails) and false negatives (sending recoverable tasks to dispute). As CAIRN accumulates execution records, the weights will be validated against observed recovery success rates and adjusted via governance.
+**Recovery score calibration — empirical validation.** The recovery score formula (Section 6.4) has been validated via Monte Carlo simulation across 100,000 synthetic task-failure events (seed=42, reproducible). The simulation compared four formula structures across 16 experiments in 4 runs:
+
+| Run | Formula | Structure | Misrouting Rate |
+|-----|---------|-----------|----------------|
+| 1 | *r* = *w*<sub>f</sub>*F* + *w*<sub>b</sub>*B* + *w*<sub>d</sub>*D* | Linear (3-variable) | 47.56% → 33.81% (optimized) |
+| 2 | Run 1 + piecewise cliffs + *B*×*D* interaction | Linear + non-linear terms | 33.17% |
+| 3 | Run 1 + complexity + fallback skill | Linear (5-variable) | 32.78% |
+| **4** | ***r* = *F*^*a* × *B*^*b* × *D*^*c*** | **Multiplicative (3-variable)** | **23.46%** |
+| — | Bayes-optimal (theoretical minimum) | Perfect oracle | 22.53% |
+
+Runs 1-3 exhaustively proved that any additive formula — regardless of non-linear terms or additional variables — converges to a ~33% misrouting structural ceiling. The "93/4/3 rule" emerged: 93% of achievable improvement comes from weight tuning within the linear formula, 4% from non-linear terms, and 3% from adding variables. The ceiling exists because additive formulas cannot express the "any-factor-kills-it" dynamic: in reality, zero budget means zero recovery chance regardless of failure type, but a sum always produces a positive value from the remaining terms.
+
+Run 4 changed the formula structure to multiplicative. The result — 23.46% misrouting — captures 96% of the theoretically achievable improvement and lies within 0.93 percentage points of the Bayes-optimal baseline (22.53%). A hybrid sweep (blending linear and multiplicative at 11 ratios from 0.0 to 1.0) confirms that pure multiplicative is strictly optimal. Cross-task-type leave-one-out validation shows 23.39% ± 0.36% across 5 task types — excellent generalization.
+
+The ground truth model underlying the simulation uses base recovery rates from the MAST taxonomy [1] and agent reliability literature [2][3]: LIVENESS 92%, RESOURCE 48%, LOGIC 8%. These are modulated by sigmoid resource factors (sharp cliffs at 15% budget and 10% deadline remaining), task complexity (inverse of remaining subtasks), and fallback agent skill (Beta-distributed, reputation-gated). Full methodology, ground truth model specification, and all results are documented in `simulation/RESULTS.md` (Run 1), `simulation/RESULTS_EQ2.md` (Run 2), `simulation/RESULTS_EQ3.md` (Run 3), and `simulation/RESULTS_EQ4.md` (Run 4).
+
+**Remaining calibration work:** The simulation uses synthetic failure distributions. As CAIRN accumulates real execution records, the exponents (*a*, *b*, *c*), class weights, and thresholds should be re-validated against observed recovery outcomes via Bayesian posterior inference (MCMC) and adjusted via governance. The staged calibration roadmap: Monte Carlo with synthetic data (complete) → Bayesian update at testnet (planned) → full MCMC at mainnet (planned).
 
 **Multi-agent recovery chains.** The current protocol supports one fallback. Future versions could support multiple sequential fallbacks, with each contributing checkpoints and earning proportional payment. The mechanism design for chains longer than two agents requires additional analysis.
 
