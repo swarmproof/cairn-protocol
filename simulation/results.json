@@ -1,0 +1,82 @@
+{
+  "seed": 42,
+  "total_trials": 100000,
+  "baseline": {
+    "weights": [
+      0.5,
+      0.3,
+      0.2
+    ],
+    "class_weights": {
+      "LIVENESS": 0.9,
+      "RESOURCE": 0.5,
+      "LOGIC": 0.1
+    },
+    "thresholds": {
+      "upper": 0.6,
+      "lower": 0.3
+    },
+    "misrouting_rate": 0.47564,
+    "false_positive_rate": 0.5620218971122586,
+    "false_negative_rate": 0.03323947110675808
+  },
+  "optimal": {
+    "weights": [
+      0.3,
+      0.25,
+      0.45
+    ],
+    "class_weights": {
+      "LIVENESS": 0.7,
+      "RESOURCE": 0.3,
+      "LOGIC": 0.0
+    },
+    "thresholds": {
+      "upper": 0.45,
+      "lower": 0.4
+    },
+    "misrouting_rate": 0.33815,
+    "false_positive_rate": 0.4696355545947504,
+    "false_negative_rate": 0.17410262749769617
+  },
+  "improvement_pp": 0.13749,
+  "sensitivity_max_10pct": 0.015699999999999992,
+  "cross_validation": [
+    {
+      "held_out": "defi.price_fetch",
+      "misrouting_rate": 0.37896311066799604,
+      "false_positive_rate": 0.5016176677451119,
+      "false_negative_rate": 0.08045190003423486,
+      "n_trials": 10030
+    },
+    {
+      "held_out": "defi.trade_execute",
+      "misrouting_rate": 0.38232044198895027,
+      "false_positive_rate": 0.5117680826636051,
+      "false_negative_rate": 0.08034817542684969,
+      "n_trials": 9955
+    },
+    {
+      "held_out": "data.report_generate",
+      "misrouting_rate": 0.36627615900670873,
+      "false_positive_rate": 0.49702596837371243,
+      "false_negative_rate": 0.07498383968972204,
+      "n_trials": 9987
+    },
+    {
+      "held_out": "governance.vote_delegate",
+      "misrouting_rate": 0.38389813515139365,
+      "false_positive_rate": 0.5111871170015676,
+      "false_negative_rate": 0.08183970240108218,
+      "n_trials": 9974
+    },
+    {
+      "held_out": "compute.model_inference",
+      "misrouting_rate": 0.3709966182613885,
+      "false_positive_rate": 0.5024341351660939,
+      "false_negative_rate": 0.07198697068403909,
+      "n_trials": 10054
+    }
+  ],
+  "runtime_seconds": 2.733664035797119
+}
