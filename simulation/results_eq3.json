@@ -1,0 +1,83 @@
+{
+  "run": 3,
+  "formula": "Eq3: r = w_f*F + w_b*B + w_d*D + w_c*C + w_s*S",
+  "seed": 42,
+  "total_trials": 100000,
+  "run1_comparison": {
+    "current_misrouting": 0.47564,
+    "optimal_linear_misrouting": 0.33815
+  },
+  "eq3_optimal": {
+    "params": {
+      "w_f": 0.3,
+      "w_b": 0.25,
+      "w_d": 0.35,
+      "w_c": 0.05,
+      "w_s": 0.05
+    },
+    "class_weights": {
+      "LIVENESS": 0.7,
+      "RESOURCE": 0.3,
+      "LOGIC": 0.0
+    },
+    "thresholds": {
+      "upper": 0.5,
+      "lower": 0.45
+    },
+    "misrouting_rate": 0.32779,
+    "false_positive_rate": 0.4603080248581464,
+    "false_negative_rate": 0.16241429695402945
+  },
+  "ablation": {
+    "3var": 0.33332,
+    "4var_complexity": 0.32476,
+    "4var_skill": 0.32459,
+    "5var_full": 0.32779,
+    "complexity_contribution_pp": 0.008560000000000012,
+    "skill_contribution_pp": 0.008730000000000016,
+    "total_improvement_pp": 0.005529999999999979
+  },
+  "cross_validation": {
+    "mean": 0.3237228326669364,
+    "std": 0.0036356965121691564,
+    "results": [
+      {
+        "held_out": "defi.price_fetch",
+        "misrouting_rate": 0.3234323432343234,
+        "fp": 0.4522649341274138,
+        "fn": 0.1633019291161956,
+        "n": 9999
+      },
+      {
+        "held_out": "defi.trade_execute",
+        "misrouting_rate": 0.3247863247863248,
+        "fp": 0.460014409221902,
+        "fn": 0.1583148558758315,
+        "n": 10062
+      },
+      {
+        "held_out": "data.report_generate",
+        "misrouting_rate": 0.3218790346608402,
+        "fp": 0.46234046377853677,
+        "fn": 0.1484687083888149,
+        "n": 10069
+      },
+      {
+        "held_out": "governance.vote_delegate",
+        "misrouting_rate": 0.3187399355877617,
+        "fp": 0.45627376425855515,
+        "fn": 0.1466122818944029,
+        "n": 9936
+      },
+      {
+        "held_out": "compute.model_inference",
+        "misrouting_rate": 0.32977652506543187,
+        "fp": 0.4655921767475552,
+        "fn": 0.15979147778785133,
+        "n": 9934
+      }
+    ]
+  },
+  "total_improvement_pp": 0.14784999999999998,
+  "runtime_seconds": 2.1993720531463623
+}
