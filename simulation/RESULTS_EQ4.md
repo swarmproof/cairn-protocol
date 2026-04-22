@@ -143,15 +143,15 @@ function recoveryScore(
     //
     // Alternative: integer approximation with lookup table
     // for the 3 failure class weights:
-    //   F=0.70^0.8 = 0.7639  → store as 763900000000000000
-    //   F=0.30^0.8 = 0.3585  → store as 358500000000000000
+    //   F=0.70^0.8 = 0.7518  → store as 751758646650045568
+    //   F=0.30^0.8 = 0.3817  → store as 381677890961817600
     //   F=0.00^0.8 = 0.0000  → store as 0
 
     // Pre-computed F^0.8 for each class (saves 2 pow calls)
     // Only 3 possible values — cheaper to lookup than compute
     uint256 fPow;
-    if (failureClassWeight == 0.70e18) fPow = 0.7639e18;      // LIVENESS
-    else if (failureClassWeight == 0.30e18) fPow = 0.3585e18;  // RESOURCE
+    if (failureClassWeight == 0.70e18) fPow = 0.7518e18;      // LIVENESS
+    else if (failureClassWeight == 0.30e18) fPow = 0.3817e18;  // RESOURCE
     else fPow = 0;                                              // LOGIC (F=0)
 
     // B^0.35 and D^0.15 via PRBMath or approximation
