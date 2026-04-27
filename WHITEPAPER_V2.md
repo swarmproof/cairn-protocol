@@ -51,7 +51,7 @@ CAIRN integrates three Ethereum standards: ERC-8004 for agent identity and reput
 
 The Ethereum agentic economy generates significant economic activity — over 10 million agent-to-agent transactions on the Olas network alone [5], ~49,000 registered agent identities via ERC-8004 across 30+ EVM chains (as of February 2026) [14], and growing on-chain commerce via ERC-8183 [15]. But every agent is operationally isolated.
 
-When an agent fails mid-task — because an API rate-limits, a budget is exceeded, a context window overflows, or a process crashes — **nothing standard happens**. The escrow sits in an ambiguous state. The human operator may or may not discover the failure. Another agent does not automatically take over. Completed work is lost.
+When an agent fails mid-task — because an API rate-limits, a budget is exceeded, a context window overflows, or a process crashes — **nothing standard happens**. The escrow sits in an ambiguous state. The operator who submitted the task — whether a human, another agent, a DAO multisig, or an autonomous smart contract — has no standardized way to detect the failure or trigger a recovery; the failure is discovered (if at all) only when the principal happens to poll the task. Another agent does not automatically take over. Completed work is lost.
 
 Twenty minutes later, a different agent — same task type, same API, same conditions — fails identically. The collective cost compounds as the agent economy scales.
 
@@ -87,7 +87,18 @@ CAIRN fills this gap.
 
 ### 2.1 Overview
 
-CAIRN is a standardized agent failure and recovery protocol. It defines the exact sequence of events that occur when an agent fails mid-task — from detection, through classification, through fallback assignment, through settlement — without requiring human intervention and without requiring trust between agents.
+CAIRN is a standardized agent failure and recovery protocol. It defines the exact sequence of events that occur when an agent fails mid-task — from detection, through classification, through fallback assignment, through settlement — **without any human-in-the-loop after task submission**, and without requiring trust between agents.
+
+**Definition (Operator).** Throughout this paper, an *operator* is the Ethereum address that submits a task and posts its escrow. The operator is the *principal* on whose behalf the work is performed. CAIRN is agnostic to what the operator actually is:
+
+| Operator type | Example | Submission mechanism |
+|---|---|---|
+| Externally-owned account (human-controlled) | A developer using a wallet to dispatch an agent task | Wallet signs `submitTask` transaction |
+| Agent address | A higher-level orchestration agent decomposing a goal into CAIRN-managed subtasks | Agent's own wallet signs `submitTask` |
+| Smart-contract account | A DeFi protocol routinely dispatching maintenance work | Contract calls `submitTask` from its execution context |
+| DAO multisig | A treasury that approves agent tasks via on-chain governance | Multisig collectively signs `submitTask` |
+
+The "no human required" property of CAIRN is therefore precise: humans may submit tasks if they choose, but **no human signature, intervention, or polling is required at any point between task submission and final settlement**. Failure detection, classification, recovery routing, fallback execution, dispute initiation, and escrow distribution all proceed via permissionless on-chain enforcement (Section 3.3) regardless of who or what the operator is.
 
 As a byproduct, CAIRN accumulates an **execution intelligence layer**: a shared, queryable record of every failure, recovery, and completion across the ecosystem. The intelligence layer grows automatically because record-writing is mandatory for escrow settlement.
 
@@ -107,7 +118,7 @@ As a byproduct, CAIRN accumulates an **execution intelligence layer**: a shared,
 
 ### 2.2 State Machine
 
-Six states. Every transition is deterministic. No human is required to trigger any state change.
+Six states. Every transition is deterministic. After the operator submits the task, **no human signature or human intervention is required to trigger any state change** — every transition fires from on-chain conditions evaluated by permissionless enforcement functions (Section 3.3) that any address may call.
 
 ```
                     ┌──────────────────────────────────────────────────┐
@@ -157,7 +168,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 
 | Current State | Event | Condition | Next State |
 |---------------|-------|-----------|------------|
-| IDLE | Confirm | Operator signs confirmation | RUNNING |
+| IDLE | Confirm | Operator address calls `confirmTask` (signs via wallet, contract call, or multisig) | RUNNING |
 | RUNNING | Complete | All subtasks verified | RESOLVED |
 | RUNNING | HeartbeatMiss | block.timestamp > lastHeartbeat + *H* | FAILED |
 | RUNNING | BudgetExceeded | *κ* ≥ *E* | FAILED |
@@ -244,7 +255,7 @@ RUNNING and RECOVERING share the same time window [*t*<sub>0</sub>, *δ*] — RE
 
 ### 2.4 Worked Example: The 2:47am Recovery
 
-A DeFi operator submits a 5-step portfolio rebalancing task with 0.01 ETH escrow, a 30-minute deadline, and a 60-second heartbeat interval.
+A DeFi portfolio-management agent (acting as the operator — its own wallet posts the escrow on behalf of an end user it serves) submits a 5-step portfolio rebalancing task to a worker agent with 0.01 ETH escrow, a 30-minute deadline, and a 60-second heartbeat interval. The operator role here is filled by an agent, not a human; the example would proceed identically if the operator were a human user, a DAO treasury contract, or any other principal.
 
 | Time | Event | State |
 |------|-------|-------|
@@ -264,7 +275,7 @@ A DeFi operator submits a 5-step portfolio rebalancing task with 0.01 ETH escrow
 | T+270s | Fallback completes step 5 → task complete | **RESOLVED** |
 | T+271s | Settlement: primary gets 60% (3/5 checkpoints), fallback gets 40% (2/5), minus 0.5% protocol fee | RESOLVED |
 
-**Result without CAIRN:** Operator discovers failure 4+ hours later. Full restart. Original agent paid $0.
+**Result without CAIRN:** The operator (agent or human) discovers the failure only on its next polling cycle — typically 4+ hours later for a human, or whenever the next health-check fires for an automated principal. Full restart. Original agent paid 0.
 
 **Result with CAIRN:** Automatic detection in 65 seconds. Fallback resumes from step 4. Original agent paid 0.006 ETH for verified work (60% × 0.01 ETH escrow, minus 0.5% protocol fee). Total recovery time: ~85 seconds.
 
@@ -297,7 +308,7 @@ With CAIRN, the original agent is compensated for verified work. Without CAIRN, 
 - **Not a new agent framework.** CAIRN wraps any existing framework — LangGraph, Olas SDK, AgentKit, CrewAI, custom builds.
 - **Not a replacement for A2A or MCP.** Google's A2A protocol [12] handles agent discovery and communication. Anthropic's MCP [13] connects agents to tools. CAIRN handles what happens when those agents fail mid-task: detection, recovery, and settlement. These are complementary layers.
 - **Not a replacement for ERC-8183.** Virtuals' Agent Commerce Protocol implements ERC-8183 for the job lifecycle happy path (job creation → completion → payment). CAIRN handles the unhappy path (failure → classification → recovery → settlement). They compose.
-- **Not a centralized service.** Every state transition is enforced by the CAIRN state machine contract. No server. No admin key. No human required.
+- **Not a centralized service.** Every state transition is enforced by the CAIRN state machine contract. No server. No admin key. No human-in-the-loop after task submission (the operator who submits the task may be a human, an agent, a DAO, or a contract — see Section 2.1).
 - **Not optional infrastructure.** The escrow condition makes record-writing mandatory — agents cannot receive payment without completing the protocol.
 
 ---
