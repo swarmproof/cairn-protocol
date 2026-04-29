@@ -1,0 +1,63 @@
+No files changed, compilation skipped
+
+Ran 24 tests for test/RecoveryRouterV2.t.sol:RecoveryRouterV2Test
+[PASS] test_ClassifyAndScore_FromCairnCore_LivenessHappyPath() (gas: 67300)
+[PASS] test_ClassifyAndScore_NotCairnCore_Reverts() (gas: 32655)
+[PASS] test_DefaultThresholds() (gas: 15197)
+[PASS] test_FPowLookup_LivenessConstant() (gas: 5607)
+[PASS] test_FPowLookup_LogicConstant() (gas: 5581)
+[PASS] test_FPowLookup_ResourceConstant() (gas: 5496)
+[PASS] test_LegacyRecoveryThresholdReturnsLower() (gas: 15062)
+[PASS] test_LivenessAtFullResources_ScoresFullTier() (gas: 17152)
+[PASS] test_LivenessExceedsResourceAtSameResources() (gas: 26693)
+[PASS] test_LogicAlwaysScoresZero_RoutesToDispute() (gas: 21800)
+[PASS] test_Monotonic_InBudget() (gas: 31663)
+[PASS] test_Monotonic_InDeadline() (gas: 31658)
+[PASS] test_OverflowBudget_Reverts() (gas: 8811)
+[PASS] test_OverflowDeadline_Reverts() (gas: 8778)
+[PASS] test_ResourceAtFullResources_ScoresReducedOrDisputeBoundary() (gas: 19336)
+[PASS] test_RoutingTier_AboveUpper_IsFull() (gas: 22894)
+[PASS] test_RoutingTier_BelowLower_IsDisputed() (gas: 29202)
+[PASS] test_RoutingTier_BetweenLowerAndUpper_IsReduced() (gas: 29295)
+[PASS] test_SetThresholds_LowerExceedsUpper_Reverts() (gas: 29959)
+[PASS] test_SetThresholds_OutOfRange_Reverts() (gas: 30077)
+[PASS] test_SetThresholds_Valid_Updates() (gas: 47566)
+[PASS] test_WorkedExample_2_47amRecovery() (gas: 35731)
+[PASS] test_ZeroBudget_ScoresZero_EvenForLiveness() (gas: 16428)
+[PASS] test_ZeroDeadline_ScoresZero_EvenForLiveness() (gas: 16341)
+Suite result: ok. 24 passed; 0 failed; 0 skipped; finished in 2.72ms (7.42ms CPU time)
+
+╭----------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| src/RecoveryRouterV2.sol:RecoveryRouterV2 Contract |                 |       |        |       |         |
++=========================================================================================================+
+| Deployment Cost                                    | Deployment Size |       |        |       |         |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 1224782                                            | 5326            |       |        |       |         |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                    |                 |       |        |       |         |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                      | Min             | Avg   | Median | Max   | # Calls |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| F_POW_LIVENESS                                     | 251             | 251   | 251    | 251   | 1       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| F_POW_LOGIC                                        | 292             | 292   | 292    | 292   | 1       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| F_POW_RESOURCE                                     | 206             | 206   | 206    | 206   | 1       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| classifyAndScore                                   | 24354           | 39017 | 39017  | 53680 | 2       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| computeRecoveryScore                               | 524             | 5748  | 1348   | 19935 | 15      |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| lowerThreshold                                     | 2372            | 2372  | 2372   | 2372  | 3       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| recoveryThreshold                                  | 2315            | 2315  | 2315   | 2315  | 1       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| routingTier                                        | 2467            | 3983  | 4590   | 4590  | 14      |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setThresholds                                      | 21839           | 25213 | 21881  | 31921 | 3       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| upperThreshold                                     | 2394            | 2394  | 2394   | 2394  | 4       |
+╰----------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+
+Ran 1 test suite in 6.56ms (2.72ms CPU time): 24 tests passed, 0 failed, 0 skipped (24 total tests)
