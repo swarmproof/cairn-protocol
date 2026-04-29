@@ -32,26 +32,47 @@ xelatex --version
 
 ### Path A — Generate LaTeX source (preferred for arXiv)
 
+**Pre-step (already applied to the snapshot in this directory):** convert raw HTML `<sup>...</sup>` and `<sub>...</sub>` tags in `cairn-whitepaper.md` to pandoc's native `^x^` / `~x~` syntax. Pandoc 3.9's `gfm` and `markdown+raw_html` readers silently drop unknown HTML inline tags, so this conversion is required for math-style super/subscripts (e.g., `F^0.80`, `F_LIVENESS`) to render correctly. The script:
+
+```bash
+python3 - <<'PY'
+import re
+src = open('cairn-whitepaper.md').read()
+src = re.sub(r'<sup>([^<]*)</sup>', r'^\1^', src)
+src = re.sub(r'<sub>([^<]*)</sub>', r'~\1~', src)
+src = re.sub(r'\^([^^]*) ([^^]*)\^', r'^\1\\\\ \2^', src)
+src = re.sub(r'~([^~]*) ([^~]*)~', r'~\1\\\\ \2~', src)
+open('cairn-whitepaper.md', 'w').write(src)
+PY
+```
+
+If you re-copy `WHITEPAPER_V2.md` from the repo root into the snapshot, re-run this conversion.
+
 ```bash
 cd PUBLICATION/arxiv/
 
 pandoc cairn-whitepaper.md \
-  --from=gfm \
+  --from=markdown+raw_html+tex_math_dollars+pipe_tables+autolink_bare_uris+backtick_code_blocks+superscript+subscript \
   --to=latex \
   --standalone \
   --toc \
+  --shift-heading-level-by=-1 \
   --metadata title="CAIRN: A Protocol for Agent Failure Detection, Classification, and Recovery in the On-Chain Agent Economy" \
   --metadata author="Maroua Boudoukha" \
   --metadata date="April 2026" \
   --resource-path=. \
   --output=cairn-whitepaper.tex
 
-# Compile locally to verify
+# Compile locally to verify (after installing BasicTeX or MacTeX)
 xelatex cairn-whitepaper.tex
 xelatex cairn-whitepaper.tex    # second pass — resolves TOC and cross-refs
 ```
 
+`--shift-heading-level-by=-1` ensures the markdown `## 1. Introduction` becomes `\section{}` (not `\subsection{}`). The `+superscript+subscript` extensions enable native `^x^` and `~x~` parsing.
+
 **Upload to arXiv:** submit `cairn-whitepaper.tex` plus the `figures/` directory.
+
+> **Note (this repo):** The `cairn-whitepaper.tex` checked into this directory is the result of running the above pipeline against the post-conversion snapshot. It is regenerated whenever `WHITEPAPER_V2.md` changes; the corresponding markdown snapshot here has the HTML-tag conversion already applied.
 
 ### Path B — Generate PDF directly (acceptable, simpler)
 
