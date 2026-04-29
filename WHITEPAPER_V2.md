@@ -670,21 +670,24 @@ This design choice is empirically validated. Monte Carlo simulation across 100,0
 
 ### 6.5 Gas Costs
 
-All operations are designed for Base L2, where gas is inexpensive. The figures below are **design-target estimates** based on opcode-level analysis and comparable published contracts; precise measurements from `forge test --gas-report` on the v2 reference implementation will be published alongside testnet v2 deployment.
+All operations are designed for Base L2, where gas is inexpensive. The `recoveryScore` and `classifyAndScore` rows below are **measured** values from `forge test --gas-report` against the v2 reference implementation `RecoveryRouterV2.sol` (24-test suite, 339 tests overall passing on this branch); the remaining rows are design-target estimates pending a full v2 system benchmark. The raw report is committed at `contracts/gas-report-v2-router.txt`.
 
-| Operation | Estimated Gas | Cost @ 0.01 gwei Base L2 | Cost @ $2,500/ETH |
-|-----------|---------------|--------------------------|-------------------|
-| `submitTask` | ~180,000 | 1.8 × 10⁻⁶ ETH | $0.0045 |
-| `commitCheckpointBatch` (1 checkpoint, v2) | ~80,000 | 8.0 × 10⁻⁷ ETH | $0.0020 |
-| `commitCheckpointBatch` (10 checkpoints, v2) | ~100,000 | 1.0 × 10⁻⁶ ETH | $0.0025 |
-| `heartbeat` | ~45,000 | 4.5 × 10⁻⁷ ETH | $0.0011 |
-| `settle` (escrow distribution) | ~140,000 | 1.4 × 10⁻⁶ ETH | $0.0035 |
-| `recoveryScore` (multiplicative, with PRBMath — v2) | ~6,200 | 6.2 × 10⁻⁸ ETH | $0.00016 |
-| `recoveryScore` (multiplicative, with lookup table — v2) | ~2,500 | 2.5 × 10⁻⁸ ETH | $0.00006 |
+| Operation | Gas | Cost @ 0.01 gwei Base L2 | Cost @ $2,500/ETH | Source |
+|-----------|-----|--------------------------|-------------------|--------|
+| `submitTask` | ~180,000 (estimate) | 1.8 × 10⁻⁶ ETH | $0.0045 | design target |
+| `commitCheckpointBatch` (1 checkpoint, v2) | ~80,000 (estimate) | 8.0 × 10⁻⁷ ETH | $0.0020 | design target |
+| `commitCheckpointBatch` (10 checkpoints, v2) | ~100,000 (estimate) | 1.0 × 10⁻⁶ ETH | $0.0025 | design target |
+| `heartbeat` | ~45,000 (estimate) | 4.5 × 10⁻⁷ ETH | $0.0011 | design target |
+| `settle` (escrow distribution) | ~140,000 (estimate) | 1.4 × 10⁻⁶ ETH | $0.0035 | design target |
+| `RecoveryRouterV2.computeRecoveryScore` (full multiplicative path) | **19,935 max / 5,748 avg / 524 min** (measured) | 2.0 × 10⁻⁷ ETH max | $0.00050 max | measured |
+| `RecoveryRouterV2.classifyAndScore` (called from CairnCore on failure) | **53,680 max / 39,017 avg / 24,354 min** (measured) | 5.4 × 10⁻⁷ ETH max | $0.00134 max | measured |
+| `RecoveryRouterV2` deployment cost | 1,224,782 (measured) | 1.2 × 10⁻⁵ ETH | $0.031 | measured |
 
 The 0.01 gwei assumption reflects typical post-Dencun Base L2 gas prices; actual L2 execution gas has ranged from below 0.001 gwei (low congestion) to approximately 0.1 gwei (high congestion) per BaseScan. Base transactions also carry an L1 publication fee (~1-5% of total cost at typical congestion) that is not included in the table above and can dominate at very low L2 gas prices. Dollar figures should therefore be read as order-of-magnitude estimates, not contractual guarantees.
 
-The multiplicative v2 recovery score formula (Section 6.4) requires fixed-point exponentiation for *B*^*b* and *D*^*c*. Two implementation strategies are available: PRBMath's `pow` function (gas cost varies with exponent magnitude; ~3,000 gas is a typical midpoint estimate) or a precomputed lookup table that bins *B* and *D* into discrete buckets (~2,500 gas total). The *F*^*a* term is always a lookup (only 3 possible class weights). The correct pre-computed F values are 0.70<sup>0.80</sup> = 0.7518 (LIVENESS) and 0.30<sup>0.80</sup> = 0.3817 (RESOURCE), stored at 18-decimal fixed-point precision. PRBMath is not yet integrated in the v1 testnet contract; the v2 upgrade introduces the dependency.
+The measured v2 `computeRecoveryScore` average of **5,748 gas** is *better* than the design-target estimate (~6,200 gas) used in earlier drafts. The maximum observed (~20,000 gas) corresponds to the full multiplicative path with two PRBMath UD60x18 `pow` calls; the median (~1,348 gas) is dominated by short-circuit paths (LOGIC class returning 0, or zero-budget early termination — see `_computeScore` in `RecoveryRouterV2.sol`). The minimum (524 gas) is the LOGIC short-circuit alone. The pre-computed *F*^0.80 lookup (0.7518 for LIVENESS, 0.3817 for RESOURCE, 0 for LOGIC, all at 18-decimal fixed-point precision) eliminates one PRBMath `pow` call per score; the remaining two `pow` calls (for *B*^0.35 and *D*^0.15) account for most of the gas.
+
+PRBMath UD60x18 v4.1.1 is integrated in v2 (`@prb/math/UD60x18.sol`); v1 has no fixed-point math dependency.
 
 Merkle batching in the v2 `commitCheckpointBatch(taskId, count, merkleRoot, latestCID)` function reduces checkpoint gas by approximately 95% compared to per-CID storage. A 50-checkpoint task is expected to cost approximately 100,000 gas for a single batch commit versus an estimated 3,350,000 gas for 50 sequential commits at ~67,000 gas each (linear extrapolation; to be validated by benchmark). The v1 MVP contract uses a simpler non-batched `commitCheckpoint(taskId, cid)` and does not realize this reduction; batching is a v2 feature.
 
