@@ -14,7 +14,8 @@ fs_permissions = [{ access = "read", path = "./"}]
 # Remappings
 remappings = [
     "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
-    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/"
+    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
+    "@prb/math/=lib/prb-math/src/"
 ]
 
 # Base Sepolia configuration

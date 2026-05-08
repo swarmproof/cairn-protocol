@@ -66,15 +66,16 @@ recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) +
 ```
 
 Where:
-- `failure_class_weight`: LIVENESS = 0.9 | RESOURCE = 0.5 | EXECUTION = 0.1
+- `failure_class_weight`: LIVENESS = 0.9 | RESOURCE = 0.5 | LOGIC = 0.1
 - `budget_remaining_pct`: (budget_cap - cost_accrued) / budget_cap
 - `deadline_remaining_pct`: (deadline - current_block) / (deadline - start_block)
 
-**Routing (v1 Implementation):**
-- `score ≥ 0.3` → **RECOVERING** (fallback agent assigned)
+**Three-tier routing:**
+- `score ≥ 0.6` → **RECOVERING (full scope)** — high confidence, fallback receives full remaining budget
+- `0.3 ≤ score < 0.6` → **RECOVERING (reduced scope)** — medium confidence, fallback receives capped budget
 - `score < 0.3` → **DISPUTED** (requires arbiter resolution)
 
-> **Note:** The `recoveryThreshold` constant is set to `0.3e18` (30%) in CairnCore.sol. Future versions may implement a PARTIAL state (0.3–0.6 range) for graduated recovery attempts.
+> **Note:** The `recoveryThreshold` constant (lower bound) is set to `0.3e18` (30%) in CairnCore.sol. The upper threshold for full-scope recovery is `0.6e18` (60%). Both thresholds are governance-adjustable.
 
 ### Escrow Split Rule
 
@@ -114,7 +115,7 @@ CAIRN's protocol-level taxonomy uses **three failure classes** for recovery scor
 |-------|----------------------|-------------|
 | **LIVENESS** (agent stopped) | 0.9 (HIGH) | Agent stopped responding — highly recoverable |
 | **RESOURCE** (agent exhausted) | 0.5 (MEDIUM) | Budget/deadline/external limits hit — partially recoverable |
-| **EXECUTION** (agent reasoning) | 0.1 (LOW) | Invalid output or logic error — rarely recoverable |
+| **LOGIC** (agent reasoning) | 0.1 (LOW) | Invalid output or logic error — rarely recoverable |
 
 ### Five Types (Contract Level)
 
@@ -126,7 +127,7 @@ The `RecoveryRouter` contract implements five specific **failure types** that ma
 | `NETWORK_PARTITION` | LIVENESS | Agent disconnected from network |
 | `RATE_LIMIT` | RESOURCE | External API rate limit exceeded |
 | `GAS_EXHAUSTED` | RESOURCE | Budget depleted during execution |
-| `VALIDATION_FAILED` | EXECUTION | Output failed schema validation |
+| `VALIDATION_FAILED` | LOGIC | Output failed schema validation |
 
 > **Note:** The FailureClass enum also includes `DEADLINE` for deadline-exceeded scenarios, which maps to RESOURCE behavior.
 
@@ -174,9 +175,10 @@ Six states. Every transition is deterministic. No human is required to trigger a
                              ▼                        │
                         ┌─────────┐   score≥0.3  ┌───┴──────┐
                         │         │ ────────────► │          │
-                        │ FAILED  │               │RECOVERING│
-                        │         │ ◄──────────── │          │
-                        └────┬────┘  fallback     └──────────┘
+                        │ FAILED  │  (≥0.6 full  │RECOVERING│
+                        │         │ ◄──────────── │ (full or │
+                        └────┬────┘  0.3-0.6     │ reduced) │
+                             │       reduced or   └──────────┘
                              │       fails
                       score  │
                       <0.3   │
