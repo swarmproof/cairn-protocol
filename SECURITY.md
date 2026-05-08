@@ -27,7 +27,7 @@ Fallback agents and arbiters must stake capital proportional to their exposure. 
 | Role | Stake Requirement | Slash Condition |
 |------|-------------------|-----------------|
 | Fallback Agent | 10% of max eligible escrow | Fails without completing any checkpoints |
-| Arbiter | 15% of max ruleable dispute | Incorrect ruling (detectable via on-chain evidence) |
+| Arbiter | 20% of max ruleable dispute | Incorrect ruling (detectable via on-chain evidence) |
 
 ### 4. Deterministic Scoring
 
@@ -93,10 +93,10 @@ No oracle. No AI. No human judgment. All inputs are on-chain verifiable.
 **Severity:** Medium
 
 **Mitigation:**
-- Arbiter stake = 15% of dispute value
+- Arbiter stake = 20% of dispute value
 - Incorrect rulings are detectable via on-chain execution record evidence
 - Incorrect rulings result in stake slashing
-- Arbiter fee (3%) is less than stake at risk (15%)
+- Arbiter fee (3%) is less than stake at risk (20%)
 - Economic cost of collusion exceeds benefit
 
 **Residual Risk:** If evidence is ambiguous, arbiter has discretion. Future versions may implement multi-arbiter voting.

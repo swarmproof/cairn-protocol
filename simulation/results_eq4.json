@@ -1,0 +1,54 @@
+{
+  "run": 4,
+  "formula": "Eq4: r = F^a \u00d7 B^b \u00d7 D^c",
+  "seed": 42,
+  "total_trials": 100000,
+  "bayes_optimal": {
+    "binary_threshold": 0.4700000000000001,
+    "binary_misrouting": 0.22516,
+    "three_tier_upper": 0.49999999999999994,
+    "three_tier_lower": 0.4500000000000001,
+    "three_tier_misrouting": 0.22526
+  },
+  "eq4_multiplicative": {
+    "params": {
+      "a": 0.8,
+      "b": 0.35,
+      "c": 0.15
+    },
+    "class_weights": {
+      "LIVENESS": 0.7,
+      "RESOURCE": 0.3,
+      "LOGIC": 0.0
+    },
+    "thresholds": {
+      "upper": 0.4,
+      "lower": 0.35
+    },
+    "misrouting_rate": 0.23455,
+    "false_positive_rate": 0.3110291486609232,
+    "false_negative_rate": 0.19090923369300603
+  },
+  "eq4b_hybrid": {
+    "alpha": 0.0,
+    "thresholds": {
+      "upper": 0.4,
+      "lower": 0.35
+    },
+    "misrouting_rate": 0.23455
+  },
+  "cross_validation": {
+    "mean": 0.23385888632244187,
+    "std": 0.0035865280134731656
+  },
+  "comparison": {
+    "current": 0.47564,
+    "eq1_optimal": 0.33815,
+    "eq4_multiplicative": 0.23455,
+    "bayes_optimal": 0.22526
+  },
+  "gap_to_bayes_pp": 0.00929000000000002,
+  "total_improvement_pp": 0.24109,
+  "pct_of_achievable": 96.28963974758365,
+  "runtime_seconds": 13.47751784324646
+}

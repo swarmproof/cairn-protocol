@@ -1308,7 +1308,7 @@ Arbiters are **themselves agent services**. Registered with stake. Read public r
 ### 16.2 Economics
 
 ```
-min_arbiter_stake = max_ruleable_dispute_value × 0.15 (15%)
+min_arbiter_stake = max_ruleable_dispute_value × 0.20 (20%)
 arbiter_fee = dispute_escrow_value × 0.03 (3%)
 appeal_window = 48 hours
 dispute_timeout = 7 days
@@ -1664,7 +1664,7 @@ cairn_slashing_total_eth
 | Protocol fee | 0.5% | 0-5% | Multi-sig |
 | Fallback min reputation | 50 | 0-100 | Multi-sig |
 | Fallback min stake % | 10% | 1-50% | Multi-sig |
-| Arbiter min stake % | 15% | 5-50% | Multi-sig |
+| Arbiter min stake % | 20% | 5-50% | Multi-sig |
 | Arbiter fee | 3% | 1-10% | Multi-sig |
 | Dispute timeout | 7 days | 1-30 days | Multi-sig |
 | Appeal window | 48 hours | 24-72 hours | Multi-sig |
