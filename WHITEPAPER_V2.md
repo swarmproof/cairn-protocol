@@ -63,7 +63,7 @@ Twenty minutes later, a different agent — same task type, same API, same condi
 
 Published research establishes agent failure as a systemic problem, not an edge case:
 
-- Multi-agent benchmarks show an **average task completion rate of approximately 50%** across popular frameworks including TaskWeaver, MetaGPT, and AutoGen [3]. At 85% per-action accuracy (a commonly cited single-step reliability for current LLM agents), a 10-step workflow succeeds only ~20% of the time (0.85<sup>10</sup> = 0.197).
+- Multi-agent benchmarks show an **average task completion rate of approximately 50%** across popular frameworks including TaskWeaver, MetaGPT, and AutoGen [3]. The compounding effect is structural: *even if* single-step accuracy were 85% (well above current measured agent reliability per [2]), a 10-step workflow would succeed only ~20% of the time (0.85<sup>10</sup> = 0.197). Real production accuracy is lower, and the 50% headline rate is the empirical consequence.
 
 - The MAST taxonomy identifies **14 distinct failure modes** across 1,600+ annotated traces from 7 multi-agent frameworks [1]. However, MAST classifies failures by symptom (step repetition, incorrect tool selection) — not by what recovery action to take.
 
@@ -791,7 +791,7 @@ These properties hold at all times:
 1. **Escrow safety.** Escrow is not released until `state == RESOLVED`.
 2. **Deterministic scoring.** Same on-chain inputs produce the same recovery score. No external dependencies.
 3. **Checkpoint immutability.** Committed checkpoint CIDs cannot be modified or deleted.
-4. **State irreversibility.** No backward state transitions. `IDLE → RUNNING → {FAILED, RESOLVED}; FAILED → {RECOVERING, DISPUTED}; RECOVERING → {RESOLVED, DISPUTED}; DISPUTED → RESOLVED; RESOLVED → terminal`.
+4. **State irreversibility.** No backward state transitions. The DAG is `IDLE → RUNNING → {FAILED, RESOLVED}; FAILED → {RECOVERING, DISPUTED}; RECOVERING → {RESOLVED, DISPUTED}; DISPUTED → RESOLVED; RESOLVED → terminal`. The `RECOVERING → DISPUTED` edge exists in the v2 specification as a direct transition when the fallback agent itself fails (FallbackFailed event in §2.2.1, triggered by missed heartbeat or deadline exceeded during the fallback phase). In v1, this transition is reached *indirectly* via the fallback's failure re-entering the FAILED state and then being re-routed; v2 surfaces it as a direct edge to make the state graph match the formal model in this paper. The reachable state set is identical in both versions; v2 changes only the path, not the destinations.
 5. **Fee ordering.** Protocol fee is deducted before agent payment calculation.
 6. **Liveness enforcement.** `checkLiveness` only succeeds if the heartbeat interval has actually elapsed.
 
