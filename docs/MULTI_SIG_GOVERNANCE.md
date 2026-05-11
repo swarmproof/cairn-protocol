@@ -87,17 +87,27 @@ All governance actions require multi-sig approval:
 
 ### Available Parameters
 
-| Key | Current | Range | Description |
-|-----|---------|-------|-------------|
-| `PROTOCOL_FEE_BPS` | 50 (0.5%) | 0-500 | Protocol fee |
-| `ARBITER_FEE_BPS` | 300 (3%) | 100-1000 | Arbiter fee |
-| `MIN_REPUTATION` | 50 | 0-100 | Min reputation score |
-| `MIN_STAKE_PERCENT` | 10 | 1-50 | Min agent stake % |
-| `MIN_ARBITER_STAKE_PERCENT` | 15 | 5-50 | Min arbiter stake % |
-| `RECOVERY_THRESHOLD` | 0.3e18 | 0.1-0.9e18 | Recovery threshold |
-| `DISPUTE_TIMEOUT` | 7 days | 1-30 days | Dispute timeout |
-| `APPEAL_WINDOW` | 48 hours | 24-72 hours | Appeal window |
-| `MIN_HEARTBEAT_INTERVAL` | 30 | 10-300 | Min heartbeat (sec) |
+| Key | v1 (testnet) | v2 (target) | Range | Description |
+|-----|--------------|-------------|-------|-------------|
+| `PROTOCOL_FEE_BPS` | 50 (0.5%) | 50 (0.5%) | 0-500 | Protocol fee |
+| `ARBITER_FEE_BPS` | 300 (3%) | 300 (3%) | 100-1000 | Arbiter fee |
+| `MIN_REPUTATION` | 50 | 50 | 0-100 | Min reputation score (ERC-8004 scale) |
+| `MIN_STAKE_PERCENT` | 10 | 10 | 1-50 | Min fallback-agent stake (% of max eligible escrow) |
+| `MIN_ARBITER_STAKE_PERCENT` | 15 | **20** | 5-50 | Min arbiter stake (% of max ruleable dispute) |
+| `RECOVERY_THRESHOLD` | 0.30e18 | — *(removed)* | 0.1-0.9e18 | v1: single binary threshold; v2 replaces with `THRESHOLD_UPPER` + `THRESHOLD_LOWER` |
+| `RECOVERY_THRESHOLD_UPPER` | — | **0.40e18** | 0.1-0.9e18 | v2: score ≥ this → RECOVERING (full scope) |
+| `RECOVERY_THRESHOLD_LOWER` | — | **0.35e18** | 0.1-0.9e18 | v2: lower ≤ score < upper → RECOVERING (reduced scope); below → DISPUTED |
+| `F_LIVENESS` | 0.90e18 | **0.70e18** | 0-1e18 | Class weight for LIVENESS failures |
+| `F_RESOURCE` | 0.50e18 | **0.30e18** | 0-1e18 | Class weight for RESOURCE failures |
+| `F_LOGIC` | 0.10e18 | **0.00e18** | 0-1e18 | Class weight for LOGIC failures (v2 routes directly to DISPUTED) |
+| `EXP_F` | n/a (linear) | **0.80e18** | 0.1-2.0e18 | v2 exponent on class weight in multiplicative formula |
+| `EXP_B` | n/a (linear) | **0.35e18** | 0.1-2.0e18 | v2 exponent on budget-remaining |
+| `EXP_D` | n/a (linear) | **0.15e18** | 0.1-2.0e18 | v2 exponent on deadline-remaining |
+| `DISPUTE_TIMEOUT` | 7 days | 7 days | 1-30 days | Dispute timeout |
+| `APPEAL_WINDOW` | 48 hours | 48 hours | 24-72 hours | Appeal window |
+| `MIN_HEARTBEAT_INTERVAL` | 30 | 30 | 10-300 | Min heartbeat (sec) |
+
+The v1 → v2 governance migration path is specified in [PRD-04](../PRDs/PRD-04-V2-UPGRADE/PRD.md); parameter writes are governance-gated, no contract redeployment is required.
 
 ### Emergency Controls
 

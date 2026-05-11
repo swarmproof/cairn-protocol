@@ -6,7 +6,7 @@
 
 ## Overview
 
-CAIRN is designed for **production autonomous agents**, not just demos. While hackathon demonstrations may use controlled agents for reliability, the protocol architecture assumes fully autonomous agents operating without human intervention.
+CAIRN is designed for **production autonomous agents**. The protocol architecture assumes fully autonomous agents operating without human-in-the-loop after task submission — the operator address may be a human-controlled EOA, another agent, a smart contract, or a DAO multisig.
 
 This document specifies the requirements, patterns, and considerations for real agent integration.
 

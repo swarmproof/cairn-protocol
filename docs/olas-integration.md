@@ -20,7 +20,7 @@ FallbackPool (Enhanced)
     │
     └── OlasMechAdapter (New)
         └── IOlasMech Registry (Gnosis Chain)
-            └── 600+ Olas Mech agents
+            └── ~2,000 deployed Olas Mechs (~500 active daily)
 ```
 
 ### Data Flow
@@ -412,7 +412,7 @@ adapter.setEnabled(true);
 - **Gnosis Registry**: `0x9338b5153AE39BB89f50468E608eD9d764B755fD`
 - **Documentation**: https://docs.autonolas.network/
 - **Marketplace**: https://marketplace.olas.network/gnosis/ai-agents
-- **Total Mechs**: 600+ active agents
+- **Total Mechs**: ~2,000 deployed (~500 active daily) — verified against Olas marketplace as of February 2026
 - **Supported Chains**: Gnosis, Base, Polygon, Optimism
 
 ## Future Enhancements

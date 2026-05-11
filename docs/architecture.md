@@ -121,8 +121,10 @@ A7:                          → classify(failure_type)
                              → emit TaskFailed(taskId, recordCID, score)
                              ← BonfiresAdapter indexes record ◄──────────────── event
 
-A8:        score≥0.3 ─────────────────────────────────────────────────────► [RECOVERING]
-           score<0.3 ─────────────────────────────────────────────────────► [DISPUTED]
+A8:        r ≥ 0.40  ────────────────► [RECOVERING (full scope)]
+           0.35 ≤ r < 0.40 ──────────► [RECOVERING (reduced scope)]
+           r < 0.35  ────────────────► [DISPUTED]
+           (v1 testnet: single binary threshold at r ≥ 0.30 → RECOVERING)
 
 ── RECOVERING ────────────────────────────────────────────────────────────────────────────
 
@@ -188,7 +190,7 @@ A14:       [arbiter]         rule(taskId, outcome)
 | Action | Actor | Description |
 |--------|-------|-------------|
 | **A7** | Protocol classifies | Classifies failure type (liveness / resource / logic). Computes recovery_score using formula. Writes Failure Record to IPFS. Stores CID on-chain. Emits TaskFailed(taskId, recordCID, recoveryScore). Escrow held. |
-| **A8** | Protocol routes | Routes based on recovery_score: score ≥ 0.3 → A9 (RECOVERING path). score < 0.3 → A13 (DISPUTED path) |
+| **A8** | Protocol routes | Routes based on recovery score *r*: v2 three-tier — `r ≥ 0.40` → A9 RECOVERING (full scope), `0.35 ≤ r < 0.40` → A9 RECOVERING (reduced scope, capped budget), `r < 0.35` → A13 DISPUTED. v1 testnet uses a single binary threshold at `r ≥ 0.30`. |
 
 ### Phase 4: Recovering
 

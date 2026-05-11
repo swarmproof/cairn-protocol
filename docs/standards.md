@@ -237,47 +237,45 @@ Live at: `https://olas.network/mech-marketplace`
 
 ---
 
-## Sponsor Integration Map
+## Standard-by-State Integration Map
 
-Visual map of how each sponsor integrates at each CAIRN state:
+Visual map of how each external standard is exercised at each CAIRN state:
 
 ```
 CairnTask.sol
 │
 ├── RUNNING
-│   ├── ERC-8183 (Virtuals/EF dAI) — job + escrow locked on startTask()
-│   └── ERC-7710 (MetaMask) — delegation caveat pre-authorized by operator
+│   ├── ERC-8183 — job + escrow locked on startTask()
+│   └── ERC-7710 — delegation caveat pre-authorized by operator
 │
 ├── FAILED
-│   └── Bonfires — failure record written via BonfiresAdapter on TaskFailed event
+│   └── BonfiresAdapter — failure record written on TaskFailed event
 │
 ├── RECOVERING
-│   ├── Olas Mech Marketplace (Valory) — fallback agent pool queried
-│   ├── Bonfires — success rate signal for fallback selection
-│   └── ERC-7710 (MetaMask) — pre-authorized caveat sub-delegated to fallback
+│   ├── Olas Mech Marketplace — fallback agent pool queried
+│   ├── BonfiresAdapter — success-rate signal informs fallback selection
+│   └── ERC-7710 — pre-authorized caveat sub-delegated to fallback
 │
 ├── RESOLVED
-│   ├── ERC-8183 (Virtuals/EF dAI) — complete() called, escrow released
-│   ├── ERC-8004 (EF dAI) — positive reputation signal written
-│   └── Bonfires — resolution record written via BonfiresAdapter
+│   ├── ERC-8183 — complete() called, escrow released
+│   ├── ERC-8004 — positive reputation signal written
+│   └── BonfiresAdapter — resolution record written
 │
 └── DISPUTED
-    ├── ERC-8183 (Virtuals/EF dAI) — escrow held, claimRefund() on timeout
-    ├── ERC-8004 (EF dAI) — negative reputation signal written
-    └── Bonfires — dispute record written, exposed as arbitration evidence
+    ├── ERC-8183 — escrow held, claimRefund() on timeout
+    ├── ERC-8004 — negative reputation signal written
+    └── BonfiresAdapter — dispute record written, exposed as arbitration evidence
 ```
 
-### Why This Integration Works
+### Why These Integrations Are Load-Bearing
 
-Every sponsor integration is **load-bearing**:
-
-| Remove | CAIRN Loses |
+| Remove | CAIRN loses |
 |--------|-------------|
-| ERC-8183 | No escrow mechanism |
-| ERC-8004 | No identity or reputation |
-| ERC-7710 | No trustless permission transfer |
-| Olas | No fallback agent pool |
-| Bonfires | No intelligence layer |
+| ERC-8183 | No standardised escrow mechanism |
+| ERC-8004 | No identity or reputation registry |
+| ERC-7710 | No trustless scoped permission transfer for fallback agents |
+| Olas Mech Marketplace | No external fallback agent pool |
+| Bonfires (or equivalent indexer) | No execution intelligence layer |
 
 The integrations are not decorative — they are structural.
 
