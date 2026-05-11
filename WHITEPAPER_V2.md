@@ -7,8 +7,6 @@
 > **Author:** Maroua Boudoukha
 > **Affiliation:** Independent Researcher
 > **Contact:** github.com/MarouaBoud
-> **ORCID:** *to be added before formal submission*
-> **Email:** *to be added before formal submission*
 >
 > **Copyright 2026 Maroua BOUDOUKHA. All rights reserved.**
 >

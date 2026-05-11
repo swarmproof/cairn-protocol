@@ -65,7 +65,7 @@ The paper header (lines 7–14 of `cairn-whitepaper.md`) currently states:
 - [ ] Open `cairn-whitepaper.pdf`, spot-check structure: title page, TOC with 11 sections, formulas in §6.4, experiment catalog table in §10.1, references list [1]-[19]
 - [ ] Decide figures policy (see "Figures policy" section below). v2.0 ships figures as **ancillary supplementary files**, not embedded.
 - [ ] Verify the arXiv-form abstract is ≤1,920 chars: **current abstract is 1,876 chars** ✓
-- [ ] Confirm author name and affiliation. Title page placeholders for ORCID and email need real values before formal submission.
+- [ ] Confirm author name and affiliation as they appear on the title page (name, "Independent Researcher", GitHub handle). ORCID is optional and can be added in the arXiv submission form rather than the paper body.
 - [ ] Select license — recommended: **arXiv perpetual non-exclusive** (preserves "All rights reserved" copyright while permitting arXiv distribution)
 - [ ] Confirm arXiv account is verified and endorsed in **`cs.MA`** (primary category). New contributors to `cs.MA` may need endorsement from an existing arXiv author — check at https://arxiv.org/auth/need-endorsement
 - [ ] Verify PDF size under arXiv's 50 MB limit — current PDF is ~210 KB, well under
