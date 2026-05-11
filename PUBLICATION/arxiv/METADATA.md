@@ -60,13 +60,22 @@ The paper header (lines 7–14 of `cairn-whitepaper.md`) currently states:
 
 ## Pre-submission Checklist
 
-- [ ] Generate PDF or LaTeX source (see README.md)
-- [ ] Verify PDF renders correctly (tables, subscripts, Greek letters, code blocks)
-- [ ] Confirm all 16 figures render at adequate resolution
-- [ ] Check that arXiv's PDF size limit (50 MB) is not exceeded
-- [ ] Draft a plain-text abstract ≤1920 characters (arXiv limit) — the abstract above is ~1650 chars ✓
-- [ ] Confirm author list, affiliations, and email match intended byline
-- [ ] Select license (CC BY, CC BY-NC, CC0, or arXiv perpetual non-exclusive)
-- [ ] Confirm arXiv account is verified and endorsed in `cs.DC` (new contributors sometimes need endorsement from an existing arXiv author)
-- [ ] Draft comments field (see above)
-- [ ] Review final rendered PDF one more time end-to-end
+- [ ] **Confirm PR #23 (defensive-framing removal) is merged to `main`** — otherwise you'll submit the wrong revision
+- [ ] Compile locally to verify: `cd PUBLICATION/arxiv && xelatex cairn-whitepaper.tex && xelatex cairn-whitepaper.tex`. BasicTeX is fine; missing-Unicode warnings are cosmetic (arXiv has the full font set)
+- [ ] Open `cairn-whitepaper.pdf`, spot-check structure: title page, TOC with 11 sections, formulas in §6.4, experiment catalog table in §10.1, references list [1]-[19]
+- [ ] Decide figures policy (see "Figures policy" section below). v2.0 ships figures as **ancillary supplementary files**, not embedded.
+- [ ] Verify the arXiv-form abstract is ≤1,920 chars: **current abstract is 1,876 chars** ✓
+- [ ] Confirm author name and affiliation as they appear on the title page (name, "Independent Researcher", GitHub handle). ORCID is optional and can be added in the arXiv submission form rather than the paper body.
+- [ ] Select license — recommended: **arXiv perpetual non-exclusive** (preserves "All rights reserved" copyright while permitting arXiv distribution)
+- [ ] Confirm arXiv account is verified and endorsed in **`cs.MA`** (primary category). New contributors to `cs.MA` may need endorsement from an existing arXiv author — check at https://arxiv.org/auth/need-endorsement
+- [ ] Verify PDF size under arXiv's 50 MB limit — current PDF is ~210 KB, well under
+- [ ] Copy the Comments field (block above) into the arXiv form
+- [ ] Click "Process" on arXiv after upload, then **review the arXiv-rendered preview PDF** before clicking Submit. arXiv's xelatex install fully covers the Unicode glyphs that BasicTeX cannot, so the preview will look cleaner than the local PDF.
+
+## Figures policy
+
+The 16 simulation figures in `figures/` are **not embedded** in the current `cairn-whitepaper.tex`. The empirical claims in §10.1 are carried by tables (run-summary, 16-row experiment catalog, confusion-matrix comparison, LOO-CV breakdown, ground-truth validation). Figures live in the repository (`simulation/figures/`) and are accessible via Reference [18].
+
+**If you upload `figures/` alongside `cairn-whitepaper.tex`:** arXiv treats the PNGs as **ancillary files** — downloadable from the submission page but not displayed in the rendered paper. Acceptable for v2.0.
+
+**If you want figures embedded (e.g., Figure 14: Comparison of all four formulas vs. Bayes-optimal) inside the paper:** requires a separate edit pass adding `![](figures/figXX.png)` markdown calls in §10.1 and re-running pandoc. Defer to v2.1 unless reviewers request it.
