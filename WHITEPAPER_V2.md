@@ -4,14 +4,18 @@
 
 ### Version 2.0 — April 2026
 
+> **Author:** Maroua Boudoukha
+> **Affiliation:** Independent Researcher
+> **Contact:** github.com/MarouaBoud
+> **ORCID:** *to be added before formal submission*
+> **Email:** *to be added before formal submission*
+>
 > **Copyright 2026 Maroua BOUDOUKHA. All rights reserved.**
 >
 > This document may be cited for academic and research purposes with proper attribution:
 > BOUDOUKHA, M. (2026). *CAIRN Protocol: Agent Failure and Recovery Protocol*. Whitepaper v2.0, April 2026.
 >
 > Redistribution or commercial use requires written permission from the author.
->
-> **Contact:** github.com/MarouaBoud
 
 ---
 
