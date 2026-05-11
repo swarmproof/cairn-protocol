@@ -85,6 +85,16 @@ Every team building agents has written bespoke, incompatible failure handling. T
 
 CAIRN fills this gap.
 
+### 1.4 Scope and Limitations
+
+Before describing the protocol in detail, we surface the bounds within which its claims hold. These are expanded in Section 10.3.
+
+- **Empirical scope.** The 23.46% misrouting result is from Monte Carlo simulation against a ground-truth model calibrated to published failure-mode distributions [1][2][3]. Class frequencies and base recovery rates are *assumed* from prior literature, not *measured* from CAIRN's own deployment, which does not yet exist at scale. The staged calibration roadmap (Section 10.1) replaces the synthetic model with observed outcomes as testnet and mainnet data accumulate.
+- **Task scope.** Full checkpoint portability covers structured-pipeline tasks (data fetches, API calls, multi-step computations) and tasks whose state can be made portable by serialising explicit context. For reasoning-heavy workloads with implicit framework state — chain-of-thought, multi-turn dialogue, planning with backtracking — only output-level checkpoints are portable and the recovery quality degrades (Section 4.1.1).
+- **Arbiter scope.** The economic analysis of arbiter honesty (Proposition 3 in Section 7.5) holds strongly for LIVENESS and RESOURCE disputes whose evidence is fully on-chain. For LOGIC disputes ("did the agent hallucinate?", "did the output match the specification?") the detection probability is materially lower; CAIRN inherits the structural limitation of all on-chain arbitration protocols [19]. The v2 specification ships single-tier arbitration; an appeals layer is reserved for v3.
+- **Trust scope.** The protocol assumes the underlying L2 sequencer (Base/Coinbase, as of 2026) is available and does not actively collude with a dispute party. This is weaker than the L1 trust model and is the principal residual trust dependency in v2 (Section 7.2).
+- **Implementation scope.** This paper specifies the v2 protocol; the testnet currently runs v1 (interim linear formula, binary routing, 15% arbiter stake, no schema-hash enforcement). The v2 migration path is governance-gated through the `IRecoveryRouter` interface (Section 8.3) and a Phase-1 reference implementation of the v2 router with measured gas is included in the companion repository.
+
 ---
 
 ## 2. Protocol Specification
@@ -93,16 +103,7 @@ CAIRN fills this gap.
 
 CAIRN is a standardized agent failure and recovery protocol. It defines the exact sequence of events that occur when an agent fails mid-task — from detection, through classification, through fallback assignment, through settlement — **without any human-in-the-loop after task submission**, and without requiring trust between agents.
 
-**Definition (Operator).** Throughout this paper, an *operator* is the Ethereum address that submits a task and posts its escrow. The operator is the *principal* on whose behalf the work is performed. CAIRN is agnostic to what the operator actually is:
-
-| Operator type | Example | Submission mechanism |
-|---|---|---|
-| Externally-owned account (human-controlled) | A developer using a wallet to dispatch an agent task | Wallet signs `submitTask` transaction |
-| Agent address | A higher-level orchestration agent decomposing a goal into CAIRN-managed subtasks | Agent's own wallet signs `submitTask` |
-| Smart-contract account | A DeFi protocol routinely dispatching maintenance work | Contract calls `submitTask` from its execution context |
-| DAO multisig | A treasury that approves agent tasks via on-chain governance | Multisig collectively signs `submitTask` |
-
-The "no human required" property of CAIRN is therefore precise: humans may submit tasks if they choose, but **no human signature, intervention, or polling is required at any point between task submission and final settlement**. Failure detection, classification, recovery routing, fallback execution, dispute initiation, and escrow distribution all proceed via permissionless on-chain enforcement (Section 3.3) regardless of who or what the operator is.
+**Definition (Operator).** Throughout this paper, an *operator* is the Ethereum address that submits a task and posts its escrow — an EOA, an agent, a smart contract, or a DAO multisig; CAIRN is agnostic to which. The "no human required" property is therefore precise: **no human signature, intervention, or polling is required at any point between task submission and final settlement**. Failure detection, classification, recovery routing, fallback execution, dispute initiation, and escrow distribution all proceed via permissionless on-chain enforcement (Section 3.3) regardless of who or what submitted the task.
 
 As a byproduct, CAIRN accumulates an **execution intelligence layer**: a shared, queryable record of every failure, recovery, and completion across the ecosystem. The intelligence layer grows automatically because record-writing is mandatory for escrow settlement.
 
@@ -745,7 +746,13 @@ CAIRN assumes:
 - ERC-8004 reputation scores are accurate (CAIRN inherits ERC-8004's security model)
 - Operators submit accurate task specifications (agents can query specs before accepting)
 - Block time is consistent (~2s on Base)
-- Block builders on L2 (Base uses a sequencer) could theoretically reorder transactions to front-run `checkLiveness`, but the atomic execution of failure detection → classification → routing within a single transaction limits the MEV surface to transaction ordering only, not mid-transaction state insertion.
+
+**L2 sequencer trust dependency.** Base is operated by a single centralised sequencer (Coinbase, as of April 2026). For a protocol that markets "trustless" recovery, this dependency requires explicit treatment:
+
+- **Liveness:** if the Coinbase sequencer is offline or refuses to include CAIRN transactions, the entire protocol pauses — `checkLiveness`, `commitCheckpointBatch`, `settle`, and arbiter rulings cannot execute. This is a censorship/availability risk shared with every Base-deployed protocol. The mitigation Base provides today is a "force inclusion" escape hatch through L1, but it adds latency (hours-to-days, depending on Base's exact bridge cadence) that exceeds CAIRN's heartbeat intervals; force-included transactions would arrive too late to prevent stale failures.
+- **Ordering:** the sequencer chooses the in-block order of transactions. For CAIRN this matters in two cases: (i) a worker agent submitting a just-in-time `heartbeat` racing against an enforcer's `checkLiveness`, and (ii) a fallback agent committing checkpoints racing against the deadline. In both cases the sequencer can pick a winner. The atomicity of CAIRN's failure path (detection → classification → routing in one transaction) limits the MEV surface to ordering only — there is no mid-transaction state insertion — but ordering alone is sufficient to extract value in adversarial scenarios.
+- **Honesty assumption:** CAIRN implicitly assumes the sequencer is not actively collaborating with one party to a dispute. This assumption is weaker than the underlying L1 trust model and is the principal residual trust dependency in v2. Base's roadmap toward decentralised sequencing (planned via the Optimism Superchain stack) will reduce this dependency over time; until then, CAIRN inherits the same trust assumption as every other Base-deployed application.
+- **Migration mitigation:** the protocol is portable to any EVM L2 with comparable gas economics. A future deployment to a chain with decentralised sequencing (e.g., a future iteration of the OP Stack with shared sequencing, or an Arbitrum Nitro chain with permissionless validators) would remove the single-sequencer dependency without protocol changes.
 
 ### 7.3 Attack Vectors and Mitigations
 
