@@ -31,3 +31,11 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+# LaTeX build artifacts in PUBLICATION/
+PUBLICATION/arxiv/*.aux
+PUBLICATION/arxiv/*.log
+PUBLICATION/arxiv/*.out
+PUBLICATION/arxiv/*.toc
+PUBLICATION/arxiv/*.synctex.gz
+PUBLICATION/arxiv/cairn-whitepaper.pdf
+PUBLICATION/arxiv/preamble.tex

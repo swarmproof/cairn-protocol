@@ -104,10 +104,6 @@
 \begin{document}
 \maketitle
 
-{
-\setcounter{tocdepth}{3}
-\tableofcontents
-}
 \section{Agent Failure and Recovery
 Protocol}\label{agent-failure-and-recovery-protocol}
 
@@ -115,9 +111,7 @@ Protocol}\label{agent-failure-and-recovery-protocol}
 
 \begin{quote}
 \textbf{Author:} Maroua Boudoukha \textbf{Affiliation:} Independent
-Researcher \textbf{Contact:} github.com/MarouaBoud \textbf{ORCID:}
-\emph{to be added before formal submission} \textbf{Email:} \emph{to be
-added before formal submission}
+Researcher \textbf{Contact:} github.com/MarouaBoud
 
 \textbf{Copyright 2026 Maroua BOUDOUKHA. All rights reserved.}
 
@@ -171,39 +165,17 @@ Our key insight is that \textbf{economic enforcement} ---
 escrow-conditioned record writing --- bootstraps a collective
 intelligence layer without requiring altruistic participation. Every
 failure becomes a queryable record. Every recovery teaches the next
-agent. The accumulated execution history is on-chain and publicly
-indexable, so the \emph{records} themselves are not forkable in the
-trivial sense, but replicating CAIRN's \emph{useful} intelligence layer
-requires reproducing the escrow-mandated write volume --- a competing
-protocol would need to independently generate comparable failure data,
-which presupposes comparable task throughput. This is a network effect
-with a switching-cost moat, not a structural impossibility.
+agent. The accumulated execution history grows with task throughput and
+is openly queryable across the ecosystem.
 
 CAIRN integrates three Ethereum standards: ERC-8004 for agent identity
 and reputation, ERC-8183 for job escrow lifecycle, and ERC-7710 for
 scoped delegation. It is deployed on Base and composable with existing
 agent frameworks (LangGraph, Olas, CrewAI, AutoGen) and emerging
-coordination protocols (Google A2A, Anthropic MCP).
-
-\begin{quote}
-\textbf{Scope of empirical claims.} The 23.46\% misrouting result is a
-simulation outcome against a literature-calibrated ground-truth model.
-We acknowledge three concrete bounds on its external validity: (i) the
-ground-truth recovery rates and class frequencies are \emph{assumed}
-from prior published studies, not \emph{measured} from CAIRN's own
-deployment; (ii) full checkpoint portability holds for
-structured-pipeline tasks but degrades for reasoning-heavy workloads
-(Section 4.1.1); (iii) the arbiter incentive analysis (Section 7.5
-Proposition 3) assumes a detection probability \emph{p}\textsubscript{d}
-that is high for LIVENESS/RESOURCE disputes but plausibly much lower for
-LOGIC disputes where the underlying question is ``did the agent reason
-incorrectly?'' Section 10.3 enumerates the full limitation set.
-
-\textbf{Reproducibility.} All simulation code, results, and figures are
-reproducible from \texttt{simulation/} in the CAIRN repository via
-\texttt{python3\ -m\ simulation.run\_eq4} (seed=42, deterministic on
-NumPy ≥1.20). See reference {[}18{]}.
-\end{quote}
+coordination protocols (Google A2A, Anthropic MCP). All simulation code,
+results, and figures are reproducible from \texttt{simulation/} in the
+CAIRN repository via \texttt{python3\ -m\ simulation.run\_eq4}
+(seed=42); see reference {[}18{]}.
 
 \begin{quote}
 \textbf{Note on protocol versions.} This paper specifies CAIRN
@@ -260,10 +232,10 @@ document the v1 → v2 transition.
 
 The Ethereum agentic economy generates significant economic activity ---
 over 10 million agent-to-agent transactions on the Olas network alone
-{[}5{]},\textbackslash{} \textasciitilde49,000 registered agent
-identities via ERC-8004 across 30+ EVM chains (as of February 2026)
-{[}14{]}, and growing on-chain commerce via ERC-8183 {[}15{]}. But every
-agent is operationally isolated.
+{[}5{]}, \textasciitilde49,000 registered agent identities via ERC-8004
+across 30+ EVM chains (as of February 2026) {[}14{]}, and growing
+on-chain commerce via ERC-8183 {[}15{]}. But every agent is
+operationally isolated.
 
 When an agent fails mid-task --- because an API rate-limits, a budget is
 exceeded, a context window overflows, or a process crashes ---
@@ -291,9 +263,10 @@ an edge case:
   MetaGPT, and AutoGen {[}3{]}. The compounding effect is structural:
   \emph{even if} single-step accuracy were 85\% (well above current
   measured agent reliability per {[}2{]}), a 10-step workflow would
-  succeed only \textasciitilde20\% of the time\textbackslash{}
-  (0.85\textsuperscript{10} = 0.197). Real production accuracy is lower,
-  and the 50\% headline rate is the empirical consequence.
+  succeed only\textbackslash{} \textasciitilde20\% of the
+  time\textbackslash{} (0.85\textsuperscript{10} = 0.197). Real
+  production accuracy is lower, and the 50\% headline rate is the
+  empirical consequence.
 \item
   The MAST taxonomy identifies \textbf{14 distinct failure modes} across
   1,600+ annotated traces from 7 multi-agent frameworks {[}1{]}.
@@ -337,53 +310,6 @@ handling. There is:
 
 CAIRN fills this gap.
 
-\subsection{1.4 Scope and Limitations}\label{scope-and-limitations}
-
-Before describing the protocol in detail, we surface the bounds within
-which its claims hold. These are expanded in Section 10.3.
-
-\begin{itemize}
-\tightlist
-\item
-  \textbf{Empirical scope.} The 23.46\% misrouting result is from Monte
-  Carlo simulation against a ground-truth model calibrated to published
-  failure-mode distributions {[}1{]}{[}2{]}{[}3{]}. Class frequencies
-  and base recovery rates are \emph{assumed} from prior literature, not
-  \emph{measured} from CAIRN's own deployment, which does not yet exist
-  at scale. The staged calibration roadmap (Section 10.1) replaces the
-  synthetic model with observed outcomes as testnet and mainnet data
-  accumulate.
-\item
-  \textbf{Task scope.} Full checkpoint portability covers
-  structured-pipeline tasks (data fetches, API calls, multi-step
-  computations) and tasks whose state can be made portable by
-  serialising explicit context. For reasoning-heavy workloads with
-  implicit framework state --- chain-of-thought, multi-turn dialogue,
-  planning with backtracking --- only output-level checkpoints are
-  portable and the recovery quality degrades (Section 4.1.1).
-\item
-  \textbf{Arbiter scope.} The economic analysis of arbiter honesty
-  (Proposition 3 in Section 7.5) holds strongly for LIVENESS and
-  RESOURCE disputes whose evidence is fully on-chain. For LOGIC disputes
-  (``did the agent hallucinate?'', ``did the output match the
-  specification?'') the detection probability is materially lower; CAIRN
-  inherits the structural limitation of all on-chain arbitration
-  protocols {[}19{]}. The v2 specification ships single-tier
-  arbitration; an appeals layer is reserved for v3.
-\item
-  \textbf{Trust scope.} The protocol assumes the underlying L2 sequencer
-  (Base/Coinbase, as of 2026) is available and does not actively collude
-  with a dispute party. This is weaker than the L1 trust model and is
-  the principal residual trust dependency in v2 (Section 7.2).
-\item
-  \textbf{Implementation scope.} This paper specifies the v2 protocol;
-  the testnet currently runs v1 (interim linear formula, binary routing,
-  15\% arbiter stake, no schema-hash enforcement). The v2 migration path
-  is governance-gated through the \texttt{IRecoveryRouter} interface
-  (Section 8.3) and a Phase-1 reference implementation of the v2 router
-  with measured gas is included in the companion repository.
-\end{itemize}
-
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \section{2. Protocol Specification}\label{protocol-specification}
@@ -413,9 +339,8 @@ completion across the ecosystem. The intelligence layer grows
 automatically because record-writing is mandatory for escrow settlement.
 
 \textbf{Formal Definition.} A CAIRN task is a tuple \emph{T} =
-(\emph{id}, \emph{σ},\textbackslash{}
-\emph{A}\textsubscript{p},\textbackslash{} \emph{A}\textsubscript{f},
-\emph{E}, \emph{δ}, \emph{H},\textbackslash{}
+(\emph{id}, \emph{σ}, \emph{A}\textsubscript{p},\textbackslash{}
+\emph{A}\textsubscript{f}, \emph{E}, \emph{δ}, \emph{H},\textbackslash{}
 \emph{c}\textsubscript{p},\textbackslash{} \emph{c}\textsubscript{f},
 \emph{κ},\textbackslash{} \emph{t}\textsubscript{0}) where:
 
@@ -1467,16 +1392,12 @@ Output: Ranked list of eligible fallback agents
 
 \subsection{5.3 Network Effects}\label{network-effects}
 
-The execution history is on-chain and publicly indexable, but
-replicating its accumulation requires matching CAIRN's escrow-mandated
-write volume --- a competing protocol would need to independently
-generate comparable failure data, which requires comparable task
-throughput. A competitor can copy the protocol code. They cannot copy
-the accumulated records --- the failure patterns, the agent performance
-data, the cost distributions --- without first reproducing the economic
-activity that produced them. This creates a defensible network effect
-where each new agent failure makes the protocol more valuable for every
-future agent.
+The execution history is on-chain and publicly indexable, growing with
+task throughput. As more agents complete tasks under CAIRN, the failure
+patterns, agent performance data, and cost distributions accumulate into
+a richer signal for every future routing and fallback-selection
+decision. Each new agent failure makes the protocol more valuable for
+every future agent.
 
 \textbf{Quantitative model.} The intelligence layer's utility for a
 given task type \emph{τ} is a function of the number of recorded failure

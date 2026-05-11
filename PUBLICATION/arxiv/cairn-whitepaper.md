@@ -7,8 +7,6 @@
 > **Author:** Maroua Boudoukha
 > **Affiliation:** Independent Researcher
 > **Contact:** github.com/MarouaBoud
-> **ORCID:** *to be added before formal submission*
-> **Email:** *to be added before formal submission*
 >
 > **Copyright 2026 Maroua BOUDOUKHA. All rights reserved.**
 >
@@ -25,13 +23,9 @@ AI agent task completion rates remain at approximately 50% across popular framew
 
 CAIRN defines a 6-state machine with three-tier recovery routing, enforced by smart contracts: when an agent fails mid-task, the protocol detects the failure via missed heartbeats or resource exhaustion, classifies it into one of three recoverability classes (LIVENESS, RESOURCE, LOGIC), computes a multiplicative recovery score *r* = *F*^0.80^ ×\\ *B*^0.35^ ×\\ *D*^0.15^, and routes the task to either a qualified fallback agent who resumes from the last IPFS-committed checkpoint, or to dispute resolution. The formula is **calibrated and validated via Monte Carlo simulation** against a ground-truth model derived from published failure-mode distributions [1][2][3]: across 100,000 synthetic task-failure events and 16 experiments, the multiplicative formula achieves 23.46% misrouting against that ground truth — within 0.93pp of the Bayes-optimal minimum (22.53%) attainable for the same model — and reduces wasted-recovery false positives by 65% versus a linear baseline. We are explicit that this is near-optimality *against the calibrated model*, not against measured production data, which does not yet exist; the staged calibration roadmap (Section 10.1) replaces the synthetic ground truth with observed outcomes as testnet and mainnet data accumulate. Escrow is settled proportionally to verified work. We prove escrow safety, termination, and state determinism, and show that honest checkpointing is the dominant strategy under realistic economic parameters.
 
-Our key insight is that **economic enforcement** — escrow-conditioned record writing — bootstraps a collective intelligence layer without requiring altruistic participation. Every failure becomes a queryable record. Every recovery teaches the next agent. The accumulated execution history is on-chain and publicly indexable, so the *records* themselves are not forkable in the trivial sense, but replicating CAIRN's *useful* intelligence layer requires reproducing the escrow-mandated write volume — a competing protocol would need to independently generate comparable failure data, which presupposes comparable task throughput. This is a network effect with a switching-cost moat, not a structural impossibility.
+Our key insight is that **economic enforcement** — escrow-conditioned record writing — bootstraps a collective intelligence layer without requiring altruistic participation. Every failure becomes a queryable record. Every recovery teaches the next agent. The accumulated execution history grows with task throughput and is openly queryable across the ecosystem.
 
-CAIRN integrates three Ethereum standards: ERC-8004 for agent identity and reputation, ERC-8183 for job escrow lifecycle, and ERC-7710 for scoped delegation. It is deployed on Base and composable with existing agent frameworks (LangGraph, Olas, CrewAI, AutoGen) and emerging coordination protocols (Google A2A, Anthropic MCP).
-
-> **Scope of empirical claims.** The 23.46% misrouting result is a simulation outcome against a literature-calibrated ground-truth model. We acknowledge three concrete bounds on its external validity: (i) the ground-truth recovery rates and class frequencies are *assumed* from prior published studies, not *measured* from CAIRN's own deployment; (ii) full checkpoint portability holds for structured-pipeline tasks but degrades for reasoning-heavy workloads (Section 4.1.1); (iii) the arbiter incentive analysis (Section 7.5 Proposition 3) assumes a detection probability *p*~d~ that is high for LIVENESS/RESOURCE disputes but plausibly much lower for LOGIC disputes where the underlying question is "did the agent reason incorrectly?" Section 10.3 enumerates the full limitation set.
->
-> **Reproducibility.** All simulation code, results, and figures are reproducible from `simulation/` in the CAIRN repository via `python3 -m simulation.run_eq4` (seed=42, deterministic on NumPy ≥1.20). See reference [18].
+CAIRN integrates three Ethereum standards: ERC-8004 for agent identity and reputation, ERC-8183 for job escrow lifecycle, and ERC-7710 for scoped delegation. It is deployed on Base and composable with existing agent frameworks (LangGraph, Olas, CrewAI, AutoGen) and emerging coordination protocols (Google A2A, Anthropic MCP). All simulation code, results, and figures are reproducible from `simulation/` in the CAIRN repository via `python3 -m simulation.run_eq4` (seed=42); see reference [18].
 
 > **Note on protocol versions.** This paper specifies CAIRN **v2**, the simulation-validated protocol described throughout. The current testnet deployment (**v1**) uses an interim linear recovery score (Equation 1 of Section 10.1) with binary routing, reflecting the protocol's state prior to the calibration work reported here. The multiplicative formula, three-tier routing, and refined stake/threshold parameters described in Sections 2.2.1, 6.4, and 7.5 are the v2 specification, intended for adoption through the governance upgrade path outlined in Section 8.3. Sections marked *"v2 specification"* describe the target protocol; *"v1 deployment"* references describe what is live on testnet. This paper exists to motivate and document the v1 → v2 transition.
 
@@ -57,7 +51,7 @@ CAIRN integrates three Ethereum standards: ERC-8004 for agent identity and reput
 
 ### 1.1 The Problem
 
-The Ethereum agentic economy generates significant economic activity — over 10 million agent-to-agent transactions on the Olas network alone [5],\\ ~49,000 registered agent identities via ERC-8004 across 30+ EVM chains (as of February 2026) [14], and growing on-chain commerce via ERC-8183 [15]. But every agent is operationally isolated.
+The Ethereum agentic economy generates significant economic activity — over 10 million agent-to-agent transactions on the Olas network alone [5], ~49,000 registered agent identities via ERC-8004 across 30+ EVM chains (as of February 2026) [14], and growing on-chain commerce via ERC-8183 [15]. But every agent is operationally isolated.
 
 When an agent fails mid-task — because an API rate-limits, a budget is exceeded, a context window overflows, or a process crashes — **nothing standard happens**. The escrow sits in an ambiguous state. The operator who submitted the task — whether a human, another agent, a DAO multisig, or an autonomous smart contract — has no standardized way to detect the failure or trigger a recovery; the failure is discovered (if at all) only when the principal happens to poll the task. Another agent does not automatically take over. Completed work is lost.
 
@@ -67,7 +61,7 @@ Twenty minutes later, a different agent — same task type, same API, same condi
 
 Published research establishes agent failure as a systemic problem, not an edge case:
 
-- Multi-agent benchmarks show an **average task completion rate of approximately 50%** across popular frameworks including TaskWeaver, MetaGPT, and AutoGen [3]. The compounding effect is structural: *even if* single-step accuracy were 85% (well above current measured agent reliability per [2]), a 10-step workflow would succeed only ~20% of the time\\ (0.85^10^ = 0.197). Real production accuracy is lower, and the 50% headline rate is the empirical consequence.
+- Multi-agent benchmarks show an **average task completion rate of approximately 50%** across popular frameworks including TaskWeaver, MetaGPT, and AutoGen [3]. The compounding effect is structural: *even if* single-step accuracy were 85% (well above current measured agent reliability per [2]), a 10-step workflow would succeed only\\ ~20% of the time\\ (0.85^10^ = 0.197). Real production accuracy is lower, and the 50% headline rate is the empirical consequence.
 
 - The MAST taxonomy identifies **14 distinct failure modes** across 1,600+ annotated traces from 7 multi-agent frameworks [1]. However, MAST classifies failures by symptom (step repetition, incorrect tool selection) — not by what recovery action to take.
 
@@ -89,16 +83,6 @@ Every team building agents has written bespoke, incompatible failure handling. T
 
 CAIRN fills this gap.
 
-### 1.4 Scope and Limitations
-
-Before describing the protocol in detail, we surface the bounds within which its claims hold. These are expanded in Section 10.3.
-
-- **Empirical scope.** The 23.46% misrouting result is from Monte Carlo simulation against a ground-truth model calibrated to published failure-mode distributions [1][2][3]. Class frequencies and base recovery rates are *assumed* from prior literature, not *measured* from CAIRN's own deployment, which does not yet exist at scale. The staged calibration roadmap (Section 10.1) replaces the synthetic model with observed outcomes as testnet and mainnet data accumulate.
-- **Task scope.** Full checkpoint portability covers structured-pipeline tasks (data fetches, API calls, multi-step computations) and tasks whose state can be made portable by serialising explicit context. For reasoning-heavy workloads with implicit framework state — chain-of-thought, multi-turn dialogue, planning with backtracking — only output-level checkpoints are portable and the recovery quality degrades (Section 4.1.1).
-- **Arbiter scope.** The economic analysis of arbiter honesty (Proposition 3 in Section 7.5) holds strongly for LIVENESS and RESOURCE disputes whose evidence is fully on-chain. For LOGIC disputes ("did the agent hallucinate?", "did the output match the specification?") the detection probability is materially lower; CAIRN inherits the structural limitation of all on-chain arbitration protocols [19]. The v2 specification ships single-tier arbitration; an appeals layer is reserved for v3.
-- **Trust scope.** The protocol assumes the underlying L2 sequencer (Base/Coinbase, as of 2026) is available and does not actively collude with a dispute party. This is weaker than the L1 trust model and is the principal residual trust dependency in v2 (Section 7.2).
-- **Implementation scope.** This paper specifies the v2 protocol; the testnet currently runs v1 (interim linear formula, binary routing, 15% arbiter stake, no schema-hash enforcement). The v2 migration path is governance-gated through the `IRecoveryRouter` interface (Section 8.3) and a Phase-1 reference implementation of the v2 router with measured gas is included in the companion repository.
-
 ---
 
 ## 2. Protocol Specification
@@ -111,7 +95,7 @@ CAIRN is a standardized agent failure and recovery protocol. It defines the exac
 
 As a byproduct, CAIRN accumulates an **execution intelligence layer**: a shared, queryable record of every failure, recovery, and completion across the ecosystem. The intelligence layer grows automatically because record-writing is mandatory for escrow settlement.
 
-**Formal Definition.** A CAIRN task is a tuple *T* = (*id*, *σ*,\\ *A*~p~,\\ *A*~f~, *E*, *δ*, *H*,\\ *c*~p~,\\ *c*~f~, *κ*,\\ *t*~0~) where:
+**Formal Definition.** A CAIRN task is a tuple *T* = (*id*, *σ*, *A*~p~,\\ *A*~f~, *E*, *δ*, *H*,\\ *c*~p~,\\ *c*~f~, *κ*,\\ *t*~0~) where:
 
 | Symbol | Type | Description |
 |--------|------|-------------|
@@ -586,7 +570,7 @@ Output: Ranked list of eligible fallback agents
 
 ### 5.3 Network Effects
 
-The execution history is on-chain and publicly indexable, but replicating its accumulation requires matching CAIRN's escrow-mandated write volume — a competing protocol would need to independently generate comparable failure data, which requires comparable task throughput. A competitor can copy the protocol code. They cannot copy the accumulated records — the failure patterns, the agent performance data, the cost distributions — without first reproducing the economic activity that produced them. This creates a defensible network effect where each new agent failure makes the protocol more valuable for every future agent.
+The execution history is on-chain and publicly indexable, growing with task throughput. As more agents complete tasks under CAIRN, the failure patterns, agent performance data, and cost distributions accumulate into a richer signal for every future routing and fallback-selection decision. Each new agent failure makes the protocol more valuable for every future agent.
 
 **Quantitative model.** The intelligence layer's utility for a given task type *τ* is a function of the number of recorded failure and resolution events *n*~τ~:
 
