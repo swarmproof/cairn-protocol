@@ -286,7 +286,7 @@ cairn-protocol/
 │
 ├── CAIRN_PROTOCOL_SPEC.md
 ├── ERC-CAIRN.md
-├── WHITEPAPER.md
+├── WHITEPAPER_V2.md
 ├── README.md
 ├── LICENSE
 └── SECURITY.md
@@ -1785,7 +1785,7 @@ invariant slashingNeverExceedsStake();
 
 ### 27.2 Related Documents
 
-- `/WHITEPAPER.md` — Philosophy & economics
+- `/WHITEPAPER_V2.md` — Protocol specification, philosophy, economics, simulation results
 - `/CAIRN_PROTOCOL_SPEC.md` — Technical specification
 - `/ERC-CAIRN.md` — EIP format
 - `/docs/` — Detailed component docs

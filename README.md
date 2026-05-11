@@ -13,7 +13,7 @@
 
 <p>
   <a href="https://cairn-protocol-iona-78423aa1.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-Frontend-00CED1?style=flat-square" alt="Live Demo"/></a>
-  <a href="./WHITEPAPER.md"><img src="https://img.shields.io/badge/Whitepaper-Read-008B8B?style=flat-square" alt="Whitepaper"/></a>
+  <a href="./WHITEPAPER_V2.md"><img src="https://img.shields.io/badge/Whitepaper-v2.0-008B8B?style=flat-square" alt="Whitepaper"/></a>
   <a href="./ERC-CAIRN.md"><img src="https://img.shields.io/badge/ERC_Spec-Draft-20B2AA?style=flat-square" alt="ERC Spec"/></a>
   <a href="./docs/architecture.md"><img src="https://img.shields.io/badge/Architecture-Docs-008B8B?style=flat-square" alt="Architecture"/></a>
   <a href="https://thegraph.com/studio/subgraph/cairn"><img src="https://img.shields.io/badge/Subgraph-The_Graph-6748fe?style=flat-square" alt="Subgraph"/></a>
@@ -35,10 +35,10 @@
 
 ---
 
-**→ Evaluating the protocol?** [Whitepaper](./WHITEPAPER.md) → [ERC Spec](./ERC-CAIRN.md)
+**→ Evaluating the protocol?** [Whitepaper v2](./WHITEPAPER_V2.md) → [ERC Spec](./ERC-CAIRN.md)
 **→ Integrating CAIRN?** [Quick Start](#quick-start) → [Integration Guide](./docs/integration.md)
 **→ Auditing contracts?** [Contracts](#deployed-contracts-base-sepolia) → [Security](./SECURITY.md)
-**→ Hackathon judges?** [Submission](#hackathon-submission--synthesis-2026) → [Live Demo](https://cairn-protocol-iona-78423aa1.vercel.app)
+**→ Reproducing the simulation?** [`simulation/`](./simulation) → `python3 -m simulation.run_eq4` (seed=42)
 
 ---
 
@@ -126,9 +126,9 @@ Example (single operator):
 | Signal | Status |
 |--------|--------|
 | **ERC-8183 is live** | Agent escrow infrastructure shipped March 2026 |
-| **600+ agents on Olas** | Real fallback pool available today |
-| **$479M aGDP** | Real money flowing through agent transactions |
-| **80% workflow failure rate** | At 85% per-action success, most multi-step tasks fail |
+| **~2,000 mechs deployed on Olas** | ~500 active daily — real fallback pool available today |
+| **10M+ agent-to-agent transactions** | Real economic activity flowing through agent rails |
+| **~50% multi-agent task completion rate** | Per Lu et al. 2025 across TaskWeaver, MetaGPT, AutoGen |
 
 
 The infrastructure is ready. The problem is severe. The gap is real.
@@ -195,7 +195,7 @@ Every task moves through exactly one of these states. No silent failures. No amb
                     │   ┌─────────┐                           │
                     │   │ FAILED  │                           │
                     │   └────┬────┘                           │
-                    │  score ≥ 0.6        score < 0.6         │
+                    │  score ≥ 0.35       score < 0.35        │
                     │        │                  │             │
                     │        ▼                  ▼             │
                     │  ┌───────────┐     ┌──────────┐         │
@@ -223,18 +223,22 @@ Every task moves through exactly one of these states. No silent failures. No amb
 
 ## Three-Class Failure Taxonomy
 
-| Class | Trigger | Weight | Default Path |
-|-------|---------|--------|--------------|
-| **LIVENESS** | Heartbeat missed beyond `heartbeat_interval` | 0.9 (high) | RECOVERING |
-| **RESOURCE** | Budget exceeded or deadline passed | 0.5 (medium) | RECOVERING |
-| **LOGIC** | Invalid checkpoint, schema violation, disputed output | 0.1 (low) | DISPUTED |
+| Class | Trigger | Class weight *F* (v2) | Default Path |
+|-------|---------|------------------------|--------------|
+| **LIVENESS** | Heartbeat missed beyond `heartbeat_interval` | 0.70 (high recovery) | RECOVERING |
+| **RESOURCE** | Budget exceeded or deadline passed | 0.30 (partial recovery) | RECOVERING / DISPUTED |
+| **LOGIC** | Invalid checkpoint, schema violation, hallucination | 0.00 (no recovery) | DISPUTED |
 
-**Recovery Score Formula:**
+**Recovery Score Formula (v2 — multiplicative):**
 ```
-recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) + (deadline_remaining_pct × 0.2)
+r = F^0.80 × B^0.35 × D^0.15
 ```
 
-Routing: `score ≥ 0.6` → RECOVERING (full) | `0.3 ≤ score < 0.6` → RECOVERING (reduced) | `score < 0.3` → DISPUTED
+Routing: `r ≥ 0.40` → RECOVERING (full scope) | `0.35 ≤ r < 0.40` → RECOVERING (reduced scope) | `r < 0.35` → DISPUTED
+
+The multiplicative form captures the "any-factor-kills-it" dynamic: if budget, deadline, or class recoverability approaches zero, the score collapses to zero — matching the ground-truth recovery dynamics. The formula was selected after Monte Carlo simulation across 100,000 task-failure events and 16 experiments comparing it against three linear alternatives; see [Whitepaper §6.4](./WHITEPAPER_V2.md) and [`simulation/RESULTS_EQ4.md`](./simulation/RESULTS_EQ4.md).
+
+> **v1 testnet note.** The contracts currently deployed on Base Sepolia implement the interim linear formula `r = 0.5·F + 0.3·B + 0.2·D` with class weights (0.90, 0.50, 0.10) and a single threshold at 0.30. The v2 multiplicative formula ships in `RecoveryRouterV2.sol` (24 unit tests passing) and migrates via governance through the `IRecoveryRouter` interface. See [PRD-04](./PRDs/PRD-04-V2-UPGRADE/PRD.md) for the migration plan.
 
 ---
 
@@ -399,10 +403,11 @@ These endpoints return markdown that AI agents can parse to integrate CAIRN into
 
 | Document | Description |
 |----------|-------------|
-| [Whitepaper](./WHITEPAPER.md) | Why CAIRN exists — problem, philosophy, economics |
-| [ERC Specification](./ERC-CAIRN.md) | Technical standard (EIP format) |
+| [Whitepaper v2.0](./WHITEPAPER_V2.md) | The protocol specification — problem, mechanism, formal proofs, simulation-validated formula, economic model |
+| [ERC Specification](./ERC-CAIRN.md) | Technical standard (EIP-1 format draft) |
 | [Security](./SECURITY.md) | Security model, attack vectors, mitigations |
 | [Changelog](./CHANGELOG.md) | Version history |
+| [Simulation results](./simulation/) | Monte Carlo calibration (Runs 1-4, 16 experiments, 100k events each); see `RESULTS_EQ4.md` for the headline multiplicative-formula result |
 
 ### Technical Documentation
 
@@ -425,27 +430,30 @@ These endpoints return markdown that AI agents can parse to integrate CAIRN into
 
 | Property | Value |
 |----------|-------|
-| Version | 1.0 |
-| Status | **Live on Base Sepolia** |
-| Network | Base Sepolia (Chain ID: 84532) |
+| Specification | **v2** (this paper — multiplicative recovery score, three-tier routing) |
+| Testnet deployment | **v1** (interim linear formula) — Live on Base Sepolia, Chain ID 84532 |
+| Whitepaper | [v2.0 — April 2026](./WHITEPAPER_V2.md) |
 | ERC Dependencies | ERC-8183, ERC-8004, ERC-7710 |
+| v1 → v2 migration | Governance-gated via `IRecoveryRouter` interface; see [PRD-04](./PRDs/PRD-04-V2-UPGRADE/PRD.md) |
 
-### Implementation Progress (Synthesis Hackathon 2026)
+### Implementation Status
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| PRD-00 Vision | ✅ Complete | Full protocol specification |
-| PRD-01 MVP | ✅ Complete | Hackathon submission |
-| Smart Contracts | ✅ Deployed | 315 tests, 98.95% coverage |
-| Deployment | ✅ Live | Base Sepolia (6 contracts) |
+| Whitepaper v2.0 | ✅ Released | Formal protocol specification, proofs, simulation-validated formula |
+| Smart contracts (v1) | ✅ Deployed | Live on Base Sepolia — 6 contracts, 339 tests passing |
+| RecoveryRouterV2 (v2) | ✅ Implemented | 24 unit tests, gas measured (avg 5,748 / max 19,935) — ready for governance upgrade |
+| Monte Carlo simulation | ✅ Complete | 4 runs, 16 experiments, 100k events each — see [`simulation/`](./simulation) |
+| PRD-01 MVP | ✅ Complete | v1 protocol shipped |
+| PRD-03 Recovery score calibration | ✅ Complete | Derived the v2 multiplicative formula and its parameters |
+| PRD-04 v2 contract upgrade | 🟡 Phase 1 complete | Phases 2-6 (three-tier routing in CairnCore, stake raise, schema validation, deploy) pending |
 | SDK (Python) | ✅ Complete | CairnClient, CairnAgent, CheckpointStore, Observers |
 | CLI Tool | ✅ Complete | submit-task, heartbeat, checkpoint, monitor, recover |
 | Subgraph | ✅ Deployed | The Graph Studio indexing |
 | Upgradeable | ✅ Complete | UUPS proxy pattern (OpenZeppelin 5.x) |
 | Frontend | ✅ Deployed | Next.js 14, wagmi |
-| PRD-07 Optimization | ✅ Complete | Merkle checkpoint batching — significant gas reduction |
 
-See [`PRDs/README.md`](./PRDs/README.md) for full roadmap.
+See [`PRDs/README.md`](./PRDs/README.md) for the full roadmap.
 
 ### Deployed Contracts (Base Sepolia)
 
@@ -472,10 +480,11 @@ All contracts use **UUPS proxy pattern** (OpenZeppelin 5.x). Upgradeable without
 
 ## Quick Links
 
-- **Understand CAIRN:** [Whitepaper](./WHITEPAPER.md) → [Concepts](./docs/concepts.md)
+- **Understand CAIRN:** [Whitepaper v2](./WHITEPAPER_V2.md) → [Concepts](./docs/concepts.md)
 - **Technical Spec:** [ERC-CAIRN](./ERC-CAIRN.md) → [Contracts](./docs/contracts.md)
 - **Build with CAIRN:** [Integration Guide](./docs/integration.md)
 - **Security:** [Security Model](./SECURITY.md)
+- **Reproduce the simulation:** `python3 -m simulation.run_eq4` (seed=42, deterministic on NumPy ≥1.20)
 
 ---
 
@@ -494,67 +503,34 @@ For detailed integration guidance, see [Standards Documentation](./docs/standard
 
 ---
 
-<details>
-<summary><b>Hackathon Submission — Synthesis 2026</b></summary>
-<br/>
-
-**Tracks:** Protocol Labs: Agents With Receipts • Let the Agent Cook
-
-### Onchain Artifacts
-
-| Artifact | Value |
-|----------|-------|
-| **Chain** | Base Sepolia (Chain ID: 84532) |
-| **Contracts** | 6 deployed — see [Deployed Contracts](#deployed-contracts-base-sepolia) above |
-| **Deployment Tx** | [`0xeeee5fc6...`](https://sepolia.basescan.org/tx/0xeeee5fc6281d95e14b8362ba950407b83818b31ba04813489dd5a0120cea825b) |
-| **Test Coverage** | 98.95% (315 tests) |
-
-### Agent Metadata
-
-| File | Description |
-|------|-------------|
-| [`.synthesis/agent.json`](./.synthesis/agent.json) | Agent identity, team structure, deployment info |
-| [`.synthesis/agent_log.json`](./.synthesis/agent_log.json) | Chronological build log |
-| [`.synthesis/CONVERSATION_LOG.md`](./.synthesis/CONVERSATION_LOG.md) | Session summaries and decision log |
-
-### Track Requirements: "Agents With Receipts"
-
-CAIRN implements the complete agent receipts pattern:
-
-| Requirement | Implementation |
-|-------------|----------------|
-| **Execution Records** | Every task creates on-chain record with checkpoints, heartbeats, settlement |
-| **Failure Classification** | RecoveryRouter classifies failures (TIMEOUT, REVERTED, RESOURCE, LOGIC, UNKNOWN) |
-| **Recovery Scoring** | Computed recovery probability before fallback assignment |
-| **Settlement Receipts** | Proportional escrow splits with on-chain verification |
-| **Collective Intelligence** | Bonfires integration writes failure patterns to knowledge graph |
-
-### What Makes CAIRN Different
-
-| # | Differentiator |
-|---|----------------|
-| 1 | **Not a framework** — Wraps any agent SDK (LangGraph, Olas, AgentKit) |
-| 2 | **Escrow-enforced** — Agents can't get paid without completing the protocol |
-| 3 | **Automatic recovery** — No human intervention needed for fallback assignment |
-| 4 | **Network effects** — Every failure teaches every future agent |
-
-### Repository Structure
+## Repository Structure
 
 ```
 cairn-protocol/
 ├── contracts/          # Solidity smart contracts (Foundry)
-│   ├── src/           # Core contracts (CairnCore, RecoveryRouter, FallbackPool)
-│   └── test/          # 315 tests, 98.95% coverage
+│   ├── src/           # Core contracts (CairnCore, RecoveryRouter, RecoveryRouterV2, FallbackPool, ArbiterRegistry)
+│   └── test/          # 339 tests passing
 ├── sdk/               # Python SDK (CairnClient, CairnAgent, CheckpointStore)
 ├── cli/               # CLI tool — task management, monitoring
 ├── frontend/          # Next.js 14 dashboard
 ├── pipeline/          # Off-chain event listener
 ├── subgraph/          # The Graph indexer
+├── simulation/        # Monte Carlo recovery-score calibration (Runs 1-4, 16 experiments)
 ├── PRDs/              # Product requirements documents
-└── docs/              # Technical documentation
+├── docs/              # Technical documentation
+├── PUBLICATION/       # arXiv submission bundle (whitepaper LaTeX, figures, metadata)
+└── WHITEPAPER_V2.md   # Protocol specification
 ```
 
-</details>
+## What Makes CAIRN Different
+
+| # | Differentiator |
+|---|----------------|
+| 1 | **Not a framework** — Wraps any agent SDK (LangGraph, Olas, AgentKit, CrewAI, AutoGen) |
+| 2 | **Escrow-enforced** — Agents cannot get paid without completing the protocol's record-writing |
+| 3 | **Automatic recovery** — No human-in-the-loop required between task submission and settlement |
+| 4 | **Simulation-validated formula** — The v2 multiplicative recovery score is within 0.93pp of the Bayes-optimal floor on the calibrated ground-truth model |
+| 5 | **Network effects** — Every failure becomes a queryable record; the intelligence layer grows with task throughput |
 
 ---
 
@@ -565,7 +541,7 @@ See [LICENSE](./LICENSE) for details.
 | Component | License |
 |-----------|---------|
 | [ERC-CAIRN.md](./ERC-CAIRN.md) | CC0-1.0 |
-| [WHITEPAPER.md](./WHITEPAPER.md) | All Rights Reserved |
+| [WHITEPAPER_V2.md](./WHITEPAPER_V2.md) | All Rights Reserved (see header copyright notice) |
 | [contracts/](./contracts/) | GPL-3.0-or-later |
 | [sdk/](./sdk/), [cli/](./cli/) | Apache-2.0 |
 | [subgraph/](./subgraph/) | MIT |
@@ -585,6 +561,24 @@ See **[CONTRIBUTING.md](./CONTRIBUTING.md)** for:
 - Pull request process
 
 By contributing, you agree to license your contributions under the same license as the component you're modifying.
+
+---
+
+## Cite this work
+
+If you use CAIRN in your research, please cite the whitepaper:
+
+```bibtex
+@misc{boudoukha2026cairn,
+  title  = {CAIRN: A Protocol for Agent Failure Detection, Classification, and Recovery in the On-Chain Agent Economy},
+  author = {Boudoukha, Maroua},
+  year   = {2026},
+  note   = {Whitepaper v2.0. Reproducible simulation: python3 -m simulation.run\_eq4 (seed=42).},
+  url    = {https://github.com/MarouaBoud/cairn-protocol}
+}
+```
+
+An arXiv preprint will be linked here after submission acceptance.
 
 ---
 
