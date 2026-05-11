@@ -12,21 +12,21 @@ Maroua Boudoukha (corresponding author)
 
 ## Abstract (for arXiv submission — plain-text, no markdown)
 
-AI agent task completion rates remain at approximately 50% across popular frameworks, yet no standardized protocol exists for failure detection, classification, and recovery in the on-chain agent economy. We present CAIRN, the first protocol to classify agent failures by recoverability rather than symptom, enabling deterministic routing to checkpoint-based recovery or dispute resolution.
+AI agent task completion rates remain at approximately 50% across popular frameworks, yet no standardized protocol exists for failure detection, classification, and recovery in the on-chain agent economy. We present CAIRN, the first on-chain agent protocol to classify failures by recoverability rather than symptom, adapting the classical crash-vs-Byzantine distinction from distributed systems to enable deterministic routing to checkpoint-based recovery or dispute resolution.
 
-CAIRN defines a 6-state machine with three-tier recovery routing, enforced by smart contracts: when an agent fails mid-task, the protocol detects the failure via missed heartbeats or resource exhaustion, classifies it into one of three recoverability classes (LIVENESS, RESOURCE, LOGIC), computes a multiplicative recovery score r = F^0.80 × B^0.35 × D^0.15, and routes the task to either a qualified fallback agent who resumes from the last IPFS-committed checkpoint, or to dispute resolution. The formula is empirically validated via Monte Carlo simulation across 100,000 task-failure events and 16 experiments, achieving 23.46% misrouting — within 0.93pp of the Bayes-optimal theoretical minimum (22.53%) — and reducing wasted-recovery false positives by 65% versus a linear baseline. Escrow is settled proportionally to verified work. We prove escrow safety, termination, and state determinism, and show that honest checkpointing is the dominant strategy under realistic economic parameters.
+CAIRN defines a 6-state machine with three-tier recovery routing enforced by smart contracts. On failure, the protocol classifies the failure into LIVENESS, RESOURCE, or LOGIC, computes a multiplicative recovery score r = F^0.80 × B^0.35 × D^0.15, and routes the task to a qualified fallback agent that resumes from the last IPFS checkpoint, or to dispute. The formula is calibrated against a ground-truth model derived from published failure-mode distributions: across 100,000 synthetic task-failure events and 16 experiments, it achieves 23.46% misrouting — within 0.93pp of the Bayes-optimal minimum (22.53%) for the same model — and reduces wasted-recovery false positives by 65% versus a linear baseline. We are explicit that this is near-optimality against the calibrated model, not production data; a staged roadmap replaces synthetic ground truth with observed outcomes as testnet data accumulates. Escrow settles proportionally to verified work. We prove escrow safety, termination, and state determinism.
 
-Our key insight is that economic enforcement — escrow-conditioned record writing — bootstraps a collective intelligence layer without requiring altruistic participation. Every failure becomes a queryable record. Every recovery teaches the next agent.
-
-CAIRN integrates three Ethereum standards: ERC-8004 for agent identity and reputation, ERC-8183 for job escrow lifecycle, and ERC-7710 for scoped delegation. It is deployed on Base and composable with existing agent frameworks (LangGraph, Olas, CrewAI, AutoGen) and emerging coordination protocols (Google A2A, Anthropic MCP).
+Economic enforcement — escrow-conditioned record writing — bootstraps a collective intelligence layer without requiring altruistic participation. CAIRN integrates ERC-8004, ERC-8183, and ERC-7710; deployed on Base, composable with LangGraph, Olas, CrewAI, AutoGen, Google A2A, and Anthropic MCP. Source and reproducible simulation (seed=42): github.com/MarouaBoud/cairn-protocol.
 
 ## arXiv Categories
 
-**Primary:** `cs.DC` (Distributed, Parallel, and Cluster Computing)
+**Primary:** `cs.MA` (Multiagent Systems) — agent coordination, failure recovery, fallback assignment. The external reviewer flagged this as the most natural primary category for an agent-economy paper.
 
-**Cross-list (recommended — pick 1–2):**
-- `cs.CR` (Cryptography and Security) — blockchain, smart-contract, incentive-design content
-- `cs.MA` (Multiagent Systems) — agent coordination, failure recovery
+**Cross-list (recommended):**
+- `cs.DC` (Distributed, Parallel, and Cluster Computing) — for the Chandy-Lamport lineage, the state-machine formalism, and the distributed-fault classification (crash vs. Byzantine adaptation)
+- `cs.CR` (Cryptography and Security) — blockchain, smart-contract, incentive-design content, mechanism-design proofs
+
+**Optional additional cross-list:**
 - `cs.SE` (Software Engineering) — protocol specification, formal verification of state machine
 
 ## Comments Field (arXiv form)
