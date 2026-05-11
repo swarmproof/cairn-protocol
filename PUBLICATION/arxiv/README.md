@@ -6,10 +6,13 @@ This directory contains everything needed to submit the CAIRN Protocol whitepape
 
 | File | Purpose |
 |---|---|
-| `cairn-whitepaper.md` | Source document (mirror of `../../WHITEPAPER_V2.md` at submission time) |
-| `figures/` | 16 simulation figures (PNG) referenced in Section 10.1 |
+| `cairn-whitepaper.md` | Source document (mirror of `../../WHITEPAPER_V2.md` at submission time, with HTML `<sub>`/`<sup>` tags converted to pandoc native syntax) |
+| `cairn-whitepaper.tex` | LaTeX source generated from the `.md` — arXiv-preferred upload format |
+| `cairn-whitepaper.pdf` | Locally compiled PDF for visual review (BasicTeX render; arXiv renders independently) |
+| `cairn-whitepaper.backup-pre-review-2026-05-11.md` | Pre-review-hardening snapshot, for revert/diff reference |
+| `figures/` | 16 simulation figures (PNG) — ancillary supplementary material, not embedded in the paper. The empirical claims are carried by `§10.1` tables. See METADATA.md "Figures policy" for details. |
 | `METADATA.md` | arXiv submission metadata (title, abstract, categories, license notes, checklist) |
-| `README.md` | This file — build instructions |
+| `README.md` | This file — build instructions and submission workflow |
 
 ## Building the submission
 

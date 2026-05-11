@@ -31,3 +31,9 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+# LaTeX build artifacts in PUBLICATION/
+PUBLICATION/arxiv/*.aux
+PUBLICATION/arxiv/*.log
+PUBLICATION/arxiv/*.out
+PUBLICATION/arxiv/*.toc
+PUBLICATION/arxiv/*.synctex.gz
