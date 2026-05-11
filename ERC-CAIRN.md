@@ -76,16 +76,21 @@ Examples:
 
 #### Recovery Score
 
-A deterministic score computed on FAILED state entry:
+A deterministic score computed on FAILED state entry. v2 specification:
 
 ```
-recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) + (deadline_remaining_pct × 0.2)
+r = F^0.80 × B^0.35 × D^0.15
 ```
 
 Where:
-- `failure_class_weight`: Liveness = 0.9 | Resource = 0.5 | Logic = 0.1
-- `budget_remaining_pct`: (budget_cap - cost_accrued) / budget_cap
-- `deadline_remaining_pct`: (deadline - current_block) / (deadline - start_block)
+- `F` = `failure_class_weight`: LIVENESS = 0.70 | RESOURCE = 0.30 | LOGIC = 0.00
+- `B` = `budget_remaining_pct`: (budget_cap - cost_accrued) / budget_cap, scaled to [0, 1]
+- `D` = `deadline_remaining_pct`: (deadline - current_block) / (deadline - start_block), scaled to [0, 1]
+- Exponents (0.80, 0.35, 0.15) are governance-adjustable.
+
+The multiplicative form captures the "any-factor-kills-it" dynamic: if budget, deadline, or class recoverability approaches zero, the score collapses to zero. The formula was selected after Monte Carlo simulation across 100,000 task-failure events and 16 experiments; see the CAIRN whitepaper §6.4.
+
+> **v1 testnet (legacy linear formula).** Earlier deployments use `r = 0.5·F + 0.3·B + 0.2·D` with weights `(0.90, 0.50, 0.10)` and a single binary threshold at `0.30`. Implementations MAY ship either formula; conformant v2 implementations MUST use the multiplicative form above and the three-tier thresholds in the routing section.
 
 #### Escrow Split Rule
 
@@ -106,23 +111,25 @@ CAIRN classifies failures by **recoverability**, not by symptom.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│ CLASS             │ FAILURE TYPES                    │ RECOVERY SCORE WEIGHT │
+│ CLASS             │ FAILURE TYPES                    │ CLASS WEIGHT F (v2)   │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ LIVENESS          │ Heartbeat missed                 │ 0.9 (HIGH)            │
+│ LIVENESS          │ Heartbeat missed                 │ 0.70 (high recovery)  │
 │ (agent stopped)   │ Process crash                    │                       │
 │                   │ Network partition                │                       │
 │                   │ Infrastructure timeout           │                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ RESOURCE          │ Budget cap hit                   │ 0.5 (MEDIUM)          │
+│ RESOURCE          │ Budget cap hit                   │ 0.30 (partial)        │
 │ (agent exhausted) │ Deadline exceeded                │                       │
 │                   │ API rate limit                   │                       │
 │                   │ Context window overflow          │                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ LOGIC             │ Step repetition loop             │ 0.1 (LOW)             │
-│ (agent reasoning) │ Wrong tool selected              │                       │
+│ LOGIC             │ Step repetition loop             │ 0.00 (no recovery —   │
+│ (agent reasoning) │ Wrong tool selected              │  routes to DISPUTED)  │
 │                   │ Hallucinated output              │                       │
 │                   │ Spec misalignment                │                       │
 └─────────────────────────────────────────────────────────────────────────────┘
+
+v1 legacy weights (for reference): LIVENESS=0.9, RESOURCE=0.5, LOGIC=0.1.
 ```
 
 #### Classification Algorithm
@@ -157,14 +164,14 @@ Six states. Every transition is deterministic. No human is required to trigger a
                     fault    │                        │ complete
                   detected   │                        │
                              ▼                        │
-                        ┌─────────┐   score≥0.3  ┌───┴──────┐
+                        ┌─────────┐  r ≥ 0.35    ┌───┴──────┐
                         │         │ ────────────► │          │
-                        │ FAILED  │  (≥0.6 full  │RECOVERING│
+                        │ FAILED  │  (≥0.40 full │RECOVERING│
                         │         │ ◄──────────── │ (full or │
-                        └────┬────┘  0.3-0.6     │ reduced) │
+                        └────┬────┘  0.35-0.40   │ reduced) │
                              │       reduced or   └──────────┘
-                      score  │       fallback fails
-                      <0.3   │
+                       r     │       fallback fails
+                      <0.35  │
                              ▼
                         ┌──────────┐  arbiter  ┌──────────┐
                         │          │ ─────────► │          │
@@ -200,14 +207,14 @@ Six states. Every transition is deterministic. No human is required to trigger a
 | Entry trigger | Any RUNNING exit condition fires |
 | Who can enter | From RUNNING only |
 | Actions | Classify failure type. Compute recovery score. Write Failure Record to IPFS. Store CID on-chain. Hold escrow. |
-| Exit — recoverable | Score ≥ 0.6 → RECOVERING (full scope); 0.3 ≤ Score < 0.6 → RECOVERING (reduced scope) |
-| Exit — unrecoverable | Score < 0.3 → DISPUTED |
+| Exit — recoverable | `r ≥ 0.40` → RECOVERING (full scope); `0.35 ≤ r < 0.40` → RECOVERING (reduced scope) |
+| Exit — unrecoverable | `r < 0.35` → DISPUTED |
 
 #### RECOVERING State
 
 | Attribute | Value |
 |---|---|
-| Entry trigger | Recovery score ≥ 0.3 from FAILED (full scope if ≥ 0.6, reduced scope if 0.3-0.6) |
+| Entry trigger | Recovery score `r ≥ 0.35` from FAILED (full scope if `r ≥ 0.40`, reduced scope if `0.35 ≤ r < 0.40`) |
 | Who can enter | From FAILED only |
 | Preconditions | Budget headroom. Deadline headroom. Fallback agent available. |
 | Actions | Select fallback agent. Transfer task state (checkpoint CIDs, remaining budget, permissions). Fallback resumes from last checkpoint. |
@@ -227,7 +234,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 
 | Attribute | Value |
 |---|---|
-| Entry trigger | Score < 0.3, no fallback available, or fallback failed |
+| Entry trigger | `r < 0.35`, no fallback available, or fallback failed |
 | Who can enter | From FAILED only |
 | Actions | Hold escrow. Write negative reputation. Expose Failure Record. Start arbiter timeout. |
 | Exit — arbiter rules | Arbiter submits ruling → RESOLVED |
@@ -258,7 +265,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 | Action | Actor | Description |
 |---|---|---|
 | A7 | Protocol | Classify failure. Compute recovery score. Write Failure Record. |
-| A8 | Protocol | Route: score ≥ 0.6 → RECOVERING (full); 0.3 ≤ score < 0.6 → RECOVERING (reduced); score < 0.3 → DISPUTED. |
+| A8 | Protocol | Route on recovery score *r*: `r ≥ 0.40` → RECOVERING (full); `0.35 ≤ r < 0.40` → RECOVERING (reduced); `r < 0.35` → DISPUTED. |
 
 #### Phase 4: Recovering (A9-A11)
 
@@ -558,8 +565,9 @@ Given: Task in RUNNING with 3/5 subtasks complete
 When: Agent misses heartbeat by 1 block
 And: Anyone calls checkLiveness(taskId)
 Then: State transitions RUNNING → FAILED
-And: Recovery score = 0.9 × 0.5 + budget_pct × 0.3 + deadline_pct × 0.2
-And: If score ≥ 0.3: State → RECOVERING
+And: Recovery score r = F^0.80 × B^0.35 × D^0.15 with F=0.70 (LIVENESS)
+And: If r ≥ 0.40: State → RECOVERING (full scope)
+And: If 0.35 ≤ r < 0.40: State → RECOVERING (reduced scope)
 And: Fallback assigned, resumes from checkpoint 3
 ```
 
@@ -568,8 +576,8 @@ And: Fallback assigned, resumes from checkpoint 3
 ```
 Given: Task in RUNNING with loop detected
 When: Failure classified as LOGIC class
-Then: Recovery score < 0.3 (logic weight = 0.1)
-And: State transitions RUNNING → FAILED → DISPUTED
+Then: Recovery score r = 0 (F_LOGIC = 0.00 in v2; r = F^0.80 × B^0.35 × D^0.15 collapses when F=0)
+And: r < 0.35, so State transitions RUNNING → FAILED → DISPUTED
 And: Escrow held, not released
 ```
 
@@ -647,7 +655,7 @@ See [contracts documentation](./docs/contracts.md) for full implementation detai
 
 **Attack:** Arbiter colludes with failing agent to rule in their favor.
 
-**Mitigation:** Arbiter stake proportional to dispute value (15%). Incorrect rulings (detectable via on-chain evidence) result in stake slashing. Economic cost of collusion exceeds benefit.
+**Mitigation:** Arbiter stake proportional to dispute value (20% in v2; 15% in v1 testnet, scheduled to migrate). Incorrect rulings (detectable via on-chain evidence for LIVENESS and RESOURCE disputes) result in 50% stake slashing. Economic cost of collusion exceeds benefit for the on-chain-evidenced classes; LOGIC disputes carry residual structural risk addressed by reputation gates and commit-reveal (see CAIRN whitepaper §7.5 Proposition 3).
 
 #### 5. Recovery Score Manipulation
 
@@ -691,4 +699,4 @@ See [contracts documentation](./docs/contracts.md) for full implementation detai
 
 ## Copyright
 
-Copyright (c) 2025 Maroua BOUDOUKHA. Licensed under [MPL-2.0](./LICENSE).
+Copyright (c) 2026 Maroua BOUDOUKHA. Licensed under [MPL-2.0](./LICENSE).
