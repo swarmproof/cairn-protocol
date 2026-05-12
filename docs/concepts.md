@@ -61,21 +61,25 @@ Agents register which `domain.operation` pairs they support in their ERC-8004 id
 
 A deterministic score computed on FAILED state entry. No oracle. Pure math.
 
+**v2 formula (multiplicative — simulation-validated):**
 ```
-recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) + (deadline_remaining_pct × 0.2)
+r = F^0.80 × B^0.35 × D^0.15
 ```
 
 Where:
-- `failure_class_weight`: LIVENESS = 0.9 | RESOURCE = 0.5 | LOGIC = 0.1
-- `budget_remaining_pct`: (budget_cap - cost_accrued) / budget_cap
-- `deadline_remaining_pct`: (deadline - current_block) / (deadline - start_block)
+- `F` = `failure_class_weight`: LIVENESS = 0.70 | RESOURCE = 0.30 | LOGIC = 0.00
+- `B` = `budget_remaining_pct`: (budget_cap - cost_accrued) / budget_cap, scaled to [0, 1]
+- `D` = `deadline_remaining_pct`: (deadline - current_block) / (deadline - start_block), scaled to [0, 1]
+- Exponents (0.80, 0.35, 0.15) are governance-adjustable.
 
-**Three-tier routing:**
-- `score ≥ 0.6` → **RECOVERING (full scope)** — high confidence, fallback receives full remaining budget
-- `0.3 ≤ score < 0.6` → **RECOVERING (reduced scope)** — medium confidence, fallback receives capped budget
-- `score < 0.3` → **DISPUTED** (requires arbiter resolution)
+The multiplicative form captures the "any-factor-kills-it" dynamic: if budget, deadline, or class recoverability approaches zero, the score collapses to zero — matching the ground-truth recovery dynamics. See [Whitepaper §6.4](../WHITEPAPER_V2.md) for the simulation methodology and [`simulation/RESULTS_EQ4.md`](../simulation/RESULTS_EQ4.md) for the calibration results (23.46% misrouting, within 0.93pp of Bayes-optimal).
 
-> **Note:** The `recoveryThreshold` constant (lower bound) is set to `0.3e18` (30%) in CairnCore.sol. The upper threshold for full-scope recovery is `0.6e18` (60%). Both thresholds are governance-adjustable.
+**Three-tier routing (v2 thresholds):**
+- `r ≥ 0.40` → **RECOVERING (full scope)** — high confidence, fallback receives full remaining budget
+- `0.35 ≤ r < 0.40` → **RECOVERING (reduced scope)** — medium confidence, fallback receives capped budget
+- `r < 0.35` → **DISPUTED** (requires arbiter resolution)
+
+> **v1 testnet note.** The contract currently deployed on Base Sepolia (`RecoveryRouter.sol`) implements the pre-calibration linear formula `r = 0.5·F + 0.3·B + 0.2·D` with class weights `(0.90, 0.50, 0.10)` and a single binary threshold at `0.30`. The v2 multiplicative formula ships in `RecoveryRouterV2.sol` and migrates via governance through the `IRecoveryRouter` interface; see [PRD-04](../PRDs/PRD-04-V2-UPGRADE/PRD.md). Both `recoveryThresholdUpper` (0.40) and `recoveryThresholdLower` (0.35) are governance-adjustable in v2.
 
 ### Escrow Split Rule
 
@@ -111,11 +115,13 @@ CAIRN classifies failures by **recoverability**, not by symptom. Prior research 
 
 CAIRN's protocol-level taxonomy uses **three failure classes** for recovery scoring:
 
-| Class | Recovery Score Weight | Description |
-|-------|----------------------|-------------|
-| **LIVENESS** (agent stopped) | 0.9 (HIGH) | Agent stopped responding — highly recoverable |
-| **RESOURCE** (agent exhausted) | 0.5 (MEDIUM) | Budget/deadline/external limits hit — partially recoverable |
-| **LOGIC** (agent reasoning) | 0.1 (LOW) | Invalid output or logic error — rarely recoverable |
+| Class | Class weight *F* (v2) | Description |
+|-------|------------------------|-------------|
+| **LIVENESS** (agent stopped) | 0.70 (high recovery) | Agent stopped responding — highly recoverable |
+| **RESOURCE** (agent exhausted) | 0.30 (partial recovery) | Budget/deadline/external limits hit — partially recoverable |
+| **LOGIC** (agent reasoning) | 0.00 (no recovery) | Invalid output or reasoning error — routes directly to DISPUTED |
+
+> **v1 values:** LIVENESS=0.90, RESOURCE=0.50, LOGIC=0.10. The v2 weights were derived from the calibration simulation; see [Whitepaper §6.4](../WHITEPAPER_V2.md) for the rationale (LOGIC → 0.00 because at 8% base recovery rate, the expected value of a recovery attempt is less than the expected cost — direct dispute is the economically correct routing).
 
 ### Five Types (Contract Level)
 
@@ -173,15 +179,15 @@ Six states. Every transition is deterministic. No human is required to trigger a
                     fault    │                        │ complete
                   detected   │                        │
                              ▼                        │
-                        ┌─────────┐   score≥0.3  ┌───┴──────┐
+                        ┌─────────┐  r ≥ 0.35    ┌───┴──────┐
                         │         │ ────────────► │          │
-                        │ FAILED  │  (≥0.6 full  │RECOVERING│
+                        │ FAILED  │  (≥0.40 full │RECOVERING│
                         │         │ ◄──────────── │ (full or │
-                        └────┬────┘  0.3-0.6     │ reduced) │
+                        └────┬────┘  0.35-0.40   │ reduced) │
                              │       reduced or   └──────────┘
                              │       fails
-                      score  │
-                      <0.3   │
+                       r     │
+                      <0.35  │
                              ▼
                         ┌──────────┐  arbiter  ┌──────────┐
                         │          │ ─────────► │          │
@@ -223,16 +229,16 @@ Six states. Every transition is deterministic. No human is required to trigger a
 | Entry trigger | Any RUNNING exit condition fires |
 | Who can enter | From RUNNING only |
 | Actions | Classify failure type. Compute recovery score. Write Failure Record to IPFS. Store CID on-chain (emit `TaskFailed(taskId, recordCID, recoveryScore)`). Hold escrow. |
-| Exit — recoverable | Score ≥ 0.3 → RECOVERING |
-| Exit — unrecoverable | Score < 0.3 → DISPUTED |
+| Exit — recoverable | `r ≥ 0.35` → RECOVERING (full or reduced) |
+| Exit — unrecoverable | `r < 0.35` → DISPUTED |
 
-**FAILED is not terminal.** It is a routing state. The only actions that happen here are classification, scoring, and record writing. The routing to RECOVERING or DISPUTED happens automatically based on the score. The threshold is defined by `recoveryThreshold` (30% in v1).
+**FAILED is not terminal.** It is a routing state. The only actions that happen here are classification, scoring, and record writing. The routing to RECOVERING (full or reduced) or DISPUTED happens automatically based on the score, partitioned by two thresholds in v2 (`recoveryThresholdUpper = 0.40`, `recoveryThresholdLower = 0.35`) or a single binary threshold in v1 (`recoveryThreshold = 0.30`).
 
 ### RECOVERING
 
 | Attribute | Value |
 |---|---|
-| Entry trigger | Recovery score ≥ 0.3 from FAILED |
+| Entry trigger | Recovery score `r ≥ 0.35` from FAILED (v2; v1: `r ≥ 0.30`) |
 | Who can enter | From FAILED only |
 | Preconditions | Budget headroom must remain. Deadline headroom must remain. At least one fallback agent available in pool for this task_type above admission threshold. |
 | Actions | Query execution intelligence layer for best fallback agent by task_type + reputation score. Select top available agent. Transfer task state: checkpoint CID list + remaining budget + remaining deadline. Transfer scoped permissions (pre-authorized caveat from IDLE). Fallback agent resumes from last committed checkpoint. New liveness clock starts for fallback. |
@@ -253,7 +259,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 
 | Attribute | Value |
 |---|---|
-| Entry trigger | Score < 0.3, no fallback available, all fallbacks failed |
+| Entry trigger | `r < 0.35` (v2; v1: `r < 0.30`), no fallback available, or all fallbacks failed |
 | Who can enter | From FAILED only |
 | Actions | Hold escrow — funds do not move. Write negative reputation signal to ERC-8004 ReputationRegistry for failing agent. Expose Failure Record CID publicly as arbitration evidence. Start arbiter timeout clock (N blocks, configurable). Any registered arbiter agent (staked, above reputation threshold) may call `rule(taskId, outcome)` within timeout window. Arbiter receives fee from held escrow on successful ruling. |
 | Exit — arbiter rules | Arbiter submits ruling → RESOLVED (escrow distributed per ruling) |
@@ -299,14 +305,15 @@ Six states. Every transition is deterministic. No human is required to trigger a
 | **RESOLVED** | Completed | Task finished, escrow distributed |
 | **DISPUTED** | Under Review | Awaiting arbiter resolution |
 
-### Recovery Score Display
+### Recovery Score Display (v2 three-tier)
 
 | Score Range | Display | Routing Outcome |
 |-------------|---------|-----------------|
-| ≥ 0.3 | Recoverable (30-100%) | Automatic recovery via fallback agent |
-| < 0.3 | Low (0-30%) | Routed to dispute resolution |
+| `r ≥ 0.40` | Recoverable — full scope | Automatic recovery via fallback agent, full remaining budget |
+| `0.35 ≤ r < 0.40` | Recoverable — reduced scope | Recovery attempt with capped budget |
+| `r < 0.35` | Not recoverable | Routed to dispute resolution |
 
-> **v1 Implementation:** Uses a single threshold at 30%. Future versions may introduce graduated thresholds for more nuanced recovery decisions.
+> **v1 testnet implementation:** uses a single threshold at `r = 0.30` (binary recover/dispute). The three-tier band above is the v2 specification; it ships on-chain via the `RecoveryRouterV2` migration ([PRD-04](../PRDs/PRD-04-V2-UPGRADE/PRD.md)).
 
 ---
 

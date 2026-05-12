@@ -31,13 +31,17 @@ Fallback agents and arbiters must stake capital proportional to their exposure. 
 
 ### 4. Deterministic Scoring
 
-Recovery score is a pure function of on-chain state:
+Recovery score is a pure function of on-chain state. v2 specification:
 
 ```
-recovery_score = (failure_class_weight × 0.5) + (budget_remaining_pct × 0.3) + (deadline_remaining_pct × 0.2)
+r = F^0.80 × B^0.35 × D^0.15
 ```
+
+with class weights LIVENESS=0.70, RESOURCE=0.30, LOGIC=0.00 and three-tier routing thresholds 0.40 / 0.35.
 
 No oracle. No AI. No human judgment. All inputs are on-chain verifiable.
+
+> v1 testnet uses the legacy linear formula `r = 0.5·F + 0.3·B + 0.2·D` with weights `(0.90, 0.50, 0.10)` and a single binary threshold at `0.30`. Determinism property holds for both.
 
 ---
 
@@ -310,4 +314,4 @@ Do NOT open public issues for security vulnerabilities.
 
 ---
 
-*CAIRN Security Model v1.0*
+*CAIRN Security Model — aligned with Whitepaper v2.0 (April 2026)*

@@ -6,7 +6,7 @@
 
 ## What Was Implemented
 
-This implementation integrates Olas Mech Marketplace as an external fallback agent source for CAIRN Protocol, expanding the pool of available recovery agents from internal registered agents to include 600+ Olas Mechs.
+This implementation integrates Olas Mech Marketplace as an external fallback agent source for CAIRN Protocol, expanding the pool of available recovery agents from internal registered agents to include ~2,000 deployed Olas Mechs (~500 active daily).
 
 ## Files Created
 
@@ -85,7 +85,7 @@ This implementation integrates Olas Mech Marketplace as an external fallback age
 │    │                                            │
 │    └─> OlasMechAdapter                         │
 │        └─> IOlasMech Registry (Gnosis)         │
-│            └─> 600+ Olas Mechs                 │
+│            └─> ~2,000 deployed Olas Mechs (~500 active daily)                 │
 │                                                 │
 │  Returns: Best agent (internal or Olas)        │
 └─────────────────────────────────────────────────┘
@@ -129,7 +129,7 @@ Admins can add custom mappings via `adapter.mapTaskType(cairnType, olasCapabilit
 ### 1. Permissionless Expansion
 - No need to manually onboard each Olas mech
 - Automatically discovers mechs via Olas Registry
-- 600+ additional fallback options
+- ~2,000 additional fallback options
 
 ### 2. Quality Gating
 - Only active mechs considered

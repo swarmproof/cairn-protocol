@@ -256,7 +256,7 @@ ERC-8183 hook implementation. ~80 lines.
 
 Off-chain component. ~150 lines Python.
 
-- Listens for `TaskFailed` events with `score ≥ 0.3`
+- Listens for `TaskFailed` events with `r ≥ 0.35` (v2 lower threshold; v1 testnet: `r ≥ 0.30`)
 - Queries Bonfires API for best fallback agent by `task_type`
 - Queries Olas Mech Marketplace for agent availability
 - Calls `assignFallback(taskId, fallbackAgentId)` on CairnTask
