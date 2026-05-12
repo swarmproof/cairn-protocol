@@ -13,7 +13,7 @@
 > | States | 6 (IDLE, RUNNING, FAILED, RECOVERING, RESOLVED, DISPUTED) | 4 (RUNNING, FAILED, RECOVERING, RESOLVED) |
 > | Failure Classification | FailureClass enum | Not implemented |
 > | Arbiter | Full dispute resolution via ArbiterRegistry | Not available |
-> | Recovery Score | Computed on-chain (threshold 0.3) | Not implemented |
+> | Recovery Score | Computed on-chain — v2 spec: three-tier thresholds 0.40 / 0.35 (multiplicative formula); v1 testnet currently uses single binary threshold 0.30 (linear formula) | Not implemented |
 > | Schema Validation | Hash-based | CID storage only |
 >
 > See `contracts/src/CairnCore.sol` for the production implementation.
