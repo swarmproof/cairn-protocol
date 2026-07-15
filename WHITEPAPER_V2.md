@@ -27,7 +27,7 @@ Our key insight is that **economic enforcement** — escrow-conditioned record w
 
 CAIRN integrates three Ethereum standards: ERC-8004 for agent identity and reputation, ERC-8183 for job escrow lifecycle, and ERC-7710 for scoped delegation. It is deployed on Base and composable with existing agent frameworks (LangGraph, Olas, CrewAI, AutoGen) and emerging coordination protocols (Google A2A, Anthropic MCP). All simulation code, results, and figures are reproducible from `simulation/` in the CAIRN repository via `python3 -m simulation.run_eq4` (seed=42); see reference [18].
 
-> **Note on protocol versions.** This paper specifies CAIRN **v2**, the simulation-validated protocol described throughout. The current testnet deployment (**v1**) uses an interim linear recovery score (Equation 1 of Section 10.1) with binary routing, reflecting the protocol's state prior to the calibration work reported here. The multiplicative formula, three-tier routing, and refined stake/threshold parameters described in Sections 2.2.1, 6.4, and 7.5 are the v2 specification, intended for adoption through the governance upgrade path outlined in Section 8.3. Sections marked *"v2 specification"* describe the target protocol; *"v1 deployment"* references describe what is live on testnet. This paper exists to motivate and document the v1 → v2 transition.
+> **Note on protocol versions.** This paper specifies CAIRN **v2**, the simulation-validated protocol described throughout. The current testnet deployment (**v1**) uses an interim linear recovery score (Equation 1 in Section 6.4) with binary routing, reflecting the protocol's state prior to the calibration work reported here. The multiplicative formula, three-tier routing, and refined stake/threshold parameters described in Sections 2.2.1, 6.4, and 7.5 are the v2 specification, intended for adoption through the governance upgrade path outlined in Section 8.3. Sections marked *"v2 specification"* describe the target protocol; *"v1 deployment"* references describe what is live on testnet. This paper exists to motivate and document the v1 → v2 transition.
 
 ---
 
@@ -124,18 +124,18 @@ Six states. Every transition is deterministic. After the operator submits the ta
     │      │            │         │                │          │
     └──────┘            └────┬────┘                └────▲─────┘
                              │                          │
-                    fault    │                          │ complete
-                  detected   │                          │
+                    fault    │                          │ fallback
+                  detected   │                          │ completes
                              ▼                          │
-                        ┌─────────┐  score ≥ 0.35  ┌───┴──────┐
-                        │         │ ──────────────► │          │
-                        │ FAILED  │  (≥0.40 full   │RECOVERING│
-                        │         │ ◄─0.35-0.40─── │ (full or │
-                        └────┬────┘  reduced scope) │ reduced) │
-                             │       or fallback    └──────────┘
-                      score  │       fails
-                     < 0.35  │
-                             ▼
+                        ┌─────────┐  score ≥ 0.40  ┌───┴──────┐
+                        │         │ ─(full scope)─► │          │
+                        │ FAILED  │  0.35 ≤ s <0.40│RECOVERING│
+                        │         │ ─(reduced)────► │ (full or │
+                        └────┬────┘                 │ reduced) │
+                             │                      └────┬─────┘
+                      score  │        fallback fails     │
+                     < 0.35  │  ┌────────────────────────┘
+                             ▼  ▼
                         ┌──────────┐  arbiter   ┌──────────┐
                         │          │ ──────────► │          │
                         │ DISPUTED │             │ RESOLVED │ (terminal)
@@ -177,7 +177,7 @@ All (*σ*, *event*) pairs not listed above are undefined; the transaction revert
 
 **Theorem 1 (Escrow Safety).** *For any task T, escrow E is not distributed until σ = RESOLVED.*
 
-*Proof.* The settlement function `settle(taskId)` contains the precondition `require(task.state == RESOLVED)`. No other function in the protocol transfers escrow from the task's balance. The transition table in Section 2.2 has no outgoing edges from RESOLVED, so RESOLVED is terminal. Therefore, escrow *E* remains locked in all non-terminal states and is released only via `settle()` at σ = RESOLVED. ∎
+*Proof.* The settlement function `settle(taskId)` contains the precondition `require(task.state == RESOLVED)`. No other function in the protocol transfers escrow from the task's balance. The transition table in Section 2.2 has no outgoing edges from RESOLVED, so RESOLVED is terminal. Therefore, escrow *E* remains locked in all non-terminal states and is released only via `settle()` at σ = RESOLVED. **QED.**
 
 **Theorem 2 (Termination).** *Every task T reaches σ = RESOLVED within at most δ − t₀ + D<sub>timeout</sub> seconds.*
 
@@ -188,15 +188,15 @@ All (*σ*, *event*) pairs not listed above are undefined; the transaction revert
 - **RECOVERING**: Fallback either completes (→ RESOLVED) or fails (→ DISPUTED). Bounded by remaining deadline: *δ* − *t*<sub>current</sub>.
 - **DISPUTED**: Arbiter rules (→ RESOLVED) or timeout expires (→ RESOLVED with auto-refund). Bounded by *D*<sub>timeout</sub> (default 604,800 seconds = 7 days).
 
-RUNNING and RECOVERING share the same time window [*t*<sub>0</sub>, *δ*] — RECOVERING begins at *t*<sub>fail</sub> ≥ *t*<sub>0</sub> and can only consume time up to *δ*, so the two intervals are not additive. The worst-case path therefore takes at most (*δ* − *t*<sub>0</sub>) seconds before DISPUTED is entered, plus at most *D*<sub>timeout</sub> seconds in DISPUTED. Total upper bound: (*δ* − *t*<sub>0</sub>) + *D*<sub>timeout</sub>. ∎
+RUNNING and RECOVERING share the same time window [*t*<sub>0</sub>, *δ*] — RECOVERING begins at *t*<sub>fail</sub> ≥ *t*<sub>0</sub> and can only consume time up to *δ*, so the two intervals are not additive. The worst-case path therefore takes at most (*δ* − *t*<sub>0</sub>) seconds before DISPUTED is entered, plus at most *D*<sub>timeout</sub> seconds in DISPUTED. Total upper bound: (*δ* − *t*<sub>0</sub>) + *D*<sub>timeout</sub>. **QED.**
 
 **Theorem 3 (Irreversibility).** *State transitions are monotonic: once a task leaves state σ, it never returns to σ.*
 
-*Proof.* The transition function *τ* defines a directed acyclic graph over states: IDLE → RUNNING → {FAILED, RESOLVED}; FAILED → {RECOVERING, DISPUTED}; RECOVERING → {RESOLVED, DISPUTED}; DISPUTED → RESOLVED. No edge returns to a previously visited state. Each transition executes atomically within a single transaction, writing the new state to contract storage before function return. ∎
+*Proof.* The transition function *τ* defines a directed acyclic graph over states: IDLE → RUNNING → {FAILED, RESOLVED}; FAILED → {RECOVERING, DISPUTED}; RECOVERING → {RESOLVED, DISPUTED}; DISPUTED → RESOLVED. No edge returns to a previously visited state. Each transition executes atomically within a single transaction, writing the new state to contract storage before function return. (Theorem 3 is stated for the v2 state graph. The v1 deployment reaches RECOVERING → DISPUTED indirectly by re-entering FAILED on fallback failure — see Section 7.4, invariant 4 — so strict monotonicity over the FAILED state holds in v2 but not v1; the reachable terminal set is identical in both versions.) **QED.**
 
 **Theorem 4 (Determinism).** *For any task T in state σ and event e, τ(σ, e) produces at most one successor state.*
 
-*Proof.* The only branching transition is *τ*(FAILED, RecoveryRoute(*r*)), which depends on the recovery score *r*. Since *r* is computed as a pure function of on-chain state (Equation 1 in Section 6.4), and the v2 threshold comparisons (*r* ≥ 0.40, 0.35 ≤ *r* < 0.40, *r* < 0.35) partition ℝ into disjoint intervals, exactly one branch is taken. (In v1, the two-tier partition at *r* ≥ 0.30 / *r* < 0.30 is a degenerate case of the same proof; the determinism property holds in both versions.) All other transitions in the table map to a unique successor. ∎
+*Proof.* The only branching transition is *τ*(FAILED, RecoveryRoute(*r*)), which depends on the recovery score *r*. Since *r* is computed as a pure function of on-chain state (Equation 4 in Section 6.4), and the v2 threshold comparisons (*r* ≥ 0.40, 0.35 ≤ *r* < 0.40, *r* < 0.35) partition ℝ into disjoint intervals, exactly one branch is taken. (In v1, the two-tier partition at *r* ≥ 0.30 / *r* < 0.30 is a degenerate case of the same proof; the determinism property holds in both versions.) All other transitions in the table map to a unique successor. **QED.**
 
 ### 2.3 Architecture
 
@@ -258,7 +258,7 @@ A DeFi portfolio-management agent (acting as the operator — its own wallet pos
 | T+65s | Agent completes step 2 → checkpoint 2 committed | RUNNING |
 | T+95s | Agent completes step 3 → checkpoint 3 committed | RUNNING |
 | T+120s | Agent calls CoinGecko API → HTTP 429 (rate limit) → agent process crashes | RUNNING |
-| T+185s | Heartbeat missed (120s + 65s > 60s interval) → anyone calls `checkLiveness` | **FAILED** |
+| T+185s | Heartbeat missed (last heartbeat at T+120s; T+185s > T+120s + 60s interval) → anyone calls `checkLiveness` | **FAILED** |
 | T+186s | RecoveryRouter classifies: **LIVENESS** (*F* = 0.70); budget 85% remaining; deadline 88% remaining | FAILED |
 | T+186s | Recovery score = *F*^0.80 × *B*^0.35 × *D*^0.15 = 0.70^0.80 × 0.85^0.35 × 0.88^0.15 = **0.752 × 0.945 × 0.981 = 0.697** | FAILED |
 | T+186s | Score 0.697 ≥ 0.40 → route to RECOVERING (full scope) | **RECOVERING** |
@@ -270,7 +270,9 @@ A DeFi portfolio-management agent (acting as the operator — its own wallet pos
 
 **Result without CAIRN:** The operator (agent or human) discovers the failure only on its next polling cycle — typically 4+ hours later for a human, or whenever the next health-check fires for an automated principal. Full restart. Original agent paid 0.
 
-**Result with CAIRN:** Automatic detection in 65 seconds. Fallback resumes from step 4. Original agent paid 0.006 ETH for verified work (60% × 0.01 ETH escrow, minus 0.5% protocol fee). Total recovery time: ~85 seconds.
+**Result with CAIRN:** Automatic detection in 65 seconds. Fallback resumes from step 4. Original agent paid 0.00597 ETH for verified work (60% of the 0.00995 ETH distributable after the 0.5% protocol fee). Total recovery time: ~85 seconds.
+
+> *Detection-window note.* The timeline above uses the strict single-interval liveness window (`block.timestamp > lastHeartbeat + H`), as implemented in the MVP contract variant. The full v1 `CairnCore` deployment applies the more conservative two-consecutive-miss rule of Section 4.3 (`lastHeartbeat + 2H`), under which detection fires at ~T+245s — 125 seconds after the crash rather than 65. Either way, detection is measured in seconds, not the hours typical of polling-based discovery.
 
 ### 2.5 Comparative Analysis: Recovery vs. Restart
 
@@ -435,7 +437,7 @@ CAIRN's checkpoint schema targets the first two classes by requiring explicit co
 
 The `context` field is the portability mechanism: any agent can reconstruct the necessary state by reading the output and context fields, without needing the original agent's internal representation. For framework-dependent tasks (reasoning chains with implicit state), operators should decompose the task into subtasks whose outputs are self-contained — effectively converting framework-dependent checkpoints into the "portable with context" class.
 
-### 4.1.3 Data Availability
+### 4.1.2 Data Availability
 
 **Checkpoint availability.** CAIRN requires checkpoint data availability for two windows: (1) the task duration (for fallback resumption) and (2) the dispute period (for arbiter evidence). Availability is ensured via:
 
@@ -538,8 +540,8 @@ Record-writing is mandatory for escrow settlement — not optional.
   "original_checkpoint_count": 3,
   "fallback_checkpoint_count": 2,
   "escrow_split": {
-    "original_agent": "0.006 ETH",
-    "fallback_agent": "0.004 ETH",
+    "original_agent": "0.00597 ETH",
+    "fallback_agent": "0.00398 ETH",
     "protocol_fee": "0.00005 ETH"
   }
 }
@@ -580,7 +582,7 @@ Fallback accuracy:      F(τ, n) = F_0 + (F_max − F_0) × (1 − e^{−n/m})
 ```
 
 Where:
-- *k* = minimum records for 63% pattern confidence (estimated: *k* ≈ 30 per task type). The value *k* ≈ 30 follows from the sample size formula for a one-proportion *z*-test: *n* = (*z*<sub>α/2</sub>)² × *p*(1−*p*) / *d*², where *p* = 0.5 (failure rate), *d* = 0.10 (precision), *α* = 0.05 → *n* = 1.96² × 0.25 / 0.01 ≈ 96 total records. With a 45% LIVENESS proportion, we need ~96 × 0.45 ≈ 43 LIVENESS records — or roughly 30 records per class when amortized across the three classes.
+- *k* = minimum records for 63% pattern confidence (estimated: *k* ≈ 30 per task type). The value *k* ≈ 30 follows from the sample size formula for a one-proportion *z*-test: *n* = (*z*<sub>α/2</sub>)² × *p*(1−*p*) / *d*², where *p* = 0.5 (failure rate), *d* = 0.10 (precision), *α* = 0.05 → *n* = 1.96² × 0.25 / 0.01 ≈ 96 total records. Distributing 96 records across the three classes gives ~32 per class on average, which we round to the conservative uniform per-class threshold *k* ≈ 30. (The scarcest class, LOGIC at ~20%, accumulates records ~2× slower than this average — see the cold-start decomposition below.)
 - *F*<sub>0</sub> = baseline fallback success rate without intelligence (random selection from pool)
 - *F*<sub>max</sub> = maximum fallback success rate with full intelligence
 - *m* = records needed for 63% of maximum improvement (estimated: *m* ≈ 100 per task type)
@@ -628,17 +630,17 @@ If no recovery occurred (original agent completed solo): 100% of distributable t
 | Fallback agent | 10% of max eligible escrow | Fails without completing any checkpoints | 100% of stake |
 | Arbiter | 20% of max ruleable dispute | Incorrect ruling (detectable via evidence) | 50% of stake |
 
-**Derivation of the 10% fallback stake.** The minimum stake must satisfy two simultaneous constraints. First, it must make zero-checkpoint failure *economically irrational* for any agent whose ex-ante success rate exceeds the admission floor — i.e., the expected loss from staking exceeds the expected gain from an unjustified acceptance. Combining the fallback acceptance condition (Proposition 2 in §7.5) with the slash mechanism: a fallback with success rate *s* faces expected gain `s · E_r · (c_f/c_total) · (1−f) − (1−s) · p_0 · stake`. For the admission floor *s* = 0.5 (reputation gate), zero-checkpoint failure probability *p*<sub>0</sub> ≈ 0.3 (empirical estimate from the simulation ground truth where failures cluster early), and the typical case `(c_f/c_total) ≈ 0.4` (fallback takes ~40% of work on recovery), the break-even stake is approximately `0.5 × 0.4 × E_r / (0.5 × 0.3) ≈ 1.33 × E_r`. Since `E_r ≤ E`, a stake of 10-15% of *maximum eligible escrow* across the agent's task portfolio satisfies this break-even with margin. Second, the stake must be small enough that capable agents will actually post it — 10% is large enough to deter Sybils but small enough that a reputable fallback can serve many tasks without locking excessive capital. Empirically, 10% is the floor used by similar staked-fallback designs (e.g., Olas's mech registration); CAIRN inherits this convention.
+**Derivation of the 10% fallback stake.** The minimum stake must satisfy two simultaneous constraints. First, it must make zero-checkpoint failure *economically irrational* for any agent whose ex-ante success rate exceeds the admission floor — i.e., the expected loss from staking exceeds the expected gain from an unjustified acceptance. Combining the fallback acceptance condition (Proposition 2 in §7.5) with the slash mechanism: a fallback with success rate *s* faces expected gain `s · E_r · (c_f/c_total) · (1−f) − (1−s) · p_0 · stake`. For the admission floor *s* = 0.5 (reputation gate), zero-checkpoint failure probability *p*<sub>0</sub> ≈ 0.3 (empirical estimate from the simulation ground truth where failures cluster early), and the typical case `(c_f/c_total) ≈ 0.4` (fallback takes ~40% of work on recovery), the slash-only break-even stake is approximately `0.5 × 0.4 × E_r / (0.5 × 0.3) ≈ 1.33 × E_r` — i.e., a stake exceeding the remaining escrow itself, which no practical per-task deposit can meet. The 10% figure is therefore *not* claimed to satisfy this bound on its own. CAIRN anchors the stake to the *maximum eligible escrow* across the agent's declared task-type portfolio (`stake = 0.1 × E_max`), so the slash alone deters unjustified acceptance for any recovery task with `E_r ≤ 0.075 × E_max` (i.e., the long tail of small tasks a fallback serves), and the remaining range is closed by the second deterrent that the slash triggers alongside it: a zero-checkpoint failure also decays the agent's ERC-8004 reputation below the admission floor (Section 4.4), forfeiting the agent's entire future fallback income stream — a repeated-game cost that dominates any single-task gain for a professionally operated fallback. The stake's role is to make Sybil re-entry costly (a fresh identity must re-post capital and re-earn reputation), not to outweigh a single large escrow by itself. Second, the stake must be small enough that capable agents will actually post it — 10% is large enough to deter Sybils but small enough that a reputable fallback can serve many tasks without locking excessive capital. Empirically, 10% is the floor used by similar staked-fallback designs (e.g., Olas's mech registration); CAIRN inherits this convention.
 
-**Derivation of the 20% arbiter stake.** The arbiter stake must dominate the arbiter fee by a factor large enough to make collusion uneconomical. With fee φ = 3% of dispute value and slash amount 50% of stake on detection, the no-collusion condition is `bribe < φ + p_d × (slash/2 × stake) = 0.03V + p_d × stake/2`. Setting `stake = 0.20V` and `p_d = 0.8` (high-detection regime, on-chain evidence) yields `bribe < 0.03V + 0.08V = 0.11V` — the minimum bribe must exceed 11% of dispute value. For the LOGIC-dispute regime where *p*<sub>d</sub> ≈ 0.4, the same stake yields `bribe < 0.05V`, which is the residual structural risk discussed in §7.5 and §10.3. A higher stake (e.g., 30%) would tighten the LOGIC-dispute bound but at the cost of arbiter participation — 20% is the compromise that keeps arbiter capital cost roughly equal to ~6-7× the per-dispute fee, which we judge is the lowest acceptable risk-to-reward ratio that still attracts professional arbiters. The v1 testnet uses 15% pending the v2 upgrade.
+**Derivation of the 20% arbiter stake.** The arbiter stake must dominate the arbiter fee by a factor large enough to make collusion uneconomical. With fee φ = 3% of dispute value and slash amount 50% of stake on detection, the no-collusion condition is `bribe < φ + p_d × (slash/2 × stake) = 0.03V + p_d × stake/2`. Setting `stake = 0.20V` and `p_d = 0.8` (high-detection regime, on-chain evidence) yields `bribe < 0.03V + 0.08V = 0.11V` — the minimum bribe must exceed 11% of dispute value. For the LOGIC-dispute regime where *p*<sub>d</sub> ≈ 0.4, the same stake yields `bribe < 0.03V + 0.04V = 0.07V` — the margin thins but does not collapse; this is the residual structural risk discussed in §7.5 and §10.3. A higher stake (e.g., 30%) would tighten the LOGIC-dispute bound but at the cost of arbiter participation — 20% is the compromise that keeps arbiter capital cost roughly equal to ~6-7× the per-dispute fee, which we judge is the lowest acceptable risk-to-reward ratio that still attracts professional arbiters. The v1 testnet uses 15% pending the v2 upgrade.
 
 The v1 testnet deployment currently enforces a **15% arbiter stake** (plus a 0.15 ETH absolute floor) rather than 20%. The v2 upgrade raises the ratio to 20% to strengthen the incentive analysis in Section 7.5. Under v1 parameters, the Proposition 3 inequality becomes `bribe < 0.03V + p_d × 0.075V`; the qualitative conclusion (honest ruling rational under realistic detection probabilities) is preserved, but the margin is tighter.
 
 ### 6.4 Recovery Score Formula *(v2 specification)*
 
-**v2 formula (simulation-validated, this paper's headline result):**
+**v2 formula (Equation 4 — simulation-validated, this paper's headline result).** Equation numbering throughout this paper follows the simulation's formula indices (Eq1 linear, Eq2 piecewise, Eq3 five-variable, Eq4 multiplicative; Section 10.1):
 ```
-r = F^a × B^b × D^c
+r = F^a × B^b × D^c                                    (Eq. 4)
 ```
 
 Where *r* is the recovery score, expanded with default parameters as:
@@ -657,7 +659,7 @@ Where:
 - 0.35 ≤ Score < 0.40 → **RECOVERING (reduced scope)** (attempt with constraints — fallback receives capped budget)
 - Score < 0.35 → **DISPUTED** (requires arbiter resolution)
 
-> **v1 interim formula (current testnet deployment).** The v1 contract on Base Sepolia implements the pre-calibration linear formula `r = 0.5·F + 0.3·B + 0.2·D` with class weights (0.90, 0.50, 0.10) and a single binary threshold at 0.30 — the 47.56%-misrouting baseline called "Eq1-current" in Section 10.1. The calibration work in this paper motivates the v2 upgrade path: replace the linear formula with the multiplicative formula above, move class weights to (0.70, 0.30, 0.00), and introduce the three-tier threshold band (0.40 / 0.35). The migration is governance-gated and does not require a state-breaking upgrade, because the score formula is already isolated behind the `IRecoveryRouter` interface in the v1 contract architecture.
+> **v1 interim formula (Equation 1 — current testnet deployment).** The v1 contract on Base Sepolia implements the pre-calibration linear formula `r = 0.5·F + 0.3·B + 0.2·D` (Eq. 1) with class weights (0.90, 0.50, 0.10) and a single binary threshold at 0.30 — the 47.56%-misrouting baseline called "Eq1-current" in Section 10.1. The calibration work in this paper motivates the v2 upgrade path: replace the linear formula with the multiplicative formula above, move class weights to (0.70, 0.30, 0.00), and introduce the three-tier threshold band (0.40 / 0.35). The migration is governance-gated and does not require a state-breaking upgrade, because the score formula is already isolated behind the `IRecoveryRouter` interface in the v1 contract architecture.
 
 The three-tier model enables graduated recovery: high-confidence failures get full resources, medium-confidence failures get a constrained attempt before escalating to dispute, and low-confidence failures go directly to arbitration.
 
@@ -717,7 +719,7 @@ At an average escrow *E* = 0.01 ETH with 50% remaining-budget *E*<sub>rem</sub> 
 - FULL-tier FP: 79 × 0.50 × 0.005 ETH = **0.198 ETH / 1,000 tasks**
 - REDUCED-tier FP: 54 × 0.25 × 0.005 ETH = **0.068 ETH / 1,000 tasks**
 - FN (arbiter fee only, delay cost not monetized): 122 × 0.03 × 0.01 ETH = **0.037 ETH / 1,000 tasks**
-- **Total Eq4 misrouting cost: ~0.303 ETH / 1,000 tasks (~$758 at $2,500/ETH, i.e., ~$0.76 per task).**
+- **Total Eq4 misrouting cost: ~0.302 ETH / 1,000 tasks (~$754 at $2,500/ETH, i.e., ~$0.75 per task).**
 
 **Versus the current Eq1 formula (v1 testnet deployment).** Applying the same cost model to the Run 1 Eq1-current confusion matrix (RESULTS.md §9: FULL+Failed 13.1%, REDUCED+Failed 34.0%, DISPUTED+Succeeded 0.5%):
 
@@ -726,7 +728,7 @@ At an average escrow *E* = 0.01 ETH with 50% remaining-budget *E*<sub>rem</sub> 
 - FN: 5 × 0.03 × 0.01 ETH = 0.0015 ETH / 1,000 tasks
 - **Total Eq1 misrouting cost: ~0.754 ETH / 1,000 tasks (~$1,885).**
 
-The multiplicative v2 formula therefore saves **~0.451 ETH / 1,000 tasks (~$1,128)**, a **60% reduction** in misrouting cost. The residual 0.93pp gap above the Bayes-optimal floor (22.53%) bounds the maximum further savings from calibration at roughly 0.012 ETH / 1,000 tasks (~$30) — essentially exhausted.
+The multiplicative v2 formula therefore saves **~0.452 ETH / 1,000 tasks (~$1,130)**, a **60% reduction** in misrouting cost. The residual 0.93pp gap above the Bayes-optimal floor (22.53%) bounds the maximum further savings from calibration at roughly 0.012 ETH / 1,000 tasks (~$30) — essentially exhausted.
 
 Relative to deployed escrow capital (10 ETH of escrow across 1,000 tasks at *E* = 0.01): Eq4 misrouting costs **~3.0% of escrow value**; Eq1-current costs ~7.5%. Eq4 reduces the friction on deployed escrow by ~2.5× — an acceptable overhead for permissionless, trustless automated recovery.
 
@@ -806,7 +808,7 @@ Checkpointing is dominant when Δ*V* > 0. Evaluating with protocol parameters (*
 
 | Subtasks (*n*) | Min Escrow (*E*) | Δ*V* | Dominant? |
 |---|---|---|---|
-| 5 | 0.001 ETH | 9.87 × 10⁻⁵ | Yes (Δ*V* ≫ *g*) |
+| 5 | 0.001 ETH | 9.87 × 10⁻⁵ | Yes (Δ*V* >> *g*) |
 | 10 | 0.001 ETH | 4.90 × 10⁻⁵ | Yes |
 | 50 | 0.001 ETH | 9.15 × 10⁻⁶ | Yes |
 | 100 | 0.001 ETH | 4.17 × 10⁻⁶ | Yes |
@@ -814,7 +816,7 @@ Checkpointing is dominant when Δ*V* > 0. Evaluating with protocol parameters (*
 
 The condition holds for all realistic task configurations (n ≤ 100 at minimum escrow, or any escrow ≥ 0.01 ETH at any *n*). The boundary escrow for dominance is *E*<sub>min</sub> = (*g* × *n*) / (*p*<sub>f</sub> × (1 − *f*)) — for *n* = 100: *E*<sub>min</sub> ≈ 1.6 × 10⁻⁴ ETH, well below the protocol minimum of 10⁻³ ETH.
 
-**Faking checkpoints** is strictly dominated under v2: invalid CIDs are rejected by schema hash validation (the `specHash` committed at task initialization and matched against each checkpoint payload). Under v1 (where per-checkpoint validation is not yet enforced), the equilibrium is preserved by reputation decay alone — repeated invalid submissions push agents below the fallback pool admission threshold (Section 4.4). The v2 upgrade hardens this from an economic disincentive into an on-chain invariant. ∎
+**Faking checkpoints** is strictly dominated under v2: invalid CIDs are rejected by schema hash validation (the `specHash` committed at task initialization and matched against each checkpoint payload). Under v1 (where per-checkpoint validation is not yet enforced), the equilibrium is preserved by reputation decay alone — repeated invalid submissions push agents below the fallback pool admission threshold (Section 4.4). The v2 upgrade hardens this from an economic disincentive into an on-chain invariant. **QED.**
 
 #### Game 2: Fallback Acceptance
 
@@ -836,7 +838,7 @@ Let *p*<sub>0</sub> denote the conditional probability of zero-checkpoint failur
 E[payoff] = s_τ · E_r · (c_f / c_total) · (1 − f)  −  (1 − s_τ) · p_0 · stake
 ```
 
-Acceptance is rational when E[payoff] > 0, yielding the stated inequality. Three remarks: (a) at *s*<sub>τ</sub> = 1 the condition reduces to a trivially positive gain, recovering the intuition that a perfectly competent fallback always accepts; (b) the fallback's own gas cost *g* and opportunity cost are absorbed into *E*<sub>r</sub> for brevity (subtract them from the left side to obtain the stricter form); (c) the admission gates (reputation ≥ 50, stake ≥ 10%) enforce a lower bound on *s*<sub>τ</sub> by construction, so low-competence agents never reach the decision. ∎
+Acceptance is rational when E[payoff] > 0, yielding the stated inequality. Three remarks: (a) at *s*<sub>τ</sub> = 1 the condition reduces to a trivially positive gain, recovering the intuition that a perfectly competent fallback always accepts; (b) the fallback's own gas cost *g* and opportunity cost are absorbed into *E*<sub>r</sub> for brevity (subtract them from the left side to obtain the stricter form); (c) the admission gates (reputation ≥ 50, stake ≥ 10%) enforce a lower bound on *s*<sub>τ</sub> by construction, so low-competence agents never reach the decision. **QED.**
 
 This self-selection mechanism is beneficial: agents with low success rates for a given task type will rationally decline recovery assignments, ensuring only capable agents accept.
 
@@ -858,11 +860,11 @@ The detection probability *p*<sub>d</sub> varies sharply by dispute type, and th
 
 **Multi-dispute analysis:** For LIVENESS/RESOURCE classes, an arbiter who colludes in *k* disputes has cumulative detection probability 1 − (1 − *p*<sub>d</sub>)<sup>k</sup>. At *p*<sub>d</sub> = 0.8: a single dispute has 80% detection risk; two disputes have 96%; three disputes have 99.2%. Sustained collusion is therefore economically irrational for these classes — expected losses compound exponentially while gains are linear.
 
-**The arbiter-recursion problem.** Proposition 3's economic guarantee breaks down for **LOGIC** disputes ("did the agent hallucinate?", "did the output match the specification?"). Arbiters are themselves agents reasoning about reasoning errors; the dispute being judged and the judge are drawn from the same population. Whether a ruling is "incorrect" is not always detectable from on-chain evidence — for genuine LOGIC disputes the detection signal is itself an inference about reasoning quality, not a comparison against a timestamp. We estimate *p*<sub>d</sub> for the hardest LOGIC cases at 0.3-0.5 rather than 0.8, which raises the minimum bribe to roughly 0.045*V*-0.08*V* — still meaningful, but a much narrower margin than the on-chain-evidenced classes.
+**The arbiter-recursion problem.** Proposition 3's economic guarantee breaks down for **LOGIC** disputes ("did the agent hallucinate?", "did the output match the specification?"). Arbiters are themselves agents reasoning about reasoning errors; the dispute being judged and the judge are drawn from the same population. Whether a ruling is "incorrect" is not always detectable from on-chain evidence — for genuine LOGIC disputes the detection signal is itself an inference about reasoning quality, not a comparison against a timestamp. We estimate *p*<sub>d</sub> for the hardest LOGIC cases at 0.3-0.5 rather than 0.8, which lowers the minimum bribe bound to roughly 0.06*V*-0.08*V* (0.03*V* + *p*<sub>d</sub> × 0.1*V*) — still meaningful, but a much narrower margin than the 0.11*V* of the on-chain-evidenced classes.
 
 This is the same structural problem encountered by Kleros and other on-chain dispute-resolution protocols [19]: a sufficiently capable adversary can craft a dispute where the "correct" answer is genuinely contestable, and detection requires either (a) an appeals layer that defers to ever-larger juries with diminishing returns, or (b) an external ground-truth oracle that re-introduces a trust assumption. CAIRN inherits this limitation. The mitigations the protocol does provide — high reputation gates for arbiter admission, commit-reveal to prevent pre-arrangement, multi-dispute compounding for repeat offenders — bound the worst case but do not eliminate it. Section 10.3 lists this as a known limitation; the v2 specification ships **single-tier arbitration**, and a future appeals layer (multi-juror with bonded escalation, in the Kleros style) is reserved for protocol v3.
 
-The commit-reveal scheme provides an additional layer: the arbiter commits a hash of their ruling before knowing which agents are involved (preventing pre-arrangement), and must reveal within 24 hours or forfeit their eligibility. ∎
+The commit-reveal scheme provides an additional layer: the arbiter commits a hash of their ruling before knowing which agents are involved (preventing pre-arrangement), and must reveal within 24 hours or forfeit their eligibility. **QED.**
 
 ---
 
@@ -880,9 +882,9 @@ The commit-reveal scheme provides an additional layer: the arbiter commits a has
 | Arbiter timeout | 7 days | 1-30 days | Time for arbiter to rule before auto-refund |
 | Recovery threshold (upper) | 0.40 | 0.1-0.9 | Score threshold for full-scope RECOVERING |
 | Recovery threshold (lower) | 0.35 | 0.1-0.9 | Score threshold for reduced-scope RECOVERING vs DISPUTED |
-| Recovery exponent *a* | 0.80 | 0.1-2.0 | Exponent for failure class weight in Equation 1 |
-| Recovery exponent *b* | 0.35 | 0.1-2.0 | Exponent for budget remaining in Equation 1 |
-| Recovery exponent *c* | 0.15 | 0.1-2.0 | Exponent for deadline remaining in Equation 1 |
+| Recovery exponent *a* | 0.80 | 0.1-2.0 | Exponent for failure class weight in Equation 4 |
+| Recovery exponent *b* | 0.35 | 0.1-2.0 | Exponent for budget remaining in Equation 4 |
+| Recovery exponent *c* | 0.15 | 0.1-2.0 | Exponent for deadline remaining in Equation 4 |
 | *F*<sub>LIVENESS</sub> | 0.70 | 0-1.0 | Failure class weight for LIVENESS failures |
 | *F*<sub>RESOURCE</sub> | 0.30 | 0-1.0 | Failure class weight for RESOURCE failures |
 | *F*<sub>LOGIC</sub> | 0.00 | 0-1.0 | Failure class weight for LOGIC failures |
@@ -926,7 +928,7 @@ All upgrades require governance approval via the timelock. In-flight tasks are n
 
 **ERC-8004 (Trustless Agents).** Provides agent identity and reputation registries. Live on Ethereum mainnet since January 29, 2026, with ~49,000 registered agents across 30+ EVM chains as of February 2026 [14]. CAIRN reads reputation scores for fallback pool admission and writes outcome signals (success/failure attestations) after task completion.
 
-**ERC-7710 (Delegation Framework).** Enables scoped permission transfer. CAIRN uses ERC-7710 for pre-authorized fallback delegation: the operator grants CAIRN permission to sub-delegate task authority to a fallback agent at recovery time, without requiring a new operator signature.
+**ERC-7710 (Delegation Framework) [17].** Enables scoped permission transfer. CAIRN uses ERC-7710 for pre-authorized fallback delegation: the operator grants CAIRN permission to sub-delegate task authority to a fallback agent at recovery time, without requiring a new operator signature.
 
 **ERC-8211 (Smart Batching).** Enables AI agents to execute complex DeFi operations in a single batched transaction [16]. Composable with CAIRN: checkpoints can wrap ERC-8211 batched executions.
 
@@ -945,6 +947,8 @@ CAIRN builds on established theory:
 - **Mechanism design.** Staking and slashing mechanisms are proven at over $100 billion in staked value in Ethereum Proof-of-Stake [9]. CAIRN applies the same principle: stake capital to participate, lose it for misbehavior.
 
 - **Multi-agent failure analysis.** The MAST taxonomy [1] provides the most comprehensive classification of multi-agent failure modes to date. CAIRN's contribution is to add the recoverability dimension — classifying failures by what action to take, not by what went wrong.
+
+- **Adjacent lines of work.** Blockchain-mediated incentive-compatible mechanisms for multi-agent reinforcement learning [4] and the broader agents-meet-blockchain survey literature [10] establish the design space CAIRN operates in but do not address mid-task failure recovery. In the networking domain, an IETF draft proposes a task-oriented multi-agent recovery framework for converged mobile networks [11] — conceptually parallel (checkpointed handoff between agents) but without economic settlement or permissionless enforcement; the convergence of independent efforts on agent recovery underscores that the gap CAIRN targets is recognized across communities.
 
 ---
 
@@ -1045,7 +1049,7 @@ where σ is the logistic function, *B* and *D* are budget and deadline remaining
 
 ### 10.2 Protocol Extensions
 
-**ERC standardization.** CAIRN is designed to become an Ethereum standard. The specification in [ERC-CAIRN.md](./ERC-CAIRN.md) follows the EIP-1 format. Working title: `ERC-CAIRN: Agent Failure and Recovery Standard`.
+**ERC standardization.** CAIRN is designed to become an Ethereum standard. The specification in [ERC-CAIRN.md](https://github.com/MarouaBoud/cairn-protocol/blob/main/ERC-CAIRN.md) follows the EIP-1 format. Working title: `ERC-CAIRN: Agent Failure and Recovery Standard`.
 
 **CAIRN MCP Server.** Exposing checkpoint, recovery, and intelligence query as MCP tools would enable any MCP-connected agent to participate in CAIRN without framework-specific integration.
 
