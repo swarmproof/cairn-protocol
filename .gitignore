@@ -39,3 +39,5 @@ PUBLICATION/arxiv/*.toc
 PUBLICATION/arxiv/*.synctex.gz
 PUBLICATION/arxiv/cairn-whitepaper.pdf
 PUBLICATION/arxiv/preamble.tex
+# Submission bundle (regenerated from cairn-whitepaper.tex + figures/)
+PUBLICATION/arxiv/cairn-submission.zip
