@@ -1,6 +1,130 @@
 # CAIRN Protocol — Claude Code Instructions
 
 > **CRITICAL**: These rules are MANDATORY for ALL agents and builds. No exceptions.
+>
+> Sections 0–10 below are the **governance/process charter** (audit gates, logging,
+> deployment, git). The **Orientation** section immediately below is the practical
+> map of the repo: how to build, test, and where the code lives. Read Orientation
+> first when you start work; obey Sections 0–10 before you commit or deploy.
+
+---
+
+## Orientation — Build, Test & Architecture
+
+### What this repo is
+
+CAIRN is a **standardized agent failure-and-recovery protocol** on Base Sepolia
+(Chain ID 84532). A task moves through a six-state machine (`IDLE → RUNNING →
+FAILED → RECOVERING/DISPUTED → RESOLVED`); when an agent fails, the protocol
+classifies the failure, scores recoverability, assigns a fallback agent that
+resumes from the last checkpoint, and settles escrow proportionally. Deep
+background lives in `README.md`, `WHITEPAPER_V2.md`, and `docs/`.
+
+It is a **polyglot monorepo** — Solidity contracts, a Python SDK + CLI, a Next.js
+frontend, a Graph subgraph, an off-chain event pipeline, and a Monte Carlo
+simulation — each with its own toolchain.
+
+### ⚠️ v1 (deployed) vs v2 (spec) — do not conflate
+
+The contracts **deployed on Base Sepolia implement the interim linear** recovery
+formula `r = 0.5·F + 0.3·B + 0.2·D` with a single 0.30 routing threshold. The
+whitepaper/README describe the **v2 multiplicative** formula `r = F^0.80 · B^0.35
+· D^0.15` with three-tier routing — that lives only in `RecoveryRouterV2.sol`
+(not deployed) and migrates via governance through the `IRecoveryRouter`
+interface. When code and docs disagree on the formula, this is why. See
+`PRDs/PRD-04-V2-UPGRADE/PRD.md`.
+
+### Component map
+
+| Path | Stack | What it is |
+|------|-------|-----------|
+| `contracts/` | Solidity 0.8.24, Foundry | Protocol contracts + interfaces. Deps are **git submodules** (`lib/`). |
+| `sdk/` | Python 3.10+ | `CairnClient`, `CairnAgent`, `CheckpointStore`, observers. Published as `cairn-sdk`. |
+| `cli/` | Python 3.10+, Click | `cairn` command (`task`, `agent`, `pool`, `intel`, `admin` subcommands). Entry point `cli.main:main`. |
+| `frontend/` | Next.js 14 (App Router), wagmi 2.x, TypeScript, **pnpm** | Dashboard. Live on Vercel. |
+| `subgraph/` | The Graph, AssemblyScript, **pnpm** | Indexes on-chain events → execution intelligence. |
+| `pipeline/` | Python | Off-chain event listener → IPFS records → Bonfires graph. |
+| `simulation/` | Python, NumPy | Monte Carlo recovery-score calibration (derived the v2 formula). |
+| `PRDs/` | — | Source-of-truth product specs. See Section 4 for the reference hierarchy. |
+
+### Contracts (Foundry)
+
+`contracts/` holds six core contracts — `CairnCore` (entry point, state machine),
+`CairnGovernance`, `RecoveryRouter` (+ `RecoveryRouterV2`), `FallbackPool`,
+`ArbiterRegistry` — plus `CairnTaskMVP` (legacy 4-state, do not extend),
+`adapters/OlasMechAdapter.sol`, `interfaces/` (the API contracts, including the
+external `IERC8183`/`IERC8004`/`IERC7710` standards CAIRN integrates), and
+`upgradeable/` UUPS variants (OpenZeppelin 5.x proxy pattern).
+
+```bash
+# First checkout — submodules are REQUIRED (OZ, forge-std, OZ-upgradeable, prb-math)
+git submodule update --init --recursive   # or: cd contracts && forge install
+
+cd contracts
+forge build --sizes                # compile + contract size check
+forge test -vvv                    # full suite
+forge test --match-test testSubmitTask   # single test by name
+forge test --match-contract CairnCoreTest # single test contract
+forge coverage                     # must be ≥95% (see Section 0)
+forge test --gas-report            # gas analysis
+forge fmt                          # formatter (config in foundry.toml)
+```
+
+> CI (`.github/workflows/tests.yml`) runs **only** `forge test` in `contracts/`
+> with recursive submodules. Python/frontend/subgraph are not yet in CI — run
+> their tests locally before committing.
+
+### Python (SDK, CLI, pipeline, simulation)
+
+Two `pyproject.toml` files exist: the **root** one (package `cairn-protocol`,
+installs `sdk`+`cli`, provides the `cairn` script) and **`sdk/pyproject.toml`**
+(the standalone `cairn-sdk` package, hatchling). Install for development:
+
+```bash
+pip install -e ".[dev]"     # root: SDK + CLI + dev tools (pytest, black, ruff, mypy)
+pip install -e ./sdk        # or just the SDK
+```
+
+> **Local import gotcha:** in-repo the SDK is imported as `from sdk import
+> CairnClient, CairnAgent, CheckpointStore` (see `sdk/__init__.py`). The README's
+> `from cairn_sdk import ...` refers to the *published* package name — it will
+> `ModuleNotFoundError` against a source checkout.
+
+```bash
+# Root pytest config (pyproject.toml) targets the top-level tests/ dir,
+# covering sdk + cli, and writes HTML coverage to htmlcov/.
+pytest                              # runs tests/ with coverage (per addopts)
+pytest tests/test_client.py -v     # one file
+pytest tests/test_client.py::test_submit_task   # one test
+pytest sdk/tests/ -v               # the SDK's own test suite (separate dir)
+python -m pytest pipeline/tests/   # pipeline tests
+
+black . && ruff check . && mypy sdk cli   # format + lint + typecheck (line length 100)
+
+# Reproduce the headline simulation result (deterministic, seed=42)
+python3 -m simulation.run_eq4
+```
+
+### Frontend & subgraph (Node, pnpm)
+
+```bash
+cd frontend && pnpm install
+pnpm dev            # local dev server
+pnpm build          # production build
+pnpm lint           # next lint / eslint
+
+cd subgraph && pnpm install
+pnpm codegen        # generate types from schema + ABIs (run after schema/ABI changes)
+pnpm build
+pnpm test           # matchstick-as unit tests
+```
+
+### Where to look first
+
+- Protocol behavior / spec of a feature → `PRDs/PRD-XX-*/PRD.md` (see Section 4).
+- Contract API shape → `contracts/src/interfaces/`.
+- Current decisions / session state → `.planning/SESSION_CONTEXT.md`.
+- Deployed addresses → `README.md` "Deployed Contracts" table.
 
 ---
 
