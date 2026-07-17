@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./.synthesis/cover.png" alt="CAIRN Protocol - Agent Failure and Recovery Protocol" width="100%"/>
+<img src="./assets/cover.png" alt="CAIRN Protocol - Agent Failure and Recovery Protocol" width="100%"/>
 
 <p>
   <img src="https://img.shields.io/badge/Status-Live_on_Base_Sepolia-00CED1?style=flat-square&logo=ethereum&logoColor=white" alt="Status"/>
