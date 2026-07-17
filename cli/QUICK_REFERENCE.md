@@ -161,7 +161,7 @@ cairn task settle $TASK_ID
 ## Links
 
 - **Documentation**: `cli/README.md`
-- **Installation**: `INSTALLATION.md`
+- **Installation**: `docs/installation.md`
 - **Examples**: `examples/cli_usage.sh`
 - **BaseScan**: https://sepolia.basescan.org
 - **Faucet**: https://www.coinbase.com/faucets/base-ethereum-sepolia-faucet
