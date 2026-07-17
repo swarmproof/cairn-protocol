@@ -63,6 +63,8 @@ pandoc cairn-whitepaper.md \
   --metadata title="CAIRN: A Protocol for Agent Failure Detection, Classification, and Recovery in the On-Chain Agent Economy" \
   --metadata author="Maroua Boudoukha" \
   --metadata date="April 2026" \
+  -V mainfont="DejaVu Serif" -V monofont="DejaVu Sans Mono" \
+  -V geometry:margin=1in -V linkcolor:blue -V fontsize=10pt \
   --resource-path=. \
   --output=cairn-whitepaper.tex
 
@@ -103,8 +105,8 @@ pandoc cairn-whitepaper.md \
 
 The whitepaper uses a few markdown constructs that need attention during conversion:
 
-1. **Unicode math symbols** (≥, ≤, ×, σ, α, ×, ∎, ≈, σ, δ, etc.)
-   — Covered by xelatex (handles Unicode natively). `pdflatex` would fail here; we use `xelatex` throughout.
+1. **Unicode math symbols** (≥, ≤, ×, σ, α, ≈, δ, etc.)
+   — REQUIRES the DejaVu font variables in the pandoc command above. The default Latin Modern fonts silently DROP Greek glyphs (α, σ, δ, κ) — this is not cosmetic; the characters disappear from the rendered PDF, locally and on arXiv. The `∎` (QED) and `≫` symbols are absent even from DejaVu and have been replaced in the source with **QED.** and `>>` respectively — do not reintroduce them.
 
 2. **Subscripts/superscripts written as `<sub>` / `<sup>` HTML tags**
    — pandoc GFM reader translates these to LaTeX `\textsubscript{}` / `\textsuperscript{}` automatically.

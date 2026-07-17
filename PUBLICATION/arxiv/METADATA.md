@@ -32,7 +32,7 @@ Economic enforcement — escrow-conditioned record writing — bootstraps a coll
 ## Comments Field (arXiv form)
 
 ```
-1083 lines, 16 figures (included). Source: github.com/MarouaBoud/cairn-protocol.
+~1130 lines, 16 figures (ancillary). Source: github.com/MarouaBoud/cairn-protocol.
 Reproducible simulation: python3 -m simulation.run_eq4 (seed=42).
 v1 testnet deployed on Base Sepolia; v2 specification in this paper.
 ```
@@ -60,15 +60,15 @@ The paper header (lines 7–14 of `cairn-whitepaper.md`) currently states:
 
 ## Pre-submission Checklist
 
-- [ ] **Confirm PR #23 (defensive-framing removal) is merged to `main`** — otherwise you'll submit the wrong revision
-- [ ] Compile locally to verify: `cd PUBLICATION/arxiv && xelatex cairn-whitepaper.tex && xelatex cairn-whitepaper.tex`. BasicTeX is fine; missing-Unicode warnings are cosmetic (arXiv has the full font set)
+- [x] PR #23 (defensive-framing removal) and PR #24 (repo-wide consistency pass) merged to `main`
+- [ ] Compile locally to verify: `cd PUBLICATION/arxiv && xelatex cairn-whitepaper.tex && xelatex cairn-whitepaper.tex`. the build MUST use the DejaVu font variables from README.md — Latin Modern silently drops Greek glyphs; a correct build reports 0 'Missing character' warnings
 - [ ] Open `cairn-whitepaper.pdf`, spot-check structure: title page, TOC with 11 sections, formulas in §6.4, experiment catalog table in §10.1, references list [1]-[19]
 - [ ] Decide figures policy (see "Figures policy" section below). v2.0 ships figures as **ancillary supplementary files**, not embedded.
 - [ ] Verify the arXiv-form abstract is ≤1,920 chars: **current abstract is 1,876 chars** ✓
 - [ ] Confirm author name and affiliation as they appear on the title page (name, "Independent Researcher", GitHub handle). ORCID is optional and can be added in the arXiv submission form rather than the paper body.
 - [ ] Select license — recommended: **arXiv perpetual non-exclusive** (preserves "All rights reserved" copyright while permitting arXiv distribution)
 - [ ] Confirm arXiv account is verified and endorsed in **`cs.MA`** (primary category). New contributors to `cs.MA` may need endorsement from an existing arXiv author — check at https://arxiv.org/auth/need-endorsement
-- [ ] Verify PDF size under arXiv's 50 MB limit — current PDF is ~210 KB, well under
+- [ ] Verify PDF size under arXiv's 50 MB limit — current PDF is ~450 KB (41 pp., DejaVu embedded), well under
 - [ ] Copy the Comments field (block above) into the arXiv form
 - [ ] Click "Process" on arXiv after upload, then **review the arXiv-rendered preview PDF** before clicking Submit. arXiv's xelatex install fully covers the Unicode glyphs that BasicTeX cannot, so the preview will look cleaner than the local PDF.
 
