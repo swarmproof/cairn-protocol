@@ -136,7 +136,6 @@ pnpm test           # matchstick-as unit tests
 - Marking a feature as complete
 - Deploying to any network (testnet or mainnet)
 - Creating a pull request
-- Spawning the next agent phase
 
 ### Audit Checklist (REQUIRED)
 
@@ -219,31 +218,16 @@ Before giving deployment instructions:
 2. Run all tests: `forge test`
 3. Run coverage: `forge coverage` (must be ≥95%)
 4. Run gas report: `forge test --gas-report`
-5. Update `.synthesis/agent_log.json` with audit results
 
 ### 1.3 Post-Deployment Checklist
 
 After deployment completes:
 ```
-[ ] .synthesis/agent_log.json
-    - Add "contract_deployed" entry with address, chain, gas
-    - Add "contract_verified" entry if verified
-    - Update "deployment" object with full details
-    - Update "deliverables" statuses to "deployed"
-    - Update "team_status" to unblock next phase
-    - Set "next_step" to next action
-
-[ ] .synthesis/agent.json
-    - Add deployment info to Contract-Dev role
-    - Update Contract-Dev status to "completed"
-    - Update SDK-Dev status to "ready"
-    - Add contract_address at root level
-
-[ ] .planning/AGENT_LOG.md
-    - Add deployment entry with timestamp
-
 [ ] contracts/.env
     - Add CAIRN_CONTRACT_ADDRESS
+
+[ ] README.md "Deployed Contracts" table
+    - Add/update the address, chain, and BaseScan link
 
 [ ] PRD STATUS.md files
     - Mark deployment tasks as complete
@@ -269,7 +253,6 @@ Before ANY commit:
 [ ] Code compiles without warnings
 [ ] No security vulnerabilities introduced
 [ ] Feature matches PRD specification
-[ ] Hackathon logs updated (.synthesis/agent_log.json)
 ```
 
 ### 2.3 Test Requirements
@@ -282,45 +265,16 @@ Every feature MUST have:
 
 ---
 
-## 3. HACKATHON LOGGING (REQUIRED)
+## 3. PROGRESS TRACKING
 
-This project is submitted to **Synthesis Hackathon 2026** and will be **judged by AI agents**.
+Progress is tracked through standard mechanisms — no external logging system:
 
-> ⚠️ **CRITICAL REMINDER**: `.synthesis/agent_log.json` is the SOURCE OF TRUTH for judges.
->
-> **ALWAYS update it IMMEDIATELY after**: deployments, audits, phase completions, errors.
->
-> The markdown log (`.planning/AGENT_LOG.md`) is for humans. The JSON log is for judges.
->
-> 🔒 **NEVER LOG SECRETS**: No private keys, API keys, passwords, or sensitive credentials in ANY log file.
+- **Git history + PRs** are the durable record of what was done and why.
+- **PRD `STATUS.md`** files track task completion within each PRD.
+- **`.planning/`** (git-ignored, local only) holds in-flight session context.
 
-### 3.1 Mandatory Log Updates
-
-Update `.synthesis/agent_log.json` after:
-- Branch created/merged
-- Feature implemented
-- Tests passed/failed
-- **Audit completed** (with full results)
-- Build completed
-- Deployment done
-- PR created/merged
-- Any error or blocker
-
-### 3.2 Log Entry Format
-
-```json
-{
-  "timestamp": "ISO-8601",
-  "phase": "contract-dev|sdk-dev|frontend-dev|integration",
-  "action": "what_was_done",
-  "status": "completed|in_progress|failed",
-  "details": { "relevant": "metadata" }
-}
-```
-
-> 🔒 **SECURITY**: Never include private keys, API keys, or secrets in log entries.
-> Safe: `"address": "0x..."`, `"tx_hash": "0x..."`, `"chain_id": 84532`
-> FORBIDDEN: `"private_key": "..."`, `"api_key": "..."`, `"password": "..."`
+There is no `.synthesis/` submission log anymore — the hackathon phase is over.
+Do not recreate it.
 
 ---
 
@@ -346,37 +300,15 @@ When implementing features, consult in this order:
 
 ---
 
-## 5. AGENT TEAM COORDINATION
+## 5. SPAWNING SUBAGENTS
 
-### 5.1 Team Structure
+When delegating work to a subagent:
+1. Verify any prerequisite work is complete and its audit has passed.
+2. Verify dependencies are met (e.g., contract deployed before SDK work that needs the address).
+3. Include full context in the spawn prompt — the relevant PRD, interfaces, and current state.
 
-```
-Lead (Orchestrator)
-├── Contract-Dev    → Phase 1: Tasks 1-8
-├── SDK-Dev         → Phase 2: Tasks 9-14 (blocked by Contract-Dev)
-├── Frontend-Dev    → Phase 3: Tasks 15-22 (blocked by SDK-Dev)
-└── Integration     → Phase 4: Tasks 23-26 (blocked by all above)
-```
-
-### 5.2 Phase Handoff Protocol
-
-When completing a phase:
-1. **Complete audit** with full checklist
-2. Update **BOTH** log files:
-   - `.synthesis/agent_log.json` ← SOURCE OF TRUTH (for judges)
-   - `.synthesis/agent.json` ← Team status & deployment info
-   - `.planning/AGENT_LOG.md` ← Human-readable history
-3. Update `team_status` to unblock next agent
-4. Document any deviations from PRD
-5. List dependencies for next phase
-
-### 5.3 Spawning Rules
-
-Before spawning a teammate agent:
-1. Verify previous phase audit is COMPLETE
-2. Verify dependencies are met (e.g., contract deployed)
-3. Include full context in spawn prompt
-4. Reference relevant PRD spawn file
+The layered dependency order still holds: contracts → SDK → CLI/frontend → integration.
+Don't start work that depends on an unfinished layer.
 
 ---
 
@@ -413,7 +345,6 @@ When a feature/phase is **fully implemented and tested** (unit, integration, E2E
 1. AUDIT
    [ ] Run audit against PRD requirements (Section 0 checklist)
    [ ] Verify docs are consistent with implementation
-   [ ] Update .synthesis/agent_log.json with audit results
 
 2. PUSH BRANCH
    [ ] Ensure all commits are progressive and atomic
@@ -427,7 +358,6 @@ When a feature/phase is **fully implemented and tested** (unit, integration, E2E
 
 4. THEN (and only then) MOVE TO NEXT PHASE
    [ ] Create new branch for next phase
-   [ ] Update team_status in agent_log.json
    [ ] Begin next phase work
 ```
 
@@ -443,7 +373,6 @@ When a feature/phase is **fully implemented and tested** (unit, integration, E2E
 Example of correct progressive commits:
 ```
 feat(contracts): add deployment records for Base Sepolia
-docs(synthesis): add hackathon logs with deployment status
 docs(rules): add validation gates and security rules
 docs(prd-01): update status to Phase 1 complete
 ```
@@ -475,11 +404,8 @@ feat: add deployment, logs, rules, and status updates  ❌ TOO BROAD
 
 - NEVER generate or store private keys
 - NEVER commit .env files
-- NEVER log sensitive data in ANY file including:
-  - `.synthesis/agent_log.json`
-  - `.synthesis/agent.json`
-  - `.planning/AGENT_LOG.md`
-  - Any STATUS.md or documentation
+- NEVER log sensitive data in ANY tracked file — code, comments, STATUS.md,
+  documentation, or local `.planning/` notes
 - Only USER handles deployment credentials
 
 **Safe to log**: Contract addresses, tx hashes, block numbers, gas amounts, public addresses
@@ -491,23 +417,20 @@ feat: add deployment, logs, rules, and status updates  ❌ TOO BROAD
 
 ### Read in Order for Session Recovery
 
-1. `.planning/SESSION_CONTEXT.md` — Full rules and current state
-2. `.synthesis/agent_log.json` — Action history for judges
-3. `.planning/mvp/STATUS.md` — Task tracking
-4. `/PRDs/PRD-01-MVP-HACKATHON/PRD.md` — Full requirements
+1. `.planning/SESSION_CONTEXT.md` — current decisions and in-flight state (local, git-ignored)
+2. The relevant `PRDs/PRD-XX-*/PRD.md` and its `STATUS.md` — requirements and task status
+3. `README.md` + `WHITEPAPER_V2.md` — protocol overview and spec
+4. The **Orientation** section at the top of this file — build/test commands and layout
 
 ### Quick Reference
 
 | What | Where |
 |------|-------|
-| Full Context | `.planning/SESSION_CONTEXT.md` |
-| Hackathon Logs | `.synthesis/agent_log.json` |
-| Agent Metadata | `.synthesis/agent.json` |
-| Task Status | `.planning/mvp/STATUS.md` |
-| PRD | `/PRDs/PRD-01-MVP-HACKATHON/PRD.md` |
-| Contract Spawn | `/PRDs/PRD-01-MVP-HACKATHON/spawn-contract-dev.md` |
-| SDK Spawn | `/PRDs/PRD-01-MVP-HACKATHON/spawn-sdk-dev.md` |
-| Frontend Spawn | `/PRDs/PRD-01-MVP-HACKATHON/spawn-frontend-dev.md` |
+| Current session state | `.planning/SESSION_CONTEXT.md` (local) |
+| Requirements | `PRDs/PRD-XX-*/PRD.md` |
+| Task status | `PRDs/PRD-XX-*/STATUS.md` |
+| Deployed addresses | `README.md` "Deployed Contracts" table |
+| Contract API | `contracts/src/interfaces/` |
 
 ---
 
@@ -522,12 +445,11 @@ feat: add deployment, logs, rules, and status updates  ❌ TOO BROAD
 ## 10. SESSION RECOVERY
 
 If session fails:
-1. Read `.planning/SESSION_CONTEXT.md`
-2. Check `.synthesis/agent_log.json` for last action
-3. Update logs with recovery entry
-4. Continue from last completed task
-5. **Re-run audit** if mid-feature
+1. Read `.planning/SESSION_CONTEXT.md` and the relevant PRD `STATUS.md`
+2. Check `git log` and open PRs for the last completed work
+3. Continue from the last completed task
+4. **Re-run audit** if mid-feature
 
 ---
 
-**REMEMBER**: These validation rules exist because this project will be judged by AI agents. Clean audits, PRD compliance, and proper logging are REQUIREMENTS, not suggestions.
+**REMEMBER**: These validation rules exist to keep CAIRN audit-clean and safe to deploy. Clean audits, PRD compliance, and progressive commits are REQUIREMENTS, not suggestions.
