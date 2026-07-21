@@ -300,7 +300,7 @@ require(block.number > task.lastHeartbeat + task.heartbeatInterval, "Heartbeat n
 
 | Auditor | Date | Scope | Status | Report |
 |---------|------|-------|--------|--------|
-| TBD | TBD | CairnTask.sol, CairnHook.sol | Pending | - |
+| TBD | TBD | CairnCore.sol, RecoveryRouterV2.sol, FallbackPool.sol, ArbiterRegistry.sol, CairnGovernance.sol | Pending | - |
 
 ## Bug Bounty
 
