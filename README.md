@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Status-Live_on_Base_Sepolia-00CED1?style=flat-square&logo=ethereum&logoColor=white" alt="Status"/>
   <img src="https://github.com/MarouaBoud/cairn-protocol/actions/workflows/tests.yml/badge.svg" alt="Tests"/>
   <img src="https://img.shields.io/badge/Contracts-6_Deployed-008B8B?style=flat-square" alt="Contracts"/>
-  <img src="https://img.shields.io/badge/Tests-315_|_98.95%25_coverage-00CED1?style=flat-square" alt="Coverage"/>
+  <img src="https://img.shields.io/badge/Tests-339_|_98.95%25_coverage-00CED1?style=flat-square" alt="Coverage"/>
   <img src="https://img.shields.io/badge/Chain_ID-84532-0052FF?style=flat-square&logo=coinbase&logoColor=white" alt="Chain ID"/>
   <img src="https://img.shields.io/badge/ERC-CAIRN_Proposal-008B8B?style=flat-square" alt="ERC"/>
 </p>
