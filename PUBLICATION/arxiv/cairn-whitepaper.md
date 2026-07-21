@@ -65,7 +65,7 @@ Published research establishes agent failure as a systemic problem, not an edge 
 
 - The MAST taxonomy identifies **14 distinct failure modes** across 1,600+ annotated traces from 7 multi-agent frameworks [1]. However, MAST classifies failures by symptom (step repetition, incorrect tool selection) — not by what recovery action to take.
 
-- Research on AI agent reliability finds that **consistency remains weak across all models** — outcome consistency is the most persistently low dimension, and agents cannot reliably determine when they are wrong [2]. This validates the need for external failure detection infrastructure rather than relying on agent self-diagnosis.
+- Research on AI agent reliability finds that **outcome consistency remains low across all models** — even as calibration has improved in recent models — and that agents cannot reliably determine when they are likely to fail [2]. This validates the need for external failure detection infrastructure rather than relying on agent self-diagnosis.
 
 - A systematic survey of 317 publications on autonomous agents and blockchains identifies **missing interface layers and verifiable policy enforcement** as key gaps [6] — precisely the gaps CAIRN addresses.
 
