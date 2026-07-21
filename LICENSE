@@ -10,7 +10,7 @@ under different terms to balance openness, protection, and ecosystem compatibili
 | Component | License | File |
 |-----------|---------|------|
 | ERC-CAIRN.md (spec) | CC0-1.0 | Public Domain |
-| WHITEPAPER.md | All Rights Reserved | Copyright protected |
+| WHITEPAPER_V1.md, WHITEPAPER_V2.md | All Rights Reserved | Copyright protected |
 | contracts/ | GPL-3.0-or-later | contracts/LICENSE |
 | sdk/ | Apache-2.0 | sdk/LICENSE |
 | cli/ | Apache-2.0 | cli/LICENSE |
@@ -21,7 +21,7 @@ under different terms to balance openness, protection, and ecosystem compatibili
 ## Rationale
 
 - **ERC-CAIRN.md (CC0)**: ERC standards must be unencumbered for adoption
-- **WHITEPAPER.md (All Rights Reserved)**: IP protection with citation rights
+- **WHITEPAPER_V1.md, WHITEPAPER_V2.md (All Rights Reserved)**: IP protection with citation rights
 - **contracts/ (GPL-3.0)**: Copyleft ensures forks remain open source
 - **sdk/ & cli/ (Apache-2.0)**: Permissive + patent grant for integrators
 - **subgraph/ (MIT)**: Simplest, no friction for The Graph ecosystem
