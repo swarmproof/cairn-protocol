@@ -6,7 +6,7 @@ import { join } from 'path';
  * GET /skill.md
  *
  * Quick integration guide for AI agents.
- * Similar to synthesis.md/skill.md pattern.
+ * Serves a machine-readable skill.md so agents can self-integrate.
  *
  * Usage: curl -s https://your-domain.com/skill.md
  */
