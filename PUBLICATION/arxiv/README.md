@@ -142,8 +142,7 @@ The whitepaper uses a few markdown constructs that need attention during convers
 4. Paste metadata from `METADATA.md`.
 5. Upload the `.tex` + `figures/` directory (Path A) or the `.pdf` (Path B).
 6. Select license per `METADATA.md` recommendation.
-7. Confirm endorsement: new arXiv contributors in `cs.DC` may need endorsement from an existing arXiv author in that category. Check the endorsement status page.
-8. Submit for moderation. arXiv moderation queue is typically 1–3 business days.
+7. Submit for moderation. arXiv moderation queue is typically 1–3 business days.
 
 ## Cross-references between the paper and this repo
 
