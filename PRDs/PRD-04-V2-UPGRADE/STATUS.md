@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | PHASES 1-5 COMPLETE — Phase 6 pending |
+| **Status** | PHASES 1-5 COMPLETE — Phase 6: coverage + deploy prep done, testnet deploy pending (user-only) |
 | **Last Updated** | 2026-07-31 |
 | **Blocked By** | None (PRD-03 complete) |
 | **Blocks** | Whitepaper peer-review submission; arXiv v2 revision |
@@ -18,7 +18,7 @@
 | 3 — Arbiter stake + Schema validation | 1 day | **DONE** | Arbiter required stake raised 15% → 20% in `ArbiterRegistry`; `commitCheckpointBatch` gains a `schemaHash` arg and reverts with `InvalidCheckpointSchema` on mismatch with `task.specHash`. Suite now 353 passing. |
 | 4 — MVP deprecation | 0.5 day | **DONE** | One-way `freeze()` on `CairnTaskMVP` blocks new `submitTask` (`MvpIsFrozen`); existing tasks still settle. Migration note at `docs/mvp-deprecation.md`. 5 new tests; suite now 358. |
 | 5 — Gas benchmarks + whitepaper backfill | 1 day | **DONE** | Full-system `forge test --gas-report` committed at `contracts/gas-report-v2-full.txt`; `test/GasBenchmark.t.sol` measures the hot paths incl. batch sizes 1/10/50. WHITEPAPER_V2 §6.5 backfilled — all rows now measured. Key findings: commitCheckpointBatch is count-independent (~158.5k); submitTask ~460k (fallback auto-selection). |
-| 6 — Test, audit, testnet deploy | 1–2 days | TODO | Coverage ≥95%, Base Sepolia deploy. |
+| 6 — Test + deploy prep | 1–2 days | **AGENT-COMPLETE** | Deployed-core coverage ≥95% (CairnCore 95.30%, RecoveryRouterV2 100%, OlasMechAdapter 100%; suite 375). Deploy script `script/DeployV2.s.sol` + runbook `docs/v2-deployment-runbook.md` ready. **Testnet deploy is user-only** (pending). |
 
 **Updated estimate after Phase 1 completion: ~5 days remaining.**
 

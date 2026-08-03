@@ -258,4 +258,37 @@ contract RecoveryRouterV2Test is Test {
         // Specifically: ratio ≈ 1.97 per WHITEPAPER §6.4
         // We just assert the ordering (avoids PRBMath rounding flakiness).
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // COVERAGE: class weights, classification, admin
+    // ═══════════════════════════════════════════════════════════════
+
+    function test_GetClassWeight_AllClasses() public view {
+        assertEq(router.getClassWeight(ICairnTypes.FailureClass.LIVENESS), 0.70e18);
+        assertEq(router.getClassWeight(ICairnTypes.FailureClass.RESOURCE), 0.30e18);
+        assertEq(router.getClassWeight(ICairnTypes.FailureClass.LOGIC), 0);
+    }
+
+    /// checkpointCount >= 3 classifies as LIVENESS (late-stage failure).
+    function test_ClassifyAndScore_ManyCheckpoints_IsLiveness() public {
+        vm.prank(cairnCore);
+        (ICairnTypes.FailureClass fc, ICairnTypes.FailureType ft,,) =
+            router.classifyAndScore(keccak256("t"), 1 ether, block.timestamp, block.timestamp + 1 hours, 5);
+        assertEq(uint8(fc), uint8(ICairnTypes.FailureClass.LIVENESS));
+        assertEq(uint8(ft), uint8(ICairnTypes.FailureType.HEARTBEAT_MISS));
+    }
+
+    /// 1-2 checkpoints classify as RESOURCE.
+    function test_ClassifyAndScore_FewCheckpoints_IsResource() public {
+        vm.prank(cairnCore);
+        (ICairnTypes.FailureClass fc,,,) =
+            router.classifyAndScore(keccak256("t"), 1 ether, block.timestamp, block.timestamp + 1 hours, 2);
+        assertEq(uint8(fc), uint8(ICairnTypes.FailureClass.RESOURCE));
+    }
+
+    function test_SetCairnCore() public {
+        address newCore = address(0xBEEF);
+        router.setCairnCore(newCore);
+        assertEq(router.cairnCore(), newCore);
+    }
 }
