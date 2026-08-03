@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="./.synthesis/cover.png" alt="CAIRN Protocol - Agent Failure and Recovery Protocol" width="100%"/>
+<img src="./assets/cover.png" alt="CAIRN Protocol - Agent Failure and Recovery Protocol" width="100%"/>
 
 <p>
   <img src="https://img.shields.io/badge/Status-Live_on_Base_Sepolia-00CED1?style=flat-square&logo=ethereum&logoColor=white" alt="Status"/>
   <img src="https://github.com/MarouaBoud/cairn-protocol/actions/workflows/tests.yml/badge.svg" alt="Tests"/>
   <img src="https://img.shields.io/badge/Contracts-6_Deployed-008B8B?style=flat-square" alt="Contracts"/>
-  <img src="https://img.shields.io/badge/Tests-315_|_98.95%25_coverage-00CED1?style=flat-square" alt="Coverage"/>
+  <img src="https://img.shields.io/badge/Tests-339_passing-00CED1?style=flat-square" alt="Tests"/>
   <img src="https://img.shields.io/badge/Chain_ID-84532-0052FF?style=flat-square&logo=coinbase&logoColor=white" alt="Chain ID"/>
   <img src="https://img.shields.io/badge/ERC-CAIRN_Proposal-008B8B?style=flat-square" alt="ERC"/>
 </p>
@@ -450,7 +450,7 @@ These endpoints return markdown that AI agents can parse to integrate CAIRN into
 | SDK (Python) | ✅ Complete | CairnClient, CairnAgent, CheckpointStore, Observers |
 | CLI Tool | ✅ Complete | submit-task, heartbeat, checkpoint, monitor, recover |
 | Subgraph | ✅ Deployed | The Graph Studio indexing |
-| Upgradeable | ✅ Complete | UUPS proxy pattern (OpenZeppelin 5.x) |
+| Upgradeability | 🟡 Variants ready | UUPS-upgradeable variants implemented (OpenZeppelin 5.x); the deployed set is non-upgradeable, pending the v2 governance upgrade |
 | Frontend | ✅ Deployed | Next.js 14, wagmi |
 
 See [`PRDs/README.md`](./PRDs/README.md) for the full roadmap.
@@ -466,7 +466,7 @@ See [`PRDs/README.md`](./PRDs/README.md) for the full roadmap.
 | ArbiterRegistry | [`0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68`](https://sepolia.basescan.org/address/0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68) | Dispute resolution, appeals |
 | CairnTaskMVP *(legacy)* | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) | Legacy MVP (4-state) — use CairnCore for production |
 
-All contracts use **UUPS proxy pattern** (OpenZeppelin 5.x). Upgradeable without redeployment.
+The contracts currently deployed on Base Sepolia are the **non-upgradeable base implementations**. UUPS-upgradeable variants (OpenZeppelin 5.x) are implemented in `contracts/src/upgradeable/` for the planned v1 → v2 migration, but are **not yet deployed**. See [PRD-04](./PRDs/PRD-04-V2-UPGRADE/PRD.md).
 
 ### Live Demo
 

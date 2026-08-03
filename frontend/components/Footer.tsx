@@ -20,16 +20,13 @@ const footerLinks = {
     { label: 'skill.md', href: '/skill.md', external: false },
     { label: 'cairn.md', href: '/cairn.md', external: false },
   ],
-  community: [
-    { label: 'Synthesis 2026', href: 'https://synthesis.md', external: true },
-  ],
 };
 
 export function Footer() {
   return (
     <footer className="border-t bg-muted/30">
       <div className="container py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 font-bold text-xl mb-4">
@@ -44,9 +41,6 @@ export function Footer() {
             <div className="flex items-center gap-2">
               <span className="px-2 py-1 rounded text-xs bg-blue-500/10 text-blue-500 font-medium">
                 Built on Base
-              </span>
-              <span className="px-2 py-1 rounded text-xs bg-purple-500/10 text-purple-500 font-medium">
-                Synthesis 2026
               </span>
             </div>
           </div>
@@ -98,25 +92,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Community */}
-          <div>
-            <h4 className="font-semibold mb-4">Community</h4>
-            <ul className="space-y-2">
-              {footerLinks.community.map((link) => (
-                <li key={link.href}>
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                  >
-                    {link.label}
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
 
         {/* Testnet Notice */}
@@ -129,7 +104,7 @@ export function Footer() {
               <p className="text-sm font-semibold text-amber-500">Testnet Only</p>
               <p className="text-xs text-muted-foreground mt-1">
                 This is a testnet deployment on Base Sepolia. Do not use real funds.
-                The protocol is under active development for Synthesis Hackathon 2026.
+                The protocol is under active development.
               </p>
             </div>
           </div>
