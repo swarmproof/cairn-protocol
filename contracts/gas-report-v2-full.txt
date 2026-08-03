@@ -1,0 +1,974 @@
+No files changed, compilation skipped
+
+Ran 16 tests for test/OlasMechAdapter.t.sol:OlasMechAdapterTest
+[PASS] test_defaultMappings() (gas: 23076)
+[PASS] test_isOlasMechEligible_falseForInactiveMech() (gas: 46996)
+[PASS] test_isOlasMechEligible_falseForLowReputation() (gas: 77635)
+[PASS] test_isOlasMechEligible_falseForUnmappedTask() (gas: 10187)
+[PASS] test_isOlasMechEligible_trueForActiveMech() (gas: 40784)
+[PASS] test_mapTaskType() (gas: 105870)
+[PASS] test_mapTaskType_revertsForNonAdmin() (gas: 35118)
+[PASS] test_queryAvailableMechs() (gas: 42378)
+[PASS] test_queryAvailableMechs_emptyForUnmappedTask() (gas: 10565)
+[PASS] test_queryAvailableMechs_filtersInactiveMechs() (gas: 44373)
+[PASS] test_queryAvailableMechs_filtersLowReputation() (gas: 77169)
+[PASS] test_queryAvailableMechs_revertsWhenDisabled() (gas: 43392)
+[PASS] test_setEnabled() (gas: 41166)
+[PASS] test_setMinReputation() (gas: 43228)
+[PASS] test_setMinReputation_revertsForInvalidValue() (gas: 34243)
+[PASS] test_unmapTaskType() (gas: 38544)
+Suite result: ok. 16 passed; 0 failed; 0 skipped; finished in 3.76ms (989.84µs CPU time)
+
+Ran 10 tests for test/ERCIntegration.t.sol:ERCIntegrationTest
+[PASS] test_CairnCoreCanSetHook() (gas: 39346)
+[PASS] test_ERC8004_AllowsHighReputation() (gas: 377065)
+[PASS] test_ERC8004_BlocksLowReputation() (gas: 101702)
+[PASS] test_ERC8004_CustomReputation() (gas: 54767)
+[PASS] test_ERC8004_DefaultReputation() (gas: 10001)
+[PASS] test_ERC8004_ReportFailure() (gas: 152262)
+[PASS] test_ERC8004_ReportSuccess() (gas: 117178)
+[PASS] test_ERC8183_NoHookDoesNotRevert() (gas: 441184)
+[PASS] test_FallbackPoolCanSetRegistries() (gas: 60760)
+[PASS] test_Integration_FullFlow() (gas: 891990)
+Suite result: ok. 10 passed; 0 failed; 0 skipped; finished in 4.63ms (366.54µs CPU time)
+
+Ran 36 tests for test/CairnGovernance.t.sol:CairnGovernanceTest
+[PASS] test_AppealWindowRange() (gas: 213814)
+[PASS] test_ArbiterFeeBpsRange() (gas: 213713)
+[PASS] test_CancelProposal() (gas: 140498)
+[PASS] test_Constructor() (gas: 22822)
+[PASS] test_ConstructorInitializesDefaultParameters() (gas: 96496)
+[PASS] test_DisputeTimeoutRange() (gas: 213769)
+[PASS] test_EmergencyPause() (gas: 50122)
+[PASS] test_EmergencyPauseEmitsEvent() (gas: 42269)
+[PASS] test_EmergencyUnpause() (gas: 83255)
+[PASS] test_EmergencyUnpauseEmitsEvent() (gas: 69976)
+[PASS] test_ExecuteProposal() (gas: 164369)
+[PASS] test_ExecuteProposalEmitsEvent() (gas: 151345)
+[PASS] test_ExecuteProposalExactlyAtTimelock() (gas: 144723)
+[PASS] test_GetParameterConstants() (gas: 48478)
+[PASS] test_MinReputationRange() (gas: 180934)
+[PASS] test_MultipleParameterProposals() (gas: 453954)
+[PASS] test_NewAdminCanActAfterTransfer() (gas: 169691)
+[PASS] test_OverwriteExistingProposal() (gas: 160866)
+[PASS] test_ProposeParameter() (gas: 119958)
+[PASS] test_ProposeParameterBoundaryValues() (gas: 158064)
+[PASS] test_ProposeParameterEmitsEvent() (gas: 114689)
+[PASS] test_RecoveryThresholdRange() (gas: 213906)
+[PASS] test_RevertCancelProposalNotAdmin() (gas: 139984)
+[PASS] test_RevertCancelProposalNotFound() (gas: 42223)
+[PASS] test_RevertConstructorZeroAdmin() (gas: 156937)
+[PASS] test_RevertEmergencyPauseNotAdmin() (gas: 34930)
+[PASS] test_RevertEmergencyUnpauseNotAdmin() (gas: 66660)
+[PASS] test_RevertExecuteProposalNotAdmin() (gas: 140440)
+[PASS] test_RevertExecuteProposalNotFound() (gas: 42185)
+[PASS] test_RevertExecuteProposalTimelockNotExpired() (gas: 143446)
+[PASS] test_RevertProposeParameterNotAdmin() (gas: 40160)
+[PASS] test_RevertProposeParameterOutOfRange() (gas: 45448)
+[PASS] test_RevertTransferAdminNotAdmin() (gas: 36672)
+[PASS] test_RevertTransferAdminZeroAddress() (gas: 34347)
+[PASS] test_TransferAdmin() (gas: 46054)
+[PASS] test_TransferAdminEmitsEvent() (gas: 43017)
+Suite result: ok. 36 passed; 0 failed; 0 skipped; finished in 4.98ms (1.42ms CPU time)
+
+Ran 8 tests for test/FallbackPoolOlas.t.sol:FallbackPoolOlasTest
+[PASS] test_selectFallback_combinesInternalAndOlasPools() (gas: 511407)
+[PASS] test_selectFallback_fallsBackToOlas_whenInternalAgentsIneligible() (gas: 346698)
+[PASS] test_selectFallback_fallsBackToOlas_whenNoInternalAgents() (gas: 50363)
+[PASS] test_selectFallback_handlesOlasQueryFailure() (gas: 53675)
+[PASS] test_selectFallback_prefersInternalPool() (gas: 468307)
+[PASS] test_selectFallback_returnsZeroAddress_whenNoEligibleFallbacks() (gas: 18739)
+[PASS] test_setOlasMechAdapter_canDisableOlas() (gas: 35634)
+[PASS] test_setOlasMechAdapter_updatesAdapter() (gas: 1711198)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 5.16ms (1.98ms CPU time)
+
+Ran 30 tests for test/RecoveryRouter.t.sol:RecoveryRouterTest
+[PASS] test_ClassifyAndScoreEmitsEvent() (gas: 69552)
+[PASS] test_ClassifyAndScoreFewCheckpoints() (gas: 67009)
+[PASS] test_ClassifyAndScoreManyCheckpoints() (gas: 67061)
+[PASS] test_ClassifyAndScoreZeroCheckpoints() (gas: 67024)
+[PASS] test_ComputeRecoveryScoreLivenessFullBudgetFullDeadline() (gas: 8896)
+[PASS] test_ComputeRecoveryScoreLogicFullParams() (gas: 8874)
+[PASS] test_ComputeRecoveryScoreLogicNoBudgetNoDeadline() (gas: 8829)
+[PASS] test_ComputeRecoveryScoreResourceHalfBudgetHalfDeadline() (gas: 8963)
+[PASS] test_ConsistentClassificationForSameParams() (gas: 107325)
+[PASS] test_Constructor() (gas: 17297)
+[PASS] test_ConstructorInitializesClassWeights() (gas: 23514)
+[PASS] test_DeadlineRemainingExpired() (gas: 66805)
+[PASS] test_DeadlineRemainingFullTime() (gas: 66725)
+[PASS] test_DeadlineRemainingHalfTime() (gas: 67298)
+[PASS] test_FailureRecordCIDEmitsEvent() (gas: 69687)
+[PASS] test_GetClassWeight() (gas: 23602)
+[PASS] test_RecoveryScoreAboveThresholdRouteToRecovery() (gas: 16150)
+[PASS] test_RecoveryScoreBelowThresholdRouteToDispute() (gas: 16189)
+[PASS] test_RecoveryThreshold() (gas: 7683)
+[PASS] test_RevertClassifyAndScoreNotCairnCore() (gas: 35657)
+[PASS] test_RevertSetRecoveryThresholdTooHigh() (gas: 29851)
+[PASS] test_RevertSetRecoveryThresholdTooLow() (gas: 29924)
+[PASS] test_SetCairnCore() (gas: 39139)
+[PASS] test_SetRecoveryThreshold() (gas: 34735)
+[PASS] test_SetRecoveryThresholdBoundaries() (gas: 69304)
+[PASS] test_UniqueFailureRecordCIDs() (gas: 107024)
+[PASS] test_WeightConstants() (gas: 26861)
+[PASS] test_WeightsSumToOne() (gas: 16333)
+[PASS] test_ZeroDurationDeadline() (gas: 66230)
+[PASS] test_ZeroEscrowAmount() (gas: 66695)
+Suite result: ok. 30 passed; 0 failed; 0 skipped; finished in 5.42ms (2.82ms CPU time)
+
+Ran 11 tests for test/CairnCoreThreeTier.t.sol:CairnCoreThreeTierTest
+[PASS] test_Disputed_LowScore() (gas: 991237)
+[PASS] test_FlagOff_UsesV1BinaryRouting() (gas: 1051355)
+[PASS] test_FullScope_NoSettlementCap() (gas: 1198549)
+[PASS] test_FullScope_ZeroCheckpoints() (gas: 822153)
+[PASS] test_NoFallback_Disputed() (gas: 734998)
+[PASS] test_ReducedScope_ResourceClass() (gas: 1060327)
+[PASS] test_ReducedScope_SettlementCapsFallbackAt50pct() (gas: 1481670)
+[PASS] test_SetReducedScopeCap_Governance() (gas: 41912)
+[PASS] test_SetReducedScopeCap_OnlyGovernance() (gas: 32086)
+[PASS] test_SetReducedScopeCap_RevertOverMax() (gas: 34898)
+[PASS] test_SetThreeTierRouting_OnlyGovernance() (gas: 57153)
+Suite result: ok. 11 passed; 0 failed; 0 skipped; finished in 5.89ms (2.32ms CPU time)
+
+Ran 24 tests for test/RecoveryRouterV2.t.sol:RecoveryRouterV2Test
+[PASS] test_ClassifyAndScore_FromCairnCore_LivenessHappyPath() (gas: 67300)
+[PASS] test_ClassifyAndScore_NotCairnCore_Reverts() (gas: 32655)
+[PASS] test_DefaultThresholds() (gas: 15197)
+[PASS] test_FPowLookup_LivenessConstant() (gas: 5607)
+[PASS] test_FPowLookup_LogicConstant() (gas: 5581)
+[PASS] test_FPowLookup_ResourceConstant() (gas: 5496)
+[PASS] test_LegacyRecoveryThresholdReturnsLower() (gas: 15062)
+[PASS] test_LivenessAtFullResources_ScoresFullTier() (gas: 17152)
+[PASS] test_LivenessExceedsResourceAtSameResources() (gas: 26693)
+[PASS] test_LogicAlwaysScoresZero_RoutesToDispute() (gas: 21800)
+[PASS] test_Monotonic_InBudget() (gas: 31663)
+[PASS] test_Monotonic_InDeadline() (gas: 31658)
+[PASS] test_OverflowBudget_Reverts() (gas: 8811)
+[PASS] test_OverflowDeadline_Reverts() (gas: 8778)
+[PASS] test_ResourceAtFullResources_ScoresReducedOrDisputeBoundary() (gas: 19336)
+[PASS] test_RoutingTier_AboveUpper_IsFull() (gas: 22894)
+[PASS] test_RoutingTier_BelowLower_IsDisputed() (gas: 29202)
+[PASS] test_RoutingTier_BetweenLowerAndUpper_IsReduced() (gas: 29295)
+[PASS] test_SetThresholds_LowerExceedsUpper_Reverts() (gas: 29959)
+[PASS] test_SetThresholds_OutOfRange_Reverts() (gas: 30077)
+[PASS] test_SetThresholds_Valid_Updates() (gas: 47566)
+[PASS] test_WorkedExample_2_47amRecovery() (gas: 35731)
+[PASS] test_ZeroBudget_ScoresZero_EvenForLiveness() (gas: 16428)
+[PASS] test_ZeroDeadline_ScoresZero_EvenForLiveness() (gas: 16341)
+Suite result: ok. 24 passed; 0 failed; 0 skipped; finished in 5.98ms (3.23ms CPU time)
+
+Ran 8 tests for test/upgrades/CairnCoreUpgrade.t.sol:CairnCoreUpgradeTest
+[PASS] test_CannotReinitialize() (gas: 49729)
+[PASS] test_FunctionalityAfterUpgrade() (gas: 4375341)
+[PASS] test_InitialDeployment() (gas: 133252)
+[PASS] test_MultipleUpgrades() (gas: 7348112)
+[PASS] test_OnlyGovernanceCanUpgrade() (gas: 3481865)
+[PASS] test_PauseAfterUpgrade() (gas: 4017685)
+[PASS] test_StatePreservedAfterUpgrade() (gas: 4607067)
+[PASS] test_UpgradeToV2() (gas: 4041118)
+Suite result: ok. 8 passed; 0 failed; 0 skipped; finished in 6.49ms (3.38ms CPU time)
+
+Ran 54 tests for test/CairnTaskMVP.t.sol:CairnTaskMVPTest
+[PASS] test_CheckLiveness() (gas: 311639)
+[PASS] test_CheckLivenessEmitsEvents() (gas: 297096)
+[PASS] test_CheckpointUpdatesHeartbeat() (gas: 376749)
+[PASS] test_CommitCheckpoint() (gas: 388425)
+[PASS] test_CommitCheckpointEmitsEvent() (gas: 357029)
+[PASS] test_CommitMultipleCheckpoints() (gas: 528692)
+[PASS] test_CompleteTask() (gas: 407439)
+[PASS] test_CompleteTaskEmitsEvent() (gas: 287343)
+[PASS] test_Constructor() (gas: 19680)
+[PASS] test_FallbackCannotActBeforeAssignment() (gas: 281860)
+[PASS] test_Freeze_BlocksNewSubmissions() (gas: 82072)
+[PASS] test_Freeze_ExistingTaskStillCompletes() (gas: 440199)
+[PASS] test_Freeze_OnlyOwner() (gas: 34217)
+[PASS] test_Freeze_RevertsIfAlreadyFrozen() (gas: 67155)
+[PASS] test_Freeze_SetsFlagAndEmits() (gas: 51906)
+[PASS] test_FullRecoveryFlow() (gas: 946107)
+[PASS] test_Heartbeat() (gas: 306846)
+[PASS] test_HeartbeatEmitsEvent() (gas: 286482)
+[PASS] test_HeartbeatExactlyAtInterval() (gas: 304361)
+[PASS] test_IsStale() (gas: 273834)
+[PASS] test_MinEscrow() (gas: 5682)
+[PASS] test_MinHeartbeatInterval() (gas: 5547)
+[PASS] test_MultipleTasksIndependent() (gas: 787797)
+[PASS] test_PrimaryCannotActAfterFailure() (gas: 426423)
+[PASS] test_ProtocolFeeBps() (gas: 5626)
+[PASS] test_RevertCheckLivenessNotStale() (gas: 280997)
+[PASS] test_RevertCheckLivenessWrongState() (gas: 319422)
+[PASS] test_RevertCommitCheckpointAfterDeadline() (gas: 284462)
+[PASS] test_RevertCommitCheckpointInvalidCID() (gas: 281528)
+[PASS] test_RevertCommitCheckpointTaskNotFound() (gas: 37029)
+[PASS] test_RevertCommitCheckpointUnauthorized() (gas: 283783)
+[PASS] test_RevertCompleteTaskAfterDeadline() (gas: 281847)
+[PASS] test_RevertCompleteTaskUnauthorized() (gas: 279200)
+[PASS] test_RevertConstructorZeroFeeRecipient() (gas: 231645)
+[PASS] test_RevertHeartbeatAfterDeadline() (gas: 281922)
+[PASS] test_RevertHeartbeatUnauthorized() (gas: 279213)
+[PASS] test_RevertSetFeeRecipientNotOwner() (gas: 36412)
+[PASS] test_RevertSetFeeRecipientZeroAddress() (gas: 34460)
+[PASS] test_RevertSettleAlreadySettled() (gas: 382419)
+[PASS] test_RevertSettleNotResolvedNotDeadline() (gas: 286885)
+[PASS] test_RevertSubmitTaskInsufficientEscrow() (gas: 49942)
+[PASS] test_RevertSubmitTaskInvalidDeadline() (gas: 49434)
+[PASS] test_RevertSubmitTaskInvalidHeartbeat() (gas: 49960)
+[PASS] test_RevertSubmitTaskZeroFallbackAgent() (gas: 47038)
+[PASS] test_RevertSubmitTaskZeroPrimaryAgent() (gas: 47004)
+[PASS] test_SetFeeRecipient() (gas: 44082)
+[PASS] test_SettleAfterDeadlineAutoResolves() (gas: 483120)
+[PASS] test_SettleEmitsEvent() (gas: 495194)
+[PASS] test_SettleHappyPath() (gas: 765580)
+[PASS] test_SettleRecoveryPath() (gas: 840999)
+[PASS] test_SettleZeroCheckpointsRefund() (gas: 322268)
+[PASS] test_SubmitTask() (gas: 277424)
+[PASS] test_SubmitTaskEmitsEvent() (gas: 254393)
+[PASS] test_SubmitTaskMinimumEscrow() (gas: 270291)
+Suite result: ok. 54 passed; 0 failed; 0 skipped; finished in 6.53ms (4.17ms CPU time)
+
+Ran 48 tests for test/FallbackPool.t.sol:FallbackPoolTest
+[PASS] test_ActivateFallback() (gas: 386131)
+[PASS] test_ActivateFallbackEmitsEvent() (gas: 363704)
+[PASS] test_AddStake() (gas: 366095)
+[PASS] test_AddStakeEmitsEvent() (gas: 343946)
+[PASS] test_CompleteFallbackTaskEmitsEvent() (gas: 413678)
+[PASS] test_CompleteFallbackTaskFailure() (gas: 438395)
+[PASS] test_CompleteFallbackTaskSuccess() (gas: 435863)
+[PASS] test_Constructor() (gas: 30425)
+[PASS] test_ConstructorAllowsZeroCairnCore() (gas: 1833505)
+[PASS] test_Deregister() (gas: 387651)
+[PASS] test_DeregisterEmitsEvent() (gas: 367134)
+[PASS] test_DeregisterRemovesFromTaskTypes() (gas: 386275)
+[PASS] test_GetAllAgents() (gas: 572193)
+[PASS] test_GetMinStake() (gas: 17049)
+[PASS] test_GetTaskTypeAgents() (gas: 312095)
+[PASS] test_MultipleConcurrentTasks() (gas: 486150)
+[PASS] test_NoSlashOnSomeCheckpointsFailure() (gas: 438201)
+[PASS] test_Register() (gas: 328319)
+[PASS] test_RegisterEmitsEvent() (gas: 306474)
+[PASS] test_RegisterWithMultipleTaskTypes() (gas: 394886)
+[PASS] test_ReregisterAfterDeregister() (gas: 681907)
+[PASS] test_RevertActivateFallbackAtCapacity() (gas: 394191)
+[PASS] test_RevertActivateFallbackNotCairnCore() (gas: 331736)
+[PASS] test_RevertActivateFallbackNotRegistered() (gas: 39672)
+[PASS] test_RevertAddStakeNotRegistered() (gas: 40956)
+[PASS] test_RevertCompleteFallbackTaskNotCairnCore() (gas: 390110)
+[PASS] test_RevertConstructorZeroFeeRecipient() (gas: 243141)
+[PASS] test_RevertDeregisterActiveTasks() (gas: 393870)
+[PASS] test_RevertDeregisterNotRegistered() (gas: 39394)
+[PASS] test_RevertRegisterAlreadyRegistered() (gas: 336586)
+[PASS] test_RevertRegisterInsufficientReputation() (gas: 102305)
+[PASS] test_RevertRegisterNoStake() (gas: 38527)
+[PASS] test_RevertRegisterNoTaskTypes() (gas: 41915)
+[PASS] test_RevertWithdrawStakeActiveTasks() (gas: 394048)
+[PASS] test_RevertWithdrawStakeInsufficientBalance() (gas: 338795)
+[PASS] test_RevertWithdrawStakeNotRegistered() (gas: 39590)
+[PASS] test_SelectFallbackAtCapacity() (gas: 376392)
+[PASS] test_SelectFallbackBetterReputationWins() (gas: 698095)
+[PASS] test_SelectFallbackHigherStakeWins() (gas: 606742)
+[PASS] test_SelectFallbackInsufficientStake() (gas: 313989)
+[PASS] test_SelectFallbackNoAgents() (gas: 12564)
+[PASS] test_SelectFallbackSingleAgent() (gas: 329040)
+[PASS] test_SelectionWithMixedEligibility() (gas: 920939)
+[PASS] test_SlashEmitsEvent() (gas: 464039)
+[PASS] test_SlashOnHighFailureRate() (gas: 1062296)
+[PASS] test_SlashOnZeroCheckpointFailure() (gas: 492969)
+[PASS] test_WithdrawStake() (gas: 368845)
+[PASS] test_WithdrawStakeEmitsEvent() (gas: 346352)
+Suite result: ok. 48 passed; 0 failed; 0 skipped; finished in 6.48ms (4.84ms CPU time)
+
+Ran 47 tests for test/ArbiterRegistry.t.sol:ArbiterRegistryTest
+[PASS] test_AddStake() (gas: 264800)
+[PASS] test_AddStakeEmitsEvent() (gas: 247129)
+[PASS] test_Constructor() (gas: 45444)
+[PASS] test_ConstructorAllowsZeroCairnCore() (gas: 1678004)
+[PASS] test_DeregisterArbiter() (gas: 272938)
+[PASS] test_DeregisterArbiterEmitsEvent() (gas: 257021)
+[PASS] test_ExecuteRuling() (gas: 442111)
+[PASS] test_ExecuteRulingEmitsEvent() (gas: 404728)
+[PASS] test_GetAllArbiters() (gas: 395727)
+[PASS] test_IsAppealWindowActive() (gas: 424252)
+[PASS] test_IsAppealWindowActiveNoRuling() (gas: 7939)
+[PASS] test_IsEligibleConflictOfInterest() (gas: 217310)
+[PASS] test_IsEligibleHighOverturnRate() (gas: 2092716)
+[PASS] test_IsEligibleInsufficientStake() (gas: 217192)
+[PASS] test_IsEligibleNotRegistered() (gas: 16914)
+[PASS] test_IsEligibleRegistered() (gas: 223970)
+[PASS] test_IsEligible_Requires20PercentStake() (gas: 423897)
+[PASS] test_MultipleRulingsFromSameArbiter() (gas: 1042058)
+[PASS] test_OverturnRuling() (gas: 583036)
+[PASS] test_OverturnRulingEmitsEvent() (gas: 538810)
+[PASS] test_ReceiveETH() (gas: 32884)
+[PASS] test_RegisterArbiter() (gas: 226894)
+[PASS] test_RegisterArbiterEmitsEvent() (gas: 209702)
+[PASS] test_RegisterArbiterMultipleDomains() (gas: 275411)
+[PASS] test_RevertAddStakeNotRegistered() (gas: 40979)
+[PASS] test_RevertConstructorZeroFeeRecipient() (gas: 230798)
+[PASS] test_RevertConstructorZeroGovernance() (gas: 230817)
+[PASS] test_RevertDeregisterArbiterNotRegistered() (gas: 39393)
+[PASS] test_RevertExecuteRulingAlreadyRuled() (gas: 444573)
+[PASS] test_RevertExecuteRulingNotCairnCore() (gas: 242215)
+[PASS] test_RevertExecuteRulingNotEligible() (gas: 49051)
+[PASS] test_RevertOverturnRulingAfterAppealWindow() (gas: 442484)
+[PASS] test_RevertOverturnRulingAlreadyOverturned() (gas: 572074)
+[PASS] test_RevertOverturnRulingNotFound() (gas: 43314)
+[PASS] test_RevertOverturnRulingNotGovernance() (gas: 430276)
+[PASS] test_RevertRegisterArbiterAlreadyRegistered() (gas: 239940)
+[PASS] test_RevertRegisterArbiterInsufficientStake() (gas: 45029)
+[PASS] test_RevertRegisterArbiterNoDomains() (gas: 41760)
+[PASS] test_RevertRuleDirectly() (gas: 231313)
+[PASS] test_RevertSetCairnCoreNotGovernance() (gas: 38544)
+[PASS] test_RevertWithdrawStakeBelowMinimum() (gas: 240364)
+[PASS] test_RevertWithdrawStakeInsufficientBalance() (gas: 239915)
+[PASS] test_RevertWithdrawStakeNotRegistered() (gas: 39634)
+[PASS] test_SetCairnCore() (gas: 44180)
+[PASS] test_SetGovernance() (gas: 41936)
+[PASS] test_WithdrawEntireStake() (gas: 253981)
+[PASS] test_WithdrawStake() (gas: 263797)
+Suite result: ok. 47 passed; 0 failed; 0 skipped; finished in 6.50ms (3.39ms CPU time)
+
+Ran 66 tests for test/CairnCore.t.sol:CairnCoreTest
+[PASS] test_CommitCheckpointBatch() (gas: 822489)
+[PASS] test_CommitCheckpointBatchAccumulates() (gas: 933426)
+[PASS] test_CommitCheckpointBatchEmitsEvent() (gas: 767140)
+[PASS] test_CommitCheckpointBatchUpdatesHeartbeat() (gas: 825839)
+[PASS] test_CommitCheckpoint_AcceptsMatchingSchema() (gas: 822420)
+[PASS] test_CommitCheckpoint_RevertsOnSchemaMismatch() (gas: 600430)
+[PASS] test_CompleteTask() (gas: 966866)
+[PASS] test_CompleteTaskEmitsEvent() (gas: 712194)
+[PASS] test_CompleteTaskTriggersSettlement() (gas: 914084)
+[PASS] test_Constructor() (gas: 31407)
+[PASS] test_DetectFailure() (gas: 806049)
+[PASS] test_DetectFailureEmitsEvent() (gas: 750917)
+[PASS] test_DetectFailure_NoFallback_EntersDisputed() (gas: 6467633)
+[PASS] test_DetectFailure_ZeroCheckpoints_EntersDisputed() (gas: 806197)
+[PASS] test_E2E_HappyPath() (gas: 1202827)
+[PASS] test_E2E_RecoveryFlow() (gas: 1357655)
+[PASS] test_FallbackCanComplete() (gas: 1047795)
+[PASS] test_FallbackTakesOverAfterFailure() (gas: 1207395)
+[PASS] test_GetAgentTasks() (gas: 487286)
+[PASS] test_GetBatchRoots() (gas: 889837)
+[PASS] test_GetTaskTypeHistory() (gas: 487114)
+[PASS] test_Heartbeat() (gas: 661099)
+[PASS] test_HeartbeatEmitsEvent() (gas: 604830)
+[PASS] test_IsStale() (gas: 594625)
+[PASS] test_ModifierInState_Reverts() (gas: 514388)
+[PASS] test_MultipleTasks() (gas: 1559607)
+[PASS] test_Pause() (gas: 104174)
+[PASS] test_PrimaryCannotActAfterFailure() (gas: 1047655)
+[PASS] test_ReceiveETH() (gas: 32950)
+[PASS] test_ResolveDispute() (gas: 806048)
+[PASS] test_ResolveDisputeTimeout() (gas: 806090)
+[PASS] test_ResolveDisputeTimeout_FullFlow() (gas: 6628938)
+[PASS] test_ResolveDispute_PayAgent() (gas: 7247143)
+[PASS] test_ResolveDispute_Split() (gas: 7073643)
+[PASS] test_RevertCommitCheckpointBatchUnauthorized() (gas: 599575)
+[PASS] test_RevertCompleteTaskAfterDeadline() (gas: 603487)
+[PASS] test_RevertCompleteTaskUnauthorized() (gas: 597611)
+[PASS] test_RevertConstructorZeroFeeRecipient() (gas: 380394)
+[PASS] test_RevertDetectFailureNotStale() (gas: 605262)
+[PASS] test_RevertHeartbeatTooFrequent() (gas: 597884)
+[PASS] test_RevertHeartbeatUnauthorized() (gas: 597915)
+[PASS] test_RevertResolveDisputeTimeoutTooEarly() (gas: 806025)
+[PASS] test_RevertResolveDispute_NotDisputed() (gas: 598730)
+[PASS] test_RevertSetFeeRecipientNotGovernance() (gas: 36565)
+[PASS] test_RevertStartTaskUnauthorized() (gas: 510776)
+[PASS] test_RevertStartTaskWrongState() (gas: 595832)
+[PASS] test_RevertSubmitTaskInsufficientEscrow() (gas: 48345)
+[PASS] test_RevertSubmitTaskInvalidDeadline() (gas: 54522)
+[PASS] test_RevertSubmitTaskInvalidHeartbeat() (gas: 55076)
+[PASS] test_RevertSubmitTaskZeroPrimaryAgent() (gas: 52153)
+[PASS] test_RevertTaskNotFound() (gas: 14306)
+[PASS] test_SetContracts() (gas: 73752)
+[PASS] test_SetFeeRecipient() (gas: 44106)
+[PASS] test_StartTask() (gas: 626137)
+[PASS] test_StartTaskEmitsEvent() (gas: 570178)
+[PASS] test_SubmitTask() (gas: 544006)
+[PASS] test_SubmitTaskEmitsEvent() (gas: 486648)
+[PASS] test_SubmitTaskWithAutoFallback() (gas: 541477)
+[PASS] test_TaskDisputedEvent() (gas: 6411397)
+[PASS] test_TotalEscrowLocked() (gas: 491243)
+[PASS] test_TotalTasksCreated() (gas: 491413)
+[PASS] test_Unpause() (gas: 551732)
+[PASS] test_VerifyCheckpoint_InvalidBatchIndex() (gas: 772178)
+[PASS] test_VerifyCheckpoint_InvalidProof() (gas: 778055)
+[PASS] test_VerifyCheckpoint_ValidProof() (gas: 778075)
+[PASS] test_VerifyCheckpoint_WrongCID() (gas: 777993)
+Suite result: ok. 66 passed; 0 failed; 0 skipped; finished in 6.87ms (10.58ms CPU time)
+
+╭-------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------╮
+| lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy Contract |                 |       |        |        |         |
++=================================================================================================================================================+
+| Deployment Cost                                                                           | Deployment Size |       |        |        |         |
+|-------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| 267161                                                                                    | 1256            |       |        |        |         |
+|-------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+|                                                                                           |                 |       |        |        |         |
+|-------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| Function Name                                                                             | Min             | Avg   | Median | Max    | # Calls |
+|-------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------|
+| fallback                                                                                  | 5113            | 71508 | 51006  | 447969 | 76      |
+╰-------------------------------------------------------------------------------------------+-----------------+-------+--------+--------+---------╯
+
+╭--------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| src/ArbiterRegistry.sol:ArbiterRegistry Contract |                 |        |        |        |         |
++=========================================================================================================+
+| Deployment Cost                                  | Deployment Size |        |        |        |         |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 1602490                                          | 7169            |        |        |        |         |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                  |                 |        |        |        |         |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                    | Min             | Avg    | Median | Max    | # Calls |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| addStake                                         | 23531           | 28130  | 30430  | 30430  | 3       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| appealWindow                                     | 206             | 206    | 206    | 206    | 1       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| arbiterFeeBps                                    | 207             | 207    | 207    | 207    | 1       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| cairnCore                                        | 2425            | 2425   | 2425   | 2425   | 4       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| deregisterArbiter                                | 28696           | 51568  | 63005  | 63005  | 3       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| executeRuling                                    | 27126           | 153453 | 152913 | 187113 | 27      |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| feeRecipient                                     | 2381            | 2381   | 2381   | 2381   | 1       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getAllArbiters                                   | 7332            | 7332   | 7332   | 7332   | 1       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getArbiter                                       | 16007           | 18565  | 18323  | 22818  | 9       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getRuling                                        | 11685           | 11685  | 11685  | 11685  | 2       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| governance                                       | 2359            | 2359   | 2359   | 2359   | 2       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| isAppealWindowActive                             | 2566            | 5457   | 6903   | 6903   | 3       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| isEligible                                       | 2986            | 7215   | 5306   | 12044  | 7       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| minArbiterStake                                  | 271             | 271    | 271    | 271    | 1       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| overturnRuling                                   | 24922           | 83251  | 86908  | 133820 | 10      |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| receive                                          | 21055           | 21055  | 21055  | 21055  | 1       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| registerArbiter                                  | 24110           | 182591 | 187219 | 233119 | 103     |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| rule                                             | 22848           | 22848  | 22848  | 22848  | 1       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| setCairnCore                                     | 26114           | 39988  | 44111  | 44111  | 8       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| setGovernance                                    | 26963           | 26963  | 26963  | 26963  | 1       |
+|--------------------------------------------------+-----------------+--------+--------+--------+---------|
+| withdrawStake                                    | 28951           | 32897  | 31674  | 38646  | 5       |
+╰--------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭--------------------------------------+-----------------+--------+--------+--------+---------╮
+| src/CairnCore.sol:CairnCore Contract |                 |        |        |        |         |
++=============================================================================================+
+| Deployment Cost                      | Deployment Size |        |        |        |         |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| 3343916                              | 15285           |        |        |        |         |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+|                                      |                 |        |        |        |         |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                        | Min             | Avg    | Median | Max    | # Calls |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| arbiterRegistry                      | 2448            | 2448   | 2448   | 2448   | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| commitCheckpointBatch                | 28418           | 165054 | 195199 | 198143 | 34      |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| completeTask                         | 26645           | 137344 | 148921 | 229683 | 11      |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| detectFailure                        | 36326           | 171985 | 181893 | 237769 | 23      |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| disputeTimeout                       | 272             | 272    | 272    | 272    | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| escrowHook                           | 2470            | 2470   | 2470   | 2470   | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| fallbackPool                         | 2469            | 2469   | 2469   | 2469   | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| feeRecipient                         | 2426            | 2426   | 2426   | 2426   | 2       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| getAgentTasks                        | 5209            | 5209   | 5209   | 5209   | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| getBatchRoots                        | 9544            | 9544   | 9544   | 9544   | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| getTask                              | 3194            | 54966  | 56294  | 56294  | 40      |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| getTaskTypeHistory                   | 5115            | 5115   | 5115   | 5115   | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| heartbeat                            | 26600           | 30632  | 31220  | 33490  | 4       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| isStale                              | 9222            | 9222   | 9222   | 9222   | 2       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| minEscrow                            | 229             | 229    | 229    | 229    | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| pause                                | 46780           | 46780  | 46780  | 46780  | 2       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| protocolFeeBps                       | 317             | 317    | 317    | 317    | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| receive                              | 21055           | 21055  | 21055  | 21055  | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| recoveryRouter                       | 2426            | 2426   | 2426   | 2426   | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| recoveryThreshold                    | 229             | 229    | 229    | 229    | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| reducedScopeCapBps                   | 2393            | 2393   | 2393   | 2393   | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| resolveDispute                       | 27579           | 227806 | 315417 | 340423 | 3       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| resolveDisputeTimeout                | 95131           | 95131  | 95131  | 95131  | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| setContracts                         | 39975           | 90692  | 91275  | 91275  | 88      |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| setEscrowHook                        | 26007           | 26007  | 26007  | 26007  | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| setFeeRecipient                      | 24198           | 26617  | 26617  | 29036  | 2       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| setReducedScopeCap                   | 23808           | 25506  | 23974  | 28737  | 3       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| setThreeTierRouting                  | 23937           | 41155  | 45849  | 45849  | 14      |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| startTask                            | 26622           | 83638  | 85693  | 92530  | 54      |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| submitTask                           | 30354           | 423332 | 460091 | 460103 | 69      |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| threeTierRoutingEnabled              | 2421            | 2421   | 2421   | 2421   | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| totalEscrowLocked                    | 2329            | 2329   | 2329   | 2329   | 2       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| totalTasksCreated                    | 2415            | 2415   | 2415   | 2415   | 2       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| unpause                              | 24880           | 24880  | 24880  | 24880  | 1       |
+|--------------------------------------+-----------------+--------+--------+--------+---------|
+| verifyCheckpoint                     | 5065            | 7279   | 8009   | 8033   | 4       |
+╰--------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭--------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| src/CairnGovernance.sol:CairnGovernance Contract |                 |       |        |       |         |
++=======================================================================================================+
+| Deployment Cost                                  | Deployment Size |       |        |       |         |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 1201105                                          | 4227            |       |        |       |         |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                  |                 |       |        |       |         |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                    | Min             | Avg   | Median | Max   | # Calls |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| APPEAL_WINDOW                                    | 271             | 271   | 271    | 271   | 3       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| ARBITER_FEE_BPS                                  | 272             | 272   | 272    | 272   | 6       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| DISPUTE_TIMEOUT                                  | 250             | 250   | 250    | 250   | 3       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| MIN_ARBITER_STAKE_PERCENT                        | 229             | 229   | 229    | 229   | 2       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| MIN_HEARTBEAT_INTERVAL                           | 228             | 228   | 228    | 228   | 2       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| MIN_REPUTATION                                   | 294             | 294   | 294    | 294   | 6       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| MIN_STAKE_PERCENT                                | 294             | 294   | 294    | 294   | 2       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| PROTOCOL_FEE_BPS                                 | 227             | 227   | 227    | 227   | 21      |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| RECOVERY_THRESHOLD                               | 228             | 228   | 228    | 228   | 3       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| admin                                            | 2445            | 2445  | 2445   | 2445  | 2       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| cancelProposal                                   | 24053           | 27256 | 26253  | 31463 | 3       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| emergencyPause                                   | 24247           | 28522 | 29378  | 29378 | 6       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| emergencyUnpause                                 | 23476           | 26225 | 27600  | 27600 | 3       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| executeProposal                                  | 24030           | 33381 | 36927  | 36936 | 9       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getParameter                                     | 2536            | 2536  | 2536   | 2536  | 17      |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getProposal                                      | 2495            | 5702  | 6771   | 6771  | 4       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| isPaused                                         | 2347            | 2347  | 2347   | 2347  | 5       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| proposeParameter                                 | 24150           | 65386 | 77059  | 97043 | 39      |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| timelockDuration                                 | 251             | 251   | 251    | 251   | 1       |
+|--------------------------------------------------+-----------------+-------+--------+-------+---------|
+| transferAdmin                                    | 23695           | 26616 | 28496  | 28496 | 5       |
+╰--------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭--------------------------------------------+-----------------+--------+--------+--------+---------╮
+| src/CairnTaskMVP.sol:CairnTaskMVP Contract |                 |        |        |        |         |
++===================================================================================================+
+| Deployment Cost                            | Deployment Size |        |        |        |         |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| 1300077                                    | 5884            |        |        |        |         |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                            |                 |        |        |        |         |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                              | Min             | Avg    | Median | Max    | # Calls |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| checkLiveness                              | 24688           | 36999  | 40428  | 40428  | 8       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| commitCheckpoint                           | 24239           | 74192  | 67975  | 102830 | 35      |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| completeTask                               | 26447           | 32019  | 33097  | 33252  | 10      |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| feeRecipient                               | 2381            | 2381   | 2381   | 2381   | 2       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| freeze                                     | 23520           | 28001  | 29712  | 29712  | 6       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| frozen                                     | 2339            | 2339   | 2339   | 2339   | 2       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| getCheckpoints                             | 7364            | 9599   | 9599   | 11834  | 2       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| getTask                                    | 17934           | 17934  | 17934  | 17934  | 13      |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| heartbeat                                  | 26491           | 32597  | 35127  | 35282  | 7       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| isStale                                    | 6971            | 6971   | 6971   | 6971   | 3       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| minEscrow                                  | 281             | 281    | 281    | 281    | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| minHeartbeatInterval                       | 236             | 236    | 236    | 236    | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| owner                                      | 2396            | 2396   | 2396   | 2396   | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| protocolFeeBps                             | 248             | 248    | 248    | 248    | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| setFeeRecipient                            | 23819           | 25650  | 24044  | 29087  | 3       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| settle                                     | 31352           | 84996  | 106377 | 117970 | 9       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| submitTask                                 | 25160           | 199091 | 227726 | 227726 | 43      |
+╰--------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭--------------------------------------------+-----------------+--------+--------+--------+---------╮
+| src/FallbackPool.sol:FallbackPool Contract |                 |        |        |        |         |
++===================================================================================================+
+| Deployment Cost                            | Deployment Size |        |        |        |         |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| 1760111                                    | 8086            |        |        |        |         |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                            |                 |        |        |        |         |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                              | Min             | Avg    | Median | Max    | # Calls |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| activateFallback                           | 24550           | 50855  | 54913  | 54925  | 29      |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| addStake                                   | 23487           | 28086  | 30386  | 30386  | 3       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| cairnCore                                  | 2348            | 2348   | 2348   | 2348   | 3       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| completeFallbackTask                       | 24827           | 62512  | 57311  | 103673 | 16      |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| deregister                                 | 28696           | 63781  | 80792  | 80792  | 6       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| feeRecipient                               | 2348            | 2348   | 2348   | 2348   | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| getAgent                                   | 20489           | 22615  | 22793  | 22793  | 13      |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| getAllAgents                               | 7310            | 7310   | 7310   | 7310   | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| getMinStake                                | 552             | 552    | 552    | 552    | 3       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| getTaskTypeAgents                          | 2788            | 4662   | 5131   | 5131   | 5       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| minReputation                              | 304             | 304    | 304    | 304    | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| minStakePercent                            | 327             | 327    | 327    | 327    | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| olasMechAdapter                            | 2392            | 2392   | 2392   | 2392   | 2       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| register                                   | 24237           | 269777 | 278380 | 351442 | 129     |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| reputationRegistry                         | 2347            | 2347   | 2347   | 2347   | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| selectFallback                             | 4998            | 23390  | 22632  | 62787  | 74      |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| setCairnCore                               | 43895           | 43895  | 43895  | 43895  | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| setDelegationRegistry                      | 23832           | 23832  | 23832  | 23832  | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| setOlasMechAdapter                         | 21800           | 24334  | 24334  | 26869  | 2       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| setReputationRegistry                      | 24073           | 24073  | 24073  | 24073  | 1       |
+|--------------------------------------------+-----------------+--------+--------+--------+---------|
+| withdrawStake                              | 28929           | 35609  | 33353  | 42355  | 5       |
+╰--------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| src/RecoveryRouter.sol:RecoveryRouter Contract |                 |       |        |       |         |
++=====================================================================================================+
+| Deployment Cost                                | Deployment Size |       |        |       |         |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 610950                                         | 2370            |       |        |       |         |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                |                 |       |        |       |         |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                  | Min             | Avg   | Median | Max   | # Calls |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| BUDGET_WEIGHT                                  | 271             | 271   | 271    | 271   | 2       |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| DEADLINE_WEIGHT                                | 250             | 250   | 250    | 250   | 2       |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| DEFAULT_THRESHOLD                              | 227             | 227   | 227    | 227   | 1       |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| FAILURE_CLASS_WEIGHT                           | 228             | 228   | 228    | 228   | 2       |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| PRECISION                                      | 205             | 205   | 205    | 205   | 1       |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| cairnCore                                      | 2359            | 2359  | 2359   | 2359  | 2       |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| classifyAndScore                               | 24763           | 51764 | 56191  | 56230 | 15      |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| computeRecoveryScore                           | 3408            | 3408  | 3408   | 3408  | 6       |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getClassWeight                                 | 2641            | 2641  | 2641   | 2641  | 6       |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| recoveryThreshold                              | 2306            | 2306  | 2306   | 2306  | 7       |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setCairnCore                                   | 26755           | 41005 | 43855  | 43855 | 6       |
+|------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setRecoveryThreshold                           | 21729           | 24691 | 26657  | 26657 | 5       |
+╰------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭----------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| src/RecoveryRouterV2.sol:RecoveryRouterV2 Contract |                 |       |        |       |         |
++=========================================================================================================+
+| Deployment Cost                                    | Deployment Size |       |        |       |         |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 1224782                                            | 5326            |       |        |       |         |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                    |                 |       |        |       |         |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                      | Min             | Avg   | Median | Max   | # Calls |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| F_POW_LIVENESS                                     | 251             | 251   | 251    | 251   | 1       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| F_POW_LOGIC                                        | 292             | 292   | 292    | 292   | 1       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| F_POW_RESOURCE                                     | 206             | 206   | 206    | 206   | 1       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| classifyAndScore                                   | 24354           | 39017 | 39017  | 53680 | 2       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| computeRecoveryScore                               | 524             | 5748  | 1348   | 19935 | 15      |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| lowerThreshold                                     | 2372            | 2372  | 2372   | 2372  | 3       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| recoveryThreshold                                  | 2315            | 2315  | 2315   | 2315  | 1       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| routingTier                                        | 2467            | 3846  | 4590   | 4590  | 20      |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setThresholds                                      | 21839           | 25213 | 21881  | 31921 | 3       |
+|----------------------------------------------------+-----------------+-------+--------+-------+---------|
+| upperThreshold                                     | 2394            | 2394  | 2394   | 2394  | 4       |
+╰----------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭-----------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| src/adapters/OlasMechAdapter.sol:OlasMechAdapter Contract |                 |       |        |       |         |
++================================================================================================================+
+| Deployment Cost                                           | Deployment Size |       |        |       |         |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 1637847                                                   | 6546            |       |        |       |         |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                           |                 |       |        |       |         |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                             | Min             | Avg   | Median | Max   | # Calls |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| cairnToOlasCapability                                     | 2505            | 2505  | 2505   | 2505  | 5       |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| enabled                                                   | 2394            | 2394  | 2394   | 2394  | 1       |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| isOlasMechEligible                                        | 4785            | 23736 | 27379  | 35403 | 4       |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| mapTaskType                                               | 24534           | 58541 | 58541  | 92548 | 2       |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| minOlasReputation                                         | 2360            | 2360  | 2360   | 2360  | 1       |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| queryAvailableMechs                                       | 2495            | 22466 | 34685  | 36267 | 11      |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setEnabled                                                | 27843           | 27843 | 27843  | 27843 | 3       |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setMinReputation                                          | 23653           | 26809 | 26809  | 29965 | 2       |
+|-----------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| unmapTaskType                                             | 33535           | 33535 | 33535  | 33535 | 1       |
+╰-----------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| src/upgradeable/ArbiterRegistryUpgradeable.sol:ArbiterRegistryUpgradeable Contract |                 |       |        |       |         |
++=========================================================================================================================================+
+| Deployment Cost                                                                    | Deployment Size |       |        |       |         |
+|------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 2114177                                                                            | 9593            |       |        |       |         |
+|------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                                    |                 |       |        |       |         |
+|------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                      | Min             | Avg   | Median | Max   | # Calls |
+|------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initialize                                                                         | 95621           | 95621 | 95621  | 95621 | 8       |
+|------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setCairnCore                                                                       | 24735           | 24735 | 24735  | 24735 | 8       |
+╰------------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| src/upgradeable/CairnCoreUpgradeable.sol:CairnCoreUpgradeable Contract |                 |        |        |        |         |
++===============================================================================================================================+
+| Deployment Cost                                                        | Deployment Size |        |        |        |         |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 3330605                                                                | 15222           |        |        |        |         |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                                        |                 |        |        |        |         |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                                          | Min             | Avg    | Median | Max    | # Calls |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| arbiterRegistry                                                        | 2448            | 2448   | 2448   | 2448   | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| commitCheckpointBatch                                                  | 169738          | 169738 | 169738 | 169738 | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| completeTask                                                           | 130659          | 130659 | 130659 | 130659 | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| disputeTimeout                                                         | 272             | 272    | 272    | 272    | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| fallbackPool                                                           | 2382            | 2382   | 2382   | 2382   | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| feeRecipient                                                           | 2426            | 2426   | 2426   | 2426   | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getTask                                                                | 56316           | 56316  | 56316  | 56316  | 7       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| governance                                                             | 2425            | 2425   | 2425   | 2425   | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| initialize                                                             | 3228            | 121035 | 135761 | 135761 | 9       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| minEscrow                                                              | 229             | 229    | 229    | 229    | 2       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| minHeartbeatInterval                                                   | 250             | 250    | 250    | 250    | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| pause                                                                  | 25781           | 25781  | 25781  | 25781  | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| protocolFeeBps                                                         | 317             | 317    | 317    | 317    | 2       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| proxiableUUID                                                          | 340             | 340    | 340    | 340    | 7       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| recoveryRouter                                                         | 2426            | 2426   | 2426   | 2426   | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| recoveryThreshold                                                      | 229             | 229    | 229    | 229    | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| startTask                                                              | 64135           | 64135  | 64135  | 64135  | 2       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| submitTask                                                             | 24884           | 354051 | 420313 | 420313 | 7       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| totalEscrowLocked                                                      | 2351            | 2351   | 2351   | 2351   | 2       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| totalTasksCreated                                                      | 2415            | 2415   | 2415   | 2415   | 2       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| unpause                                                                | 8684            | 8684   | 8684   | 8684   | 1       |
+|------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| upgradeToAndCall                                                       | 3437            | 9333   | 11018  | 11018  | 9       |
+╰------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| src/upgradeable/FallbackPoolUpgradeable.sol:FallbackPoolUpgradeable Contract |                 |       |        |       |         |
++===================================================================================================================================+
+| Deployment Cost                                                              | Deployment Size |       |        |       |         |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 2104928                                                                      | 9549            |       |        |       |         |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                                              |                 |       |        |       |         |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                                                | Min             | Avg   | Median | Max   | # Calls |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| initialize                                                                   | 73320           | 73320 | 73320  | 73320 | 8       |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| selectFallback                                                               | 2663            | 2663  | 2663   | 2663  | 6       |
+|------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setCairnCore                                                                 | 24690           | 24690 | 24690  | 24690 | 8       |
+╰------------------------------------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+╭----------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| src/upgradeable/RecoveryRouterUpgradeable.sol:RecoveryRouterUpgradeable Contract |                 |        |        |        |         |
++=========================================================================================================================================+
+| Deployment Cost                                                                  | Deployment Size |        |        |        |         |
+|----------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 1142454                                                                          | 5168            |        |        |        |         |
+|----------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                                                  |                 |        |        |        |         |
+|----------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                                                    | Min             | Avg    | Median | Max    | # Calls |
+|----------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| initialize                                                                       | 139426          | 139426 | 139426 | 139426 | 8       |
+|----------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| setCairnCore                                                                     | 24690           | 24690  | 24690  | 24690  | 8       |
+╰----------------------------------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭-----------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| test/FallbackPoolOlas.t.sol:MockOlasMechRegistry Contract |                 |        |        |        |         |
++==================================================================================================================+
+| Deployment Cost                                           | Deployment Size |        |        |        |         |
+|-----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 401184                                                    | 1638            |        |        |        |         |
+|-----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                           |                 |        |        |        |         |
+|-----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                             | Min             | Avg    | Median | Max    | # Calls |
+|-----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| addMech                                                   | 222387          | 222387 | 222387 | 222387 | 16      |
+|-----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getMech                                                   | 14156           | 14156  | 14156  | 14156  | 4       |
+|-----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getMechAddress                                            | 544             | 544    | 544    | 544    | 4       |
+|-----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getMechsByCapability                                      | 5026            | 5026   | 5026   | 5026   | 4       |
+|-----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| isMechActive                                              | 2446            | 2446   | 2446   | 2446   | 4       |
+╰-----------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭----------------------------------------------------------+-----------------+--------+--------+--------+---------╮
+| test/OlasMechAdapter.t.sol:MockOlasMechRegistry Contract |                 |        |        |        |         |
++=================================================================================================================+
+| Deployment Cost                                          | Deployment Size |        |        |        |         |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| 470842                                                   | 1960            |        |        |        |         |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+|                                                          |                 |        |        |        |         |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| Function Name                                            | Min             | Avg    | Median | Max    | # Calls |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| addMech                                                  | 249572          | 255276 | 249584 | 266672 | 48      |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getMech                                                  | 12156           | 13156  | 13156  | 14156  | 4       |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getMechAddress                                           | 566             | 2066   | 2566   | 2566   | 4       |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| getMechsByCapability                                     | 5070            | 5070   | 5070   | 5070   | 6       |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| isMechActive                                             | 2446            | 2446   | 2446   | 2446   | 6       |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| setMechActive                                            | 22017           | 22017  | 22017  | 22017  | 2       |
+|----------------------------------------------------------+-----------------+--------+--------+--------+---------|
+| setMechReputation                                        | 31856           | 31856  | 31856  | 31856  | 2       |
+╰----------------------------------------------------------+-----------------+--------+--------+--------+---------╯
+
+╭-------------------------------------------------+-----------------+-------+--------+-------+---------╮
+| test/mocks/MockERC8004.sol:MockERC8004 Contract |                 |       |        |       |         |
++======================================================================================================+
+| Deployment Cost                                 | Deployment Size |       |        |       |         |
+|-------------------------------------------------+-----------------+-------+--------+-------+---------|
+| 445249                                          | 1842            |       |        |       |         |
+|-------------------------------------------------+-----------------+-------+--------+-------+---------|
+|                                                 |                 |       |        |       |         |
+|-------------------------------------------------+-----------------+-------+--------+-------+---------|
+| Function Name                                   | Min             | Avg   | Median | Max   | # Calls |
+|-------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getReputation                                   | 2627            | 2635  | 2637   | 2637  | 51      |
+|-------------------------------------------------+-----------------+-------+--------+-------+---------|
+| getReputationForType                            | 2700            | 2700  | 2700   | 2700  | 2       |
+|-------------------------------------------------+-----------------+-------+--------+-------+---------|
+| reportFailure                                   | 94576           | 94576 | 94576  | 94576 | 1       |
+|-------------------------------------------------+-----------------+-------+--------+-------+---------|
+| reportSuccess                                   | 94370           | 94370 | 94370  | 94370 | 1       |
+|-------------------------------------------------+-----------------+-------+--------+-------+---------|
+| setReputation                                   | 44120           | 44120 | 44120  | 44120 | 8       |
+╰-------------------------------------------------+-----------------+-------+--------+-------+---------╯
+
+
+Ran 12 test suites in 38.25ms (68.70ms CPU time): 358 tests passed, 0 failed, 0 skipped (358 total tests)
