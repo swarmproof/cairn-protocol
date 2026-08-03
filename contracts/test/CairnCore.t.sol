@@ -239,7 +239,7 @@ contract CairnCoreTest is Test {
         bytes32 latestCID = keccak256("batch_latest");
 
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 5, merkleRoot, latestCID);
+        core.commitCheckpointBatch(taskId, 5, merkleRoot, latestCID, specHash);
 
         ICairnCore.Task memory task = core.getTask(taskId);
         assertEq(task.checkpointCount, 5);
@@ -255,7 +255,7 @@ contract CairnCoreTest is Test {
         vm.prank(primaryAgent);
         vm.expectEmit(true, true, false, true);
         emit ICairnCore.CheckpointBatchCommitted(taskId, primaryAgent, 0, 4, merkleRoot, latestCID);
-        core.commitCheckpointBatch(taskId, 5, merkleRoot, latestCID);
+        core.commitCheckpointBatch(taskId, 5, merkleRoot, latestCID, specHash);
     }
 
     function test_CommitCheckpointBatchAccumulates() public {
@@ -263,11 +263,11 @@ contract CairnCoreTest is Test {
 
         // First batch: 3 checkpoints
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 3, keccak256("root1"), keccak256("cid1"));
+        core.commitCheckpointBatch(taskId, 3, keccak256("root1"), keccak256("cid1"), specHash);
 
         // Second batch: 5 checkpoints
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 5, keccak256("root2"), keccak256("cid2"));
+        core.commitCheckpointBatch(taskId, 5, keccak256("root2"), keccak256("cid2"), specHash);
 
         ICairnCore.Task memory task = core.getTask(taskId);
         assertEq(task.checkpointCount, 8);
@@ -281,7 +281,7 @@ contract CairnCoreTest is Test {
         vm.warp(block.timestamp + 30);
 
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 3, keccak256("root"), keccak256("cid"));
+        core.commitCheckpointBatch(taskId, 3, keccak256("root"), keccak256("cid"), specHash);
 
         ICairnCore.Task memory task = core.getTask(taskId);
         assertEq(task.lastHeartbeat, timeBefore + 30);
@@ -292,7 +292,30 @@ contract CairnCoreTest is Test {
 
         vm.prank(randomUser);
         vm.expectRevert();
-        core.commitCheckpointBatch(taskId, 5, keccak256("root"), keccak256("cid"));
+        core.commitCheckpointBatch(taskId, 5, keccak256("root"), keccak256("cid"), specHash);
+    }
+
+    /// AC-05 (PRD-04 Phase 3): checkpoint with matching schemaHash succeeds.
+    function test_CommitCheckpoint_AcceptsMatchingSchema() public {
+        bytes32 taskId = _submitAndStartTask();
+
+        vm.prank(primaryAgent);
+        core.commitCheckpointBatch(taskId, 3, keccak256("root"), keccak256("cid"), specHash);
+
+        ICairnCore.Task memory task = core.getTask(taskId);
+        assertEq(task.checkpointCount, 3);
+    }
+
+    /// AC-05: checkpoint with a schemaHash != task.specHash reverts.
+    function test_CommitCheckpoint_RevertsOnSchemaMismatch() public {
+        bytes32 taskId = _submitAndStartTask();
+        bytes32 wrongSchema = keccak256("wrong schema");
+
+        vm.prank(primaryAgent);
+        vm.expectRevert(
+            abi.encodeWithSelector(ICairnCore.InvalidCheckpointSchema.selector, wrongSchema, specHash)
+        );
+        core.commitCheckpointBatch(taskId, 3, keccak256("root"), keccak256("cid"), wrongSchema);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -405,7 +428,7 @@ contract CairnCoreTest is Test {
 
         // Primary commits some work
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1);
+        core.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1, specHash);
 
         // Primary fails
         vm.warp(block.timestamp + 121);
@@ -419,7 +442,7 @@ contract CairnCoreTest is Test {
 
             // Fallback picks up
             vm.prank(fallbackAgent);
-            core.commitCheckpointBatch(taskId, 2, keccak256("root2"), cid2);
+            core.commitCheckpointBatch(taskId, 2, keccak256("root2"), cid2, specHash);
 
             task = core.getTask(taskId);
             assertEq(task.checkpointCount, 5);
@@ -432,7 +455,7 @@ contract CairnCoreTest is Test {
 
         // Primary commits some work
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1);
+        core.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1, specHash);
 
         // Primary fails
         vm.warp(block.timestamp + 121);
@@ -444,7 +467,7 @@ contract CairnCoreTest is Test {
             // Primary tries to continue - should fail
             vm.prank(primaryAgent);
             vm.expectRevert();
-            core.commitCheckpointBatch(taskId, 2, keccak256("root2"), cid2);
+            core.commitCheckpointBatch(taskId, 2, keccak256("root2"), cid2, specHash);
         }
     }
 
@@ -456,7 +479,7 @@ contract CairnCoreTest is Test {
         bytes32 taskId = _submitAndStartTask();
 
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1);
+        core.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1, specHash);
 
         vm.prank(primaryAgent);
         core.completeTask(taskId);
@@ -478,7 +501,7 @@ contract CairnCoreTest is Test {
         bytes32 taskId = _submitAndStartTask();
 
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1);
+        core.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1, specHash);
 
         uint256 primaryBefore = primaryAgent.balance;
         uint256 feeBefore = feeRecipient.balance;
@@ -615,9 +638,9 @@ contract CairnCoreTest is Test {
         bytes32 root2 = keccak256("root2");
 
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 3, root1, cid1);
+        core.commitCheckpointBatch(taskId, 3, root1, cid1, specHash);
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 5, root2, cid2);
+        core.commitCheckpointBatch(taskId, 5, root2, cid2, specHash);
 
         bytes32[] memory roots = core.getBatchRoots(taskId);
         assertEq(roots.length, 2);
@@ -731,7 +754,7 @@ contract CairnCoreTest is Test {
         for (uint i = 0; i < 3; i++) {
             vm.warp(block.timestamp + 30);
             vm.prank(primaryAgent);
-            core.commitCheckpointBatch(taskId, 2, keccak256(abi.encode("root", i)), keccak256(abi.encode("cid", i)));
+            core.commitCheckpointBatch(taskId, 2, keccak256(abi.encode("root", i)), keccak256(abi.encode("cid", i)), specHash);
         }
 
         // 4. Complete
@@ -752,7 +775,7 @@ contract CairnCoreTest is Test {
 
         // 2. Primary works partially
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 3, keccak256("root1"), cid1);
+        core.commitCheckpointBatch(taskId, 3, keccak256("root1"), cid1, specHash);
 
         // 3. Primary fails
         vm.warp(block.timestamp + 121);
@@ -763,7 +786,7 @@ contract CairnCoreTest is Test {
         if (task.state == ICairnTypes.TaskState.RECOVERING) {
             // 4. Fallback picks up
             vm.prank(fallbackAgent);
-            core.commitCheckpointBatch(taskId, 2, keccak256("root2"), cid2);
+            core.commitCheckpointBatch(taskId, 2, keccak256("root2"), cid2, specHash);
 
             // 5. Fallback completes
             uint256 primaryBefore = primaryAgent.balance;
@@ -787,10 +810,10 @@ contract CairnCoreTest is Test {
         bytes32 taskId2 = _submitAndStartTask();
 
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId1, 3, keccak256("root1"), cid1);
+        core.commitCheckpointBatch(taskId1, 3, keccak256("root1"), cid1, specHash);
 
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId2, 5, keccak256("root2"), cid2);
+        core.commitCheckpointBatch(taskId2, 5, keccak256("root2"), cid2, specHash);
 
         ICairnCore.Task memory task1 = core.getTask(taskId1);
         ICairnCore.Task memory task2 = core.getTask(taskId2);
@@ -907,7 +930,7 @@ contract CairnCoreTest is Test {
 
         // Commit some checkpoints before failing
         vm.prank(primaryAgent);
-        coreNoFallback.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1);
+        coreNoFallback.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1, specHash);
 
         vm.warp(block.timestamp + 121);
         coreNoFallback.detectFailure(taskId);
@@ -1103,7 +1126,7 @@ contract CairnCoreTest is Test {
 
         // Commit one batch
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1);
+        core.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1, specHash);
 
         // Try to verify with invalid batch index
         bytes32[] memory proof = new bytes32[](0);
@@ -1125,7 +1148,7 @@ contract CairnCoreTest is Test {
 
         // Commit batch with this root
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 2, root, cid2);
+        core.commitCheckpointBatch(taskId, 2, root, cid2, specHash);
 
         // Verify leaf0 with proof [leaf1]
         bytes32[] memory proof = new bytes32[](1);
@@ -1144,7 +1167,7 @@ contract CairnCoreTest is Test {
         bytes32 root = _hashPair(leaf0, leaf1);
 
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 2, root, cid2);
+        core.commitCheckpointBatch(taskId, 2, root, cid2, specHash);
 
         // Try to verify with wrong proof
         bytes32[] memory wrongProof = new bytes32[](1);
@@ -1162,7 +1185,7 @@ contract CairnCoreTest is Test {
         bytes32 root = _hashPair(leaf0, leaf1);
 
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 2, root, cid2);
+        core.commitCheckpointBatch(taskId, 2, root, cid2, specHash);
 
         // Try to verify wrong CID with correct proof structure
         bytes32[] memory proof = new bytes32[](1);

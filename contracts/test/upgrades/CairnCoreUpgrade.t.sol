@@ -278,7 +278,7 @@ contract CairnCoreUpgradeTest is Test {
         bytes32 merkleRoot = keccak256(abi.encodePacked(checkpoints[0]));
 
         vm.prank(primaryAgent);
-        cairnCore.commitCheckpointBatch(taskId, 1, merkleRoot, checkpoints[0]);
+        cairnCore.commitCheckpointBatch(taskId, 1, merkleRoot, checkpoints[0], SPEC_HASH);
 
         // Complete task
         vm.prank(primaryAgent);

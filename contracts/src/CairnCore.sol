@@ -271,7 +271,8 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         bytes32 taskId,
         uint256 count,
         bytes32 merkleRoot,
-        bytes32 latestCID
+        bytes32 latestCID,
+        bytes32 schemaHash
     ) external override taskExists(taskId) onlyCurrentAgent(taskId) {
         Task storage task = _tasks[taskId];
 
@@ -279,6 +280,11 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         if (task.state != ICairnTypes.TaskState.RUNNING &&
             task.state != ICairnTypes.TaskState.RECOVERING) {
             revert InvalidState(task.state, ICairnTypes.TaskState.RUNNING);
+        }
+
+        // PRD-04 Phase 3: enforce the committed schema against the task's specHash
+        if (schemaHash != task.specHash) {
+            revert InvalidCheckpointSchema(schemaHash, task.specHash);
         }
 
         uint256 batchStart = task.checkpointCount;

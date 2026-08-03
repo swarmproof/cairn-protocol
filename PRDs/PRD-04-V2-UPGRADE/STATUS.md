@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | PHASES 1-2 COMPLETE — Phases 3-6 pending |
+| **Status** | PHASES 1-3 COMPLETE — Phases 4-6 pending |
 | **Last Updated** | 2026-07-31 |
 | **Blocked By** | None (PRD-03 complete) |
 | **Blocks** | Whitepaper peer-review submission; arXiv v2 revision |
@@ -15,7 +15,7 @@
 |---|---|---|---|
 | 1 — RecoveryRouter v2 | 2 days | **DONE** | PRBMath v4.1.1 installed; `RecoveryRouterV2.sol` ships multiplicative formula `r = F^0.80 × B^0.35 × D^0.15` with three-tier routing tier classifier. 24 unit tests, all passing. Gas measurements captured — see below. |
 | 2 — Three-tier routing | 1 day | **DONE** | `RecoveryScope` enum + `Task.recoveryScope` added; `IRecoveryRouterV2.routingTier()` interface; `CairnCore._routeThreeTier` sets `RECOVERING(FULL/REDUCED)` vs `DISPUTED` behind the `threeTierRoutingEnabled` governance flag (default off → v1 unchanged); reduced-scope settlement caps the fallback at `reducedScopeCapBps` (50%) and refunds the operator. 11 new tests; suite now 350 passing. |
-| 3 — Arbiter stake + Schema validation | 1 day | TODO | 15% → 20% in `ArbiterRegistry`; activate `specHash` check on `commitCheckpointBatch`. |
+| 3 — Arbiter stake + Schema validation | 1 day | **DONE** | Arbiter required stake raised 15% → 20% in `ArbiterRegistry`; `commitCheckpointBatch` gains a `schemaHash` arg and reverts with `InvalidCheckpointSchema` on mismatch with `task.specHash`. Suite now 353 passing. |
 | 4 — MVP deprecation | 0.5 day | TODO | Freeze flag on `CairnTaskMVP` + migration doc. |
 | 5 — Gas benchmarks + whitepaper backfill | 1 day | **PARTIAL** | RouterV2 gas numbers backfilled into WHITEPAPER_V2 §6.5; full system gas snapshot deferred to after Phases 2-3 land. |
 | 6 — Test, audit, testnet deploy | 1–2 days | TODO | Coverage ≥95%, Base Sepolia deploy. |
@@ -58,8 +58,8 @@ The whitepaper §6.5 has been updated with these measured numbers (the row sourc
 | AC-01 | `RecoveryRouter.score()` matches simulation EQ4_DEFAULTS | 1e-6 precision | **DONE (Phase 1)** — `test_WorkedExample_2_47amRecovery` confirms r(0.70, 0.85, 0.88) ≈ 0.6967 within 1e-3 tolerance; rounding inherent to PRBMath's log/exp implementation accounts for the residual. |
 | AC-02 | Three-tier routing matches thresholds 0.40 / 0.35 | Exact | **PARTIAL (Phase 1)** — `routingTier()` classifier ships in v2 router; CairnCore integration is Phase 2. |
 | AC-03 | Class weights (0.70, 0.30, 0.00) governance-adjustable | Yes | **PARTIAL** — class weights are constants in v2 router (matches whitepaper); thresholds adjustable via `setThresholds()`. Class-weight governance is a Phase 2 follow-up if needed. |
-| AC-04 | Arbiter stake = 20% of dispute value | Exact | TODO (Phase 3) |
-| AC-05 | `commitCheckpointBatch` reverts on schema mismatch | Yes | TODO (Phase 3) |
+| AC-04 | Arbiter stake = 20% of dispute value | Exact | **DONE (Phase 3)** — `test_IsEligible_Requires20PercentStake` asserts the boundary. |
+| AC-05 | `commitCheckpointBatch` reverts on schema mismatch | Yes | **DONE (Phase 3)** — `test_CommitCheckpoint_RevertsOnSchemaMismatch` + matching happy path. |
 | AC-06 | `recoveryScore` gas ≤ 10,000 (target 6,200) | Yes | **DONE (Phase 1)** — avg 5,748 gas (8% under target). Max 19,935 gas (full multiplicative path) — well under the 10,000 hard ceiling for typical resource conditions; only triggered when both *B* and *D* are non-zero and not at the boundary. |
 | AC-07 | Backward compat with v1 tasks | Yes | **DONE (Phase 1)** — v2 implements `IRecoveryRouter` unchanged; legacy `recoveryThreshold()` returns the lower threshold for binary-routing v1 callers. |
 | AC-08 | UUPS upgrade deployable without state migration | Yes | TODO (Phase 2) — current v2 is non-upgradeable sibling; a `RecoveryRouterV2Upgradeable` should follow, mirroring the existing v1 upgradeable pattern. |

@@ -76,7 +76,7 @@ contract CairnCoreThreeTierTest is Test {
 
     function _commit(bytes32 taskId, address who, uint256 count) internal {
         vm.prank(who);
-        core.commitCheckpointBatch(taskId, count, keccak256("root"), keccak256("cid"));
+        core.commitCheckpointBatch(taskId, count, keccak256("root"), keccak256("cid"), specHash);
     }
 
     // ═══════════════════════════════════════════════════════════════
