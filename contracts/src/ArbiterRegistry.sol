@@ -12,7 +12,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 ///
 /// Economics:
 ///   - Arbiter fee: 3% of dispute escrow
-///   - Min stake: 15% of max ruleable dispute
+///   - Min stake: 20% of max ruleable dispute
 ///
 /// Slashing:
 ///   - Ruling overturned → 50% stake slashed
@@ -308,8 +308,8 @@ contract ArbiterRegistry is IArbiterRegistry, ReentrancyGuard {
         // Must be registered
         if (!a.registered) return false;
 
-        // Must have adequate stake (15% of dispute value)
-        uint256 requiredStake = (escrowAmount * 15) / PRECISION;
+        // Must have adequate stake (20% of dispute value — PRD-04 v2, WHITEPAPER_V2 §6.3)
+        uint256 requiredStake = (escrowAmount * 20) / PRECISION;
         if (requiredStake < minArbiterStake) requiredStake = minArbiterStake;
         if (a.stake < requiredStake) return false;
 

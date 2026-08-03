@@ -664,7 +664,7 @@ contract ArbiterRegistryTest is Test {
     function test_IsEligibleInsufficientStake() public {
         _registerArbiter(arbiter1, MIN_ARBITER_STAKE);
 
-        // Escrow = 10 ether requires 1.5 ether stake (15%)
+        // Escrow = 10 ether requires 2 ether stake (20%)
         bool eligible = registry.isEligible(
             arbiter1,
             10 ether,
@@ -674,6 +674,23 @@ contract ArbiterRegistryTest is Test {
         );
 
         assertFalse(eligible);
+    }
+
+    /// AC-04 (PRD-04 v2): required arbiter stake is 20% of dispute value.
+    function test_IsEligible_Requires20PercentStake() public {
+        // Escrow 1 ether → required = 20% = 0.2 ether (above the 0.15 ETH floor)
+        _registerArbiter(arbiter1, 0.2 ether);
+        assertTrue(
+            registry.isEligible(arbiter1, 1 ether, primaryAgent, fallbackAgent, taskType),
+            "exactly 20% is eligible"
+        );
+
+        // 0.19 ether (>= 0.15 floor, so registration succeeds) is just under 20% → ineligible
+        _registerArbiter(arbiter2, 0.19 ether);
+        assertFalse(
+            registry.isEligible(arbiter2, 1 ether, primaryAgent, fallbackAgent, taskType),
+            "just under 20% is ineligible"
+        );
     }
 
     function test_IsEligibleConflictOfInterest() public {
