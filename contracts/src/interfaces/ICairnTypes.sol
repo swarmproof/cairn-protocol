@@ -59,6 +59,17 @@ interface ICairnTypes {
         SPLIT            // Custom split between operator/agent
     }
 
+    /// @notice Recovery scope tier for the RECOVERING state (PRD-04 three-tier routing)
+    /// @dev FULL: recovery score >= upper threshold (fallback gets full checkpoint-proportional
+    ///      share). REDUCED: lower <= score < upper — fallback attempts with a capped budget, so
+    ///      its escrow share is capped and the remainder returns to the operator (WHITEPAPER_V2
+    ///      Section 6.4). Default value (0) is FULL, so tasks routed under v1 binary routing are
+    ///      unaffected.
+    enum RecoveryScope {
+        FULL,   // Full-scope recovery (default)
+        REDUCED // Reduced-scope recovery: fallback payout capped
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // STRUCTS
     // ═══════════════════════════════════════════════════════════════
