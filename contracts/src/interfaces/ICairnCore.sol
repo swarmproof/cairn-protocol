@@ -166,6 +166,7 @@ interface ICairnCore {
     error DisputeTimeoutNotReached();
     error ZeroAddress();
     error InvalidReducedScopeCap(uint256 bps);
+    error InvalidCheckpointSchema(bytes32 provided, bytes32 expected);
 
     // ═══════════════════════════════════════════════════════════════
     // TASK LIFECYCLE
@@ -200,11 +201,13 @@ interface ICairnCore {
     /// @param count Number of checkpoints in this batch
     /// @param merkleRoot Root of Merkle tree containing checkpoint CIDs
     /// @param latestCID Most recent checkpoint CID (for quick access)
+    /// @param schemaHash Schema hash for this batch; must equal the task's specHash (PRD-04 Phase 3)
     function commitCheckpointBatch(
         bytes32 taskId,
         uint256 count,
         bytes32 merkleRoot,
-        bytes32 latestCID
+        bytes32 latestCID,
+        bytes32 schemaHash
     ) external;
 
     /// @notice Agent marks task as successfully completed
