@@ -234,6 +234,57 @@ contract OlasMechAdapterTest is Test {
             20
         );
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // COVERAGE: view helpers + admin
+    // ═══════════════════════════════════════════════════════════════
+
+    function test_GetOlasMechInfo() public view {
+        IOlasMech.MechInfo memory info = adapter.getOlasMechInfo(1);
+        assertEq(info.mechAddress, address(0x100));
+        assertTrue(info.active);
+    }
+
+    function test_GetCairnTaskTypes() public view {
+        bytes32[] memory types = adapter.getCairnTaskTypes(PRICE_ORACLE);
+        assertEq(types.length, 1);
+        assertEq(types[0], PRICE_FETCH);
+    }
+
+    function test_HasMappingFor() public view {
+        assertTrue(adapter.hasMappingFor(PRICE_FETCH));
+        assertFalse(adapter.hasMappingFor(keccak256("unmapped.type")));
+    }
+
+    function test_SetAdmin() public {
+        address newAdmin = address(0xA11CE);
+        vm.prank(admin);
+        adapter.setAdmin(newAdmin);
+        assertEq(adapter.admin(), newAdmin);
+    }
+
+    function test_SetAdmin_RevertZeroAddress() public {
+        vm.prank(admin);
+        vm.expectRevert(OlasMechAdapter.ZeroAddress.selector);
+        adapter.setAdmin(address(0));
+    }
+
+    function test_SetAdmin_OnlyAdmin() public {
+        vm.prank(user);
+        vm.expectRevert();
+        adapter.setAdmin(user);
+    }
+
+    /// New mech (zero requests) is eligible if active — exercises the return-true branch.
+    function test_Eligibility_NewMechActive() public {
+        mockRegistry.addMech(9, address(0x900), PRICE_ORACLE, 0.01 ether, true, 0, 0);
+        assertTrue(adapter.isOlasMechEligible(address(0x900), PRICE_FETCH));
+    }
+
+    /// A mech address not registered for the capability returns false (loop-miss branch).
+    function test_Eligibility_UnknownMechAddress() public view {
+        assertFalse(adapter.isOlasMechEligible(address(0xDEAD), PRICE_FETCH));
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════
