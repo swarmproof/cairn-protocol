@@ -30,6 +30,16 @@ contract CairnTaskMVP is ICairnTaskMVP, ReentrancyGuard, Ownable {
     mapping(address => uint256) private operatorNonces;
     address public feeRecipient;
 
+    /// @notice Once true, no new tasks may be submitted (v2 deprecation, PRD-04 Phase 4).
+    ///         Existing tasks continue to heartbeat, checkpoint, and settle normally.
+    bool public frozen;
+
+    /// @notice Emitted once when the MVP contract is frozen for the v2 migration.
+    event MvpFrozen(uint256 timestamp);
+
+    /// @notice New task submission attempted after the contract was frozen.
+    error MvpIsFrozen();
+
     constructor(address _owner, address _feeRecipient) Ownable(_owner) {
         if (_feeRecipient == address(0)) revert InvalidAddress();
         feeRecipient = _feeRecipient;
@@ -53,6 +63,7 @@ contract CairnTaskMVP is ICairnTaskMVP, ReentrancyGuard, Ownable {
     }
 
     function submitTask(address primaryAgent, address fallbackAgent, bytes32 specHash, uint256 heartbeatInterval, uint256 deadline) external payable returns (bytes32 taskId) {
+        if (frozen) revert MvpIsFrozen();
         if (primaryAgent == address(0) || fallbackAgent == address(0)) revert InvalidAddress();
         if (msg.value < MIN_ESCROW) revert InsufficientEscrow(MIN_ESCROW, msg.value);
         if (heartbeatInterval < MIN_HEARTBEAT_INTERVAL) revert InvalidHeartbeatInterval(MIN_HEARTBEAT_INTERVAL, heartbeatInterval);
@@ -156,6 +167,14 @@ contract CairnTaskMVP is ICairnTaskMVP, ReentrancyGuard, Ownable {
     function protocolFeeBps() external pure returns (uint256) { return PROTOCOL_FEE_BPS; }
     function minEscrow() external pure returns (uint256) { return MIN_ESCROW; }
     function minHeartbeatInterval() external pure returns (uint256) { return MIN_HEARTBEAT_INTERVAL; }
+
+    /// @notice Freeze the MVP contract for the v2 migration (one-way, PRD-04 Phase 4).
+    /// @dev Blocks new task submissions. Existing tasks are unaffected and settle normally.
+    function freeze() external onlyOwner {
+        if (frozen) revert MvpIsFrozen();
+        frozen = true;
+        emit MvpFrozen(block.timestamp);
+    }
 
     function setFeeRecipient(address _feeRecipient) external onlyOwner {
         if (_feeRecipient == address(0)) revert InvalidAddress();

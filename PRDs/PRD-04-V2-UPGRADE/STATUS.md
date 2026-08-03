@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| **Status** | PHASES 1-3 COMPLETE — Phases 4-6 pending |
+| **Status** | PHASES 1-4 COMPLETE — Phases 5-6 pending |
 | **Last Updated** | 2026-07-31 |
 | **Blocked By** | None (PRD-03 complete) |
 | **Blocks** | Whitepaper peer-review submission; arXiv v2 revision |
@@ -16,7 +16,7 @@
 | 1 — RecoveryRouter v2 | 2 days | **DONE** | PRBMath v4.1.1 installed; `RecoveryRouterV2.sol` ships multiplicative formula `r = F^0.80 × B^0.35 × D^0.15` with three-tier routing tier classifier. 24 unit tests, all passing. Gas measurements captured — see below. |
 | 2 — Three-tier routing | 1 day | **DONE** | `RecoveryScope` enum + `Task.recoveryScope` added; `IRecoveryRouterV2.routingTier()` interface; `CairnCore._routeThreeTier` sets `RECOVERING(FULL/REDUCED)` vs `DISPUTED` behind the `threeTierRoutingEnabled` governance flag (default off → v1 unchanged); reduced-scope settlement caps the fallback at `reducedScopeCapBps` (50%) and refunds the operator. 11 new tests; suite now 350 passing. |
 | 3 — Arbiter stake + Schema validation | 1 day | **DONE** | Arbiter required stake raised 15% → 20% in `ArbiterRegistry`; `commitCheckpointBatch` gains a `schemaHash` arg and reverts with `InvalidCheckpointSchema` on mismatch with `task.specHash`. Suite now 353 passing. |
-| 4 — MVP deprecation | 0.5 day | TODO | Freeze flag on `CairnTaskMVP` + migration doc. |
+| 4 — MVP deprecation | 0.5 day | **DONE** | One-way `freeze()` on `CairnTaskMVP` blocks new `submitTask` (`MvpIsFrozen`); existing tasks still settle. Migration note at `docs/mvp-deprecation.md`. 5 new tests; suite now 358. |
 | 5 — Gas benchmarks + whitepaper backfill | 1 day | **PARTIAL** | RouterV2 gas numbers backfilled into WHITEPAPER_V2 §6.5; full system gas snapshot deferred to after Phases 2-3 land. |
 | 6 — Test, audit, testnet deploy | 1–2 days | TODO | Coverage ≥95%, Base Sepolia deploy. |
 
