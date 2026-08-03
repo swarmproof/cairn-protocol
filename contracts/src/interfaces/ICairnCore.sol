@@ -64,6 +64,9 @@ interface ICairnCore {
         // Resolution
         ICairnTypes.ResolutionType resolutionType;
         bytes32 resolutionRecordCID;
+
+        // Recovery routing tier (PRD-04 three-tier routing; appended for storage safety)
+        ICairnTypes.RecoveryScope recoveryScope;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -126,6 +129,12 @@ interface ICairnCore {
         uint256 resumeFromCheckpoint
     );
 
+    /// @notice Emitted when a recovering task's scope tier is assigned (PRD-04 three-tier routing)
+    event RecoveryScopeAssigned(
+        bytes32 indexed taskId,
+        ICairnTypes.RecoveryScope scope
+    );
+
     event TaskDisputed(
         bytes32 indexed taskId,
         uint256 recoveryScore,
@@ -156,6 +165,7 @@ interface ICairnCore {
     error InvalidMerkleProof();
     error DisputeTimeoutNotReached();
     error ZeroAddress();
+    error InvalidReducedScopeCap(uint256 bps);
 
     // ═══════════════════════════════════════════════════════════════
     // TASK LIFECYCLE
