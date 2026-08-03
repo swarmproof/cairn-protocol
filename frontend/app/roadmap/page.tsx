@@ -94,7 +94,7 @@ export default function RoadmapPage() {
           CAIRN Protocol Roadmap
         </h1>
         <p className="text-lg text-muted-foreground">
-          From Hackathon MVP to Production Protocol
+          From MVP to Production Protocol
         </p>
       </section>
 
@@ -207,7 +207,7 @@ export default function RoadmapPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-cyan-500 animate-pulse" />
-              Current Focus: Synthesis Hackathon 2026
+              Current Focus: v1 → v2 Protocol Upgrade
             </CardTitle>
           </CardHeader>
           <CardContent>

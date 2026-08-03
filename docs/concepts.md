@@ -173,22 +173,21 @@ Six states. Every transition is deterministic. No human is required to trigger a
     ┌──────┐  confirm   ┌─────────┐  task done  ┌──────────┐
     │      │ ─────────► │         │ ───────────► │          │
     │ IDLE │            │ RUNNING │              │ RESOLVED │ (terminal)
-    │      │ ◄───────── │         │              │          │
+    │      │            │         │              │          │
     └──────┘            └────┬────┘              └────▲─────┘
                              │                        │
-                    fault    │                        │ complete
-                  detected   │                        │
+                    fault    │                        │ fallback
+                  detected   │                        │ completes
                              ▼                        │
-                        ┌─────────┐  r ≥ 0.35    ┌───┴──────┐
-                        │         │ ────────────► │          │
-                        │ FAILED  │  (≥0.40 full │RECOVERING│
-                        │         │ ◄──────────── │ (full or │
-                        └────┬────┘  0.35-0.40   │ reduced) │
-                             │       reduced or   └──────────┘
-                             │       fails
-                       r     │
-                      <0.35  │
-                             ▼
+                        ┌─────────┐  r ≥ 0.40    ┌───┴──────┐
+                        │         │ ─(full)─────► │          │
+                        │ FAILED  │  0.35≤r<0.40 │RECOVERING│
+                        │         │ ─(reduced)──► │ (full or │
+                        └────┬────┘               │ reduced) │
+                             │                    └────┬─────┘
+                       r     │   fallback fails        │
+                      <0.35  │  ┌──────────────────────┘
+                             ▼  ▼
                         ┌──────────┐  arbiter  ┌──────────┐
                         │          │ ─────────► │          │
                         │ DISPUTED │            │ RESOLVED │ (terminal)

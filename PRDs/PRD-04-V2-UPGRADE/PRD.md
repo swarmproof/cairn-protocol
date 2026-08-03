@@ -191,7 +191,7 @@ Decision: **Option A**. Emit a deprecation event on MVP at v2 activation; freeze
 | T6.1 | Full test suite passes | — | `forge test -vvv` green |
 | T6.2 | Coverage ≥ 95% | — | `forge coverage` |
 | T6.3 | Manual audit against WHITEPAPER_V2 §7 | — | Every "v2" claim has an on-chain enforcement |
-| T6.4 | Deploy v2 to Base Sepolia | — | Address logged to `.synthesis/agent_log.json` per CLAUDE.md §1.3 |
+| T6.4 | Deploy v2 to Base Sepolia | — | Address added to README "Deployed Contracts" table per CLAUDE.md §1.3 |
 | T6.5 | Governance proposal to activate v2 | — | Operator-facing proposal draft |
 
 ---

@@ -67,11 +67,8 @@ PRDs/
 │
 ├── PRD-01-MVP-HACKATHON/
 │   ├── PRD.md                             # Synthesis hackathon MVP
-│   ├── STATUS.md                          # Pipeline tracking
-│   ├── spawn-contract-dev.md              # Contract development agent
-│   ├── spawn-sdk-dev.md                   # SDK development agent
-│   ├── spawn-frontend-dev.md              # Frontend development agent
-│   └── spawn-integration.md               # Integration testing agent
+│   └── STATUS.md                          # Pipeline tracking
+│       # (spawn-*.md scaffolding moved to /archive/prd-01-spawn-scaffolding/)
 │
 ├── PRD-02-CORE-RECOVERY/
 │   ├── PRD.md                             # Recovery scoring & routing

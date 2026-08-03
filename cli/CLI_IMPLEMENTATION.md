@@ -291,7 +291,7 @@ Checkpoints:
    - Examples for common workflows
    - Troubleshooting guide
 
-2. **Installation Guide** (`INSTALLATION.md`)
+2. **Installation Guide** (`docs/installation.md`)
    - Step-by-step setup
    - Development environment
    - Testing instructions
@@ -405,7 +405,7 @@ receipt = await client.heartbeat(task_id)
 ### Documentation (4 files)
 
 1. `cli/README.md` - CLI documentation
-2. `INSTALLATION.md` - Installation guide
+2. `docs/installation.md` - Installation guide
 3. `cli/CLI_IMPLEMENTATION.md` - This file
 4. `examples/cli_usage.sh` - Usage examples
 
