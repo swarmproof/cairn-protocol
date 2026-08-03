@@ -629,4 +629,59 @@ contract CairnTaskMVPTest is Test {
         assertEq(cp1, 1);
         assertEq(cp2, 2);
     }
+
+    // ============ Freeze / Deprecation Tests (PRD-04 Phase 4) ============
+
+    function test_Freeze_SetsFlagAndEmits() public {
+        assertFalse(cairn.frozen());
+
+        vm.expectEmit(false, false, false, true);
+        emit CairnTaskMVP.MvpFrozen(block.timestamp);
+        vm.prank(owner);
+        cairn.freeze();
+
+        assertTrue(cairn.frozen());
+    }
+
+    function test_Freeze_OnlyOwner() public {
+        vm.prank(randomUser);
+        vm.expectRevert();
+        cairn.freeze();
+    }
+
+    function test_Freeze_BlocksNewSubmissions() public {
+        vm.prank(owner);
+        cairn.freeze();
+
+        uint256 deadline = block.timestamp + 1 hours;
+        vm.prank(operator);
+        vm.expectRevert(CairnTaskMVP.MvpIsFrozen.selector);
+        cairn.submitTask{value: 0.1 ether}(primaryAgent, fallbackAgent, specHash, 60, deadline);
+    }
+
+    function test_Freeze_RevertsIfAlreadyFrozen() public {
+        vm.prank(owner);
+        cairn.freeze();
+
+        vm.prank(owner);
+        vm.expectRevert(CairnTaskMVP.MvpIsFrozen.selector);
+        cairn.freeze();
+    }
+
+    /// Existing tasks continue to settle normally after the contract is frozen.
+    function test_Freeze_ExistingTaskStillCompletes() public {
+        bytes32 taskId = _submitTask();
+
+        vm.prank(owner);
+        cairn.freeze();
+
+        // The pre-existing task can still checkpoint and complete
+        vm.prank(primaryAgent);
+        cairn.commitCheckpoint(taskId, cid1);
+        vm.prank(primaryAgent);
+        cairn.completeTask(taskId);
+
+        (ICairnTaskMVP.State state,,,,,,,,) = cairn.getTask(taskId);
+        assertEq(uint8(state), uint8(ICairnTaskMVP.State.RESOLVED));
+    }
 }
