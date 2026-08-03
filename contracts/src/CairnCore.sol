@@ -4,6 +4,7 @@ pragma solidity 0.8.24;
 import {ICairnCore} from "./interfaces/ICairnCore.sol";
 import {ICairnTypes} from "./interfaces/ICairnTypes.sol";
 import {IRecoveryRouter} from "./interfaces/IRecoveryRouter.sol";
+import {IRecoveryRouterV2} from "./interfaces/IRecoveryRouterV2.sol";
 import {IFallbackPool} from "./interfaces/IFallbackPool.sol";
 import {IArbiterRegistry} from "./interfaces/IArbiterRegistry.sol";
 import {IGovernance} from "./interfaces/IGovernance.sol";
@@ -81,6 +82,15 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
 
     /// @notice Operator nonces for task ID generation
     mapping(address => uint256) private _operatorNonces;
+
+    /// @notice When true, routing uses the v2 router's three-tier classifier
+    ///         (FULL / REDUCED / DISPUTED). Default false preserves v1 binary routing. (PRD-04)
+    bool public threeTierRoutingEnabled;
+
+    /// @notice Cap on the fallback's escrow share for REDUCED-scope recoveries,
+    ///         in basis points of the distributable escrow (default 50%). The capped
+    ///         remainder is refunded to the operator. Governance-adjustable. (PRD-04)
+    uint256 public reducedScopeCapBps = 5000;
 
     // ═══════════════════════════════════════════════════════════════
     // CONSTRUCTOR
@@ -413,6 +423,13 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
     function _routeFailedTask(bytes32 taskId) internal {
         Task storage task = _tasks[taskId];
 
+        // v2: three-tier routing via the router's tier classifier (PRD-04)
+        if (threeTierRoutingEnabled) {
+            _routeThreeTier(task, taskId);
+            return;
+        }
+
+        // v1: binary routing (unchanged)
         if (task.recoveryScore >= recoveryThreshold) {
             // High recovery score → automatic fallback
             if (task.fallbackAgent != address(0)) {
@@ -437,6 +454,34 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
             // Low recovery score → dispute required
             _enterDispute(task, taskId);
         }
+    }
+
+    /// @notice Three-tier routing (PRD-04): tier 2 = RECOVERING(FULL),
+    ///         tier 1 = RECOVERING(REDUCED), tier 0 = DISPUTED.
+    /// @dev Only reached when threeTierRoutingEnabled is set, which requires the
+    ///      wired router to implement IRecoveryRouterV2.routingTier().
+    function _routeThreeTier(Task storage task, bytes32 taskId) internal {
+        uint8 tier = IRecoveryRouterV2(address(recoveryRouter)).routingTier(task.recoveryScore);
+
+        // Tier 0, or no fallback available → dispute
+        if (tier == 0 || task.fallbackAgent == address(0)) {
+            _enterDispute(task, taskId);
+            return;
+        }
+
+        task.recoveryScope = tier == 1
+            ? ICairnTypes.RecoveryScope.REDUCED
+            : ICairnTypes.RecoveryScope.FULL;
+
+        task.state = ICairnTypes.TaskState.RECOVERING;
+        task.currentAgent = task.fallbackAgent;
+
+        if (address(fallbackPool) != address(0)) {
+            fallbackPool.activateFallback(taskId, task.fallbackAgent);
+        }
+
+        emit RecoveryStarted(taskId, task.fallbackAgent, task.checkpointCount);
+        emit RecoveryScopeAssigned(taskId, task.recoveryScope);
     }
 
     /// @notice Enter DISPUTED state
@@ -594,6 +639,18 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
             }
         }
 
+        // PRD-04: on reduced-scope recoveries the fallback ran with a capped
+        // budget, so cap its share and refund the remainder to the operator.
+        // No-op for FULL scope (the v1 default), so binary-routed tasks are unaffected.
+        uint256 operatorRefund;
+        if (task.recoveryScope == ICairnTypes.RecoveryScope.REDUCED) {
+            uint256 cap = (distributable * reducedScopeCapBps) / 10000;
+            if (fallbackPayout > cap) {
+                operatorRefund = fallbackPayout - cap;
+                fallbackPayout = cap;
+            }
+        }
+
         // Store settlement amounts
         task.settledPrimary = primaryPayout;
         task.settledFallback = fallbackPayout;
@@ -610,6 +667,10 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         if (protocolFee > 0) {
             (bool s3, ) = feeRecipient.call{value: protocolFee}("");
             require(s3, "Fee transfer failed");
+        }
+        if (operatorRefund > 0) {
+            (bool s4, ) = task.operator.call{value: operatorRefund}("");
+            require(s4, "Operator refund failed");
         }
 
         // Update state
@@ -793,6 +854,20 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
     /// @param _escrowHook The hook contract address (or zero to disable)
     function setEscrowHook(address _escrowHook) external onlyGovernance {
         escrowHook = IERC8183(_escrowHook);
+    }
+
+    /// @notice Enable/disable v2 three-tier routing (PRD-04)
+    /// @dev The wired recoveryRouter MUST implement IRecoveryRouterV2.routingTier()
+    ///      before enabling, or failure routing will revert.
+    function setThreeTierRouting(bool enabled) external onlyGovernance {
+        threeTierRoutingEnabled = enabled;
+    }
+
+    /// @notice Set the reduced-scope fallback escrow cap (basis points, PRD-04)
+    /// @param bps Cap on the fallback's share of distributable escrow (<= 10000)
+    function setReducedScopeCap(uint256 bps) external onlyGovernance {
+        if (bps > 10000) revert InvalidReducedScopeCap(bps);
+        reducedScopeCapBps = bps;
     }
 
     /// @notice Receive ETH (for arbiter fee refunds)

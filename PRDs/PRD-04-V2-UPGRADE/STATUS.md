@@ -2,8 +2,8 @@
 
 | Field | Value |
 |---|---|
-| **Status** | PHASE 1 COMPLETE — Phases 2-6 pending |
-| **Last Updated** | 2026-04-29 |
+| **Status** | PHASES 1-2 COMPLETE — Phases 3-6 pending |
+| **Last Updated** | 2026-07-31 |
 | **Blocked By** | None (PRD-03 complete) |
 | **Blocks** | Whitepaper peer-review submission; arXiv v2 revision |
 
@@ -14,7 +14,7 @@
 | Phase | Duration | Status | Notes |
 |---|---|---|---|
 | 1 — RecoveryRouter v2 | 2 days | **DONE** | PRBMath v4.1.1 installed; `RecoveryRouterV2.sol` ships multiplicative formula `r = F^0.80 × B^0.35 × D^0.15` with three-tier routing tier classifier. 24 unit tests, all passing. Gas measurements captured — see below. |
-| 2 — Three-tier routing | 1 day | TODO | Add `RecoveryScope` enum to `ICairnTypes`; update `CairnCore` to read both thresholds and set `RECOVERING(FULL)` vs `RECOVERING(REDUCED)` based on `routingTier()`. |
+| 2 — Three-tier routing | 1 day | **DONE** | `RecoveryScope` enum + `Task.recoveryScope` added; `IRecoveryRouterV2.routingTier()` interface; `CairnCore._routeThreeTier` sets `RECOVERING(FULL/REDUCED)` vs `DISPUTED` behind the `threeTierRoutingEnabled` governance flag (default off → v1 unchanged); reduced-scope settlement caps the fallback at `reducedScopeCapBps` (50%) and refunds the operator. 11 new tests; suite now 350 passing. |
 | 3 — Arbiter stake + Schema validation | 1 day | TODO | 15% → 20% in `ArbiterRegistry`; activate `specHash` check on `commitCheckpointBatch`. |
 | 4 — MVP deprecation | 0.5 day | TODO | Freeze flag on `CairnTaskMVP` + migration doc. |
 | 5 — Gas benchmarks + whitepaper backfill | 1 day | **PARTIAL** | RouterV2 gas numbers backfilled into WHITEPAPER_V2 §6.5; full system gas snapshot deferred to after Phases 2-3 land. |
