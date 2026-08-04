@@ -136,7 +136,7 @@ All 9 CairnCore events must have handlers:
 ### subgraph.yaml
 
 - [x] Correct network: `base-sepolia`
-- [x] Correct contract address: `0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`
+- [x] Correct contract address: `0x9917E509742495EbEedfF6335406096B2e1aFB3a`
 - [x] Start block set (requires update to exact block)
 - [x] All 9 events listed in eventHandlers
 - [x] Correct event signatures match contract
@@ -300,7 +300,7 @@ After deployment, test these queries to verify functionality:
 
 ### 1. Protocol Metrics
 ```graphql
-{ protocol(id: "0xb65596b21d670b6c670106c3e3c7e5fff8e3a640") { totalTasksCreated } }
+{ protocol(id: "0x9917e509742495ebeedff6335406096b2e1afb3a") { totalTasksCreated } }
 ```
 Expected: Returns protocol entity with task count.
 

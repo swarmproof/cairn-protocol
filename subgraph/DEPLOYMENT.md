@@ -32,7 +32,7 @@ Check `subgraph.yaml` has correct values:
 
 ```yaml
 source:
-  address: "0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640"  # CairnCore contract
+  address: "0x9917E509742495EbEedfF6335406096B2e1aFB3a"  # CairnCore contract
   startBlock: 17741070  # Deployment block
 ```
 
@@ -126,7 +126,7 @@ In The Graph Studio playground, test a simple query:
 
 ```graphql
 {
-  protocol(id: "0xb65596b21d670b6c670106c3e3c7e5fff8e3a640") {
+  protocol(id: "0x9917e509742495ebeedff6335406096b2e1afb3a") {
     totalTasksCreated
     totalTasksResolved
     overallSuccessRate

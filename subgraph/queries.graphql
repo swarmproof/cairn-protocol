@@ -7,7 +7,7 @@
 
 # Get global protocol metrics
 query ProtocolMetrics {
-  protocol(id: "0xb65596b21d670b6c670106c3e3c7e5fff8e3a640") {
+  protocol(id: "0x9917e509742495ebeedff6335406096b2e1afb3a") {
     totalTasksCreated
     totalTasksResolved
     totalEscrowLocked
@@ -402,7 +402,7 @@ query MetricsForDate($date: Bytes!) {
 # Main dashboard data
 query Dashboard {
   # Protocol overview
-  protocol(id: "0xb65596b21d670b6c670106c3e3c7e5fff8e3a640") {
+  protocol(id: "0x9917e509742495ebeedff6335406096b2e1afb3a") {
     totalTasksCreated
     totalTasksResolved
     totalEscrowLocked

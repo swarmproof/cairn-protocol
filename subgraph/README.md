@@ -176,7 +176,7 @@ npm run deploy-local
 
 ```graphql
 {
-  protocol(id: "0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640") {
+  protocol(id: "0x9917E509742495EbEedfF6335406096B2e1aFB3a") {
     totalTasksCreated
     totalTasksResolved
     totalEscrowLocked
@@ -310,7 +310,7 @@ If the CairnCore contract is redeployed or updated:
 
 - Network: `base-sepolia`
 - Chain ID: 84532
-- Contract: `0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`
+- Contract: `0x9917E509742495EbEedfF6335406096B2e1aFB3a`
 - Start Block: ~17741070
 
 To change networks, update `subgraph.yaml`:
