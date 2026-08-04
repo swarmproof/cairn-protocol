@@ -83,7 +83,7 @@ contract DeployCairnV2 is Script {
         console.log("  CairnCore:        ", address(cairnCore));
         console.log("");
         console.log("POST-DEPLOY (governance, see docs/v2-deployment-runbook.md):");
-        console.log("  * CairnCore.setThreeTierRouting(true)  <- activates v2 routing");
+        console.log("  * governance.execute(cairnCore, setThreeTierRouting(true)) <- activates v2");
         console.log("  * Verify all 5 contracts on BaseScan");
         console.log("  * Update README 'Deployed Contracts' + frontend addresses");
         console.log("=============================================");

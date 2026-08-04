@@ -41,19 +41,27 @@ addresses from the console summary (also in `broadcast/DeployV2.s.sol/84532/run-
 ## 2. Activate v2 routing (governance)
 
 Three-tier routing ships **off by default** (`threeTierRoutingEnabled == false`), so a
-fresh deploy behaves like v1 binary routing until governance flips it. Enable it via the
-governance path:
+fresh deploy behaves like v1 binary routing until governance flips it.
 
-```
-CairnCore.setThreeTierRouting(true)   // onlyGovernance
+`setThreeTierRouting` is `onlyGovernance` — it requires `msg.sender == address(governance)`,
+so it **cannot** be called from an EOA directly. Route it through `CairnGovernance.execute`,
+which the admin (`ADMIN_ADDRESS`) is authorized to call:
+
+```bash
+# admin sends: governance.execute(cairnCore, setThreeTierRouting(true))
+cast send <CairnGovernance> "execute(address,bytes)" \
+  <CairnCore> $(cast calldata "setThreeTierRouting(bool)" true) \
+  --rpc-url base_sepolia --private-key <ADMIN_PRIVATE_KEY>
 ```
 
+- The admin key that signs this must correspond to `ADMIN_ADDRESS` (the `CairnGovernance`
+  admin set at deploy). This is a maintainer action, not automation.
 - Arbiter stake (20%) and checkpoint schema validation are **already active** in the v2
   bytecode — no governance call needed.
-- Optional: `CairnCore.setReducedScopeCap(bps)` to tune the reduced-scope fallback cap
-  (default 5000 = 50%).
+- Optional (same `execute` pattern): `setReducedScopeCap(bps)` to tune the reduced-scope
+  fallback cap (default 5000 = 50%), and `pause()`/`unpause()`.
 
-Confirm: `cast call <CairnCore> "threeTierRoutingEnabled()(bool)" --rpc-url "$BASE_SEPOLIA_RPC_URL"` → `true`.
+Confirm: `cast call <CairnCore> "threeTierRoutingEnabled()(bool)" --rpc-url base_sepolia` → `true`.
 
 ## 3. Freeze the legacy MVP (optional, when ready)
 
