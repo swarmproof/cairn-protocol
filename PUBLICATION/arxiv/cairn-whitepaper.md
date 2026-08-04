@@ -683,18 +683,19 @@ All thresholds are governance-adjustable parameters (Section 8) — an operator 
 
 ### 6.5 Gas Costs
 
-All operations are designed for Base L2, where gas is inexpensive. The `recoveryScore` and `classifyAndScore` rows below are **measured** values from `forge test --gas-report` against the v2 reference implementation `RecoveryRouterV2.sol` (24-test suite, 339 tests overall passing on this branch); the remaining rows are design-target estimates pending a full v2 system benchmark. The raw report is committed at `contracts/gas-report-v2-router.txt`.
+All operations are designed for Base L2, where gas is inexpensive. **Every row below is now measured** from `forge test --gas-report` against the full v2 reference implementation (359-test suite passing on this branch); the raw report is committed at `contracts/gas-report-v2-full.txt`. CairnCore rows report the median of successful calls; `computeRecoveryScore`/`classifyAndScore` report max/avg/min across their input range.
 
-| Operation | Gas | Cost @ 0.01 gwei Base L2 | Cost @ $2,500/ETH | Source |
+| Operation | Gas (measured) | Cost @ 0.01 gwei Base L2 | Cost @ $2,500/ETH | Source |
 |-----------|-----|--------------------------|-------------------|--------|
-| `submitTask` |\\ ~180,000 (estimate) | 1.8 × 10⁻⁶ ETH | $0.0045 | design target |
-| `commitCheckpointBatch` (1 checkpoint, v2) | ~80,000 (estimate) | 8.0 × 10⁻⁷ ETH | $0.0020 | design target |
-| `commitCheckpointBatch` (10 checkpoints, v2) |\\ ~100,000 (estimate) | 1.0 × 10⁻⁶ ETH | $0.0025 | design target |
-| `heartbeat` | ~45,000 (estimate) | 4.5 × 10⁻⁷ ETH | $0.0011 | design target |
-| `settle` (escrow distribution) |\\ ~140,000 (estimate) | 1.4 × 10⁻⁶ ETH | $0.0035 | design target |
-| `RecoveryRouterV2.computeRecoveryScore` (full multiplicative path) | **19,935 max / 5,748 avg / 524 min** (measured) | 2.0 × 10⁻⁷ ETH max | $0.00050 max | measured |
-| `RecoveryRouterV2.classifyAndScore` (called from CairnCore on failure) | **53,680 max / 39,017 avg / 24,354 min** (measured) | 5.4 × 10⁻⁷ ETH max | $0.00134 max | measured |
-| `RecoveryRouterV2` deployment cost | 1,224,782 (measured) | 1.2 × 10⁻⁵ ETH | $0.031 | measured |
+| `submitTask` (incl. fallback auto-selection) | 460,091 (median) | 4.6 × 10⁻⁶ ETH | $0.0115 | measured |
+| `commitCheckpointBatch` (any batch size) | 195,199 (median) | 2.0 × 10⁻⁶ ETH | $0.0049 | measured |
+| `heartbeat` | 31,220 (median) | 3.1 × 10⁻⁷ ETH | $0.00078 | measured |
+| `completeTask` (settlement) | 148,921 (median) | 1.5 × 10⁻⁶ ETH | $0.0037 | measured |
+| `RecoveryRouterV2.computeRecoveryScore` (full multiplicative path) | **19,935 max / 5,748 avg / 524 min** | 2.0 × 10⁻⁷ ETH max | $0.00050 max | measured |
+| `RecoveryRouterV2.classifyAndScore` (called from CairnCore on failure) | **53,680 max / 39,017 avg / 24,354 min** | 5.4 × 10⁻⁷ ETH max | $0.00134 max | measured |
+| `RecoveryRouterV2` deployment cost | 1,224,782 | 1.2 × 10⁻⁵ ETH | $0.031 | measured |
+
+Two measured results are worth highlighting. First, **`commitCheckpointBatch` gas is independent of checkpoint count** — because Merkle batching commits a single root per batch, an isolated call costs ~158,528 gas of execution whether it commits 1, 10, or 50 checkpoints (benchmark in `test/GasBenchmark.t.sol`). Batching therefore amortizes checkpoint cost to near-zero per checkpoint at scale. Second, **`submitTask` (~460k) is higher than earlier design estimates (~180k)** because v2 auto-selects the fallback agent from the pool via an external call rather than requiring a pre-declared fallback — a deliberate trade of gas for operator convenience and a larger fallback set. Even so, at 0.01 gwei on Base the full task lifecycle (submit + checkpoint + settle) costs well under two cents.
 
 The 0.01 gwei assumption reflects typical post-Dencun Base L2 gas prices; actual L2 execution gas has ranged from below 0.001 gwei (low congestion) to approximately 0.1 gwei (high congestion) per BaseScan. Base transactions also carry an L1 publication fee (~1-5% of total cost at typical congestion) that is not included in the table above and can dominate at very low L2 gas prices. Dollar figures should therefore be read as order-of-magnitude estimates, not contractual guarantees.
 
