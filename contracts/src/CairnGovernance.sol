@@ -187,4 +187,40 @@ contract CairnGovernance is IGovernance {
 
         emit AdminTransferred(oldAdmin, newAdmin);
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // EXECUTOR
+    // ═══════════════════════════════════════════════════════════════
+
+    /// @notice Emitted when governance relays a call to another contract.
+    event Executed(address indexed target, bytes data, bytes result);
+
+    /// @notice Relay an admin-authorized call to another contract so that this
+    ///         governance contract is `msg.sender`. Required to reach the
+    ///         `onlyGovernance` functions on CairnCore (e.g. `setThreeTierRouting`,
+    ///         `setContracts`, `pause`), which check `msg.sender == address(governance)`.
+    /// @dev Immediate `onlyAdmin` execution. For mainnet, route sensitive calls
+    ///      through the 48h parameter timelock or a multisig admin. Reverts bubble
+    ///      up the target's revert reason.
+    /// @param target The contract to call (e.g. CairnCore).
+    /// @param data ABI-encoded calldata for the target function.
+    /// @return result The target's return data.
+    function execute(address target, bytes calldata data)
+        external
+        onlyAdmin
+        returns (bytes memory result)
+    {
+        if (target == address(0)) revert ZeroAddress();
+
+        (bool ok, bytes memory ret) = target.call(data);
+        if (!ok) {
+            // Bubble up the target's revert reason.
+            assembly {
+                revert(add(ret, 0x20), mload(ret))
+            }
+        }
+
+        emit Executed(target, data, ret);
+        return ret;
+    }
 }
