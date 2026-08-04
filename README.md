@@ -5,8 +5,8 @@
 <p>
   <img src="https://img.shields.io/badge/Status-Live_on_Base_Sepolia-00CED1?style=flat-square&logo=ethereum&logoColor=white" alt="Status"/>
   <img src="https://github.com/MarouaBoud/cairn-protocol/actions/workflows/tests.yml/badge.svg" alt="Tests"/>
-  <img src="https://img.shields.io/badge/Contracts-6_Deployed-008B8B?style=flat-square" alt="Contracts"/>
-  <img src="https://img.shields.io/badge/Tests-339_passing-00CED1?style=flat-square" alt="Tests"/>
+  <img src="https://img.shields.io/badge/Contracts-5_Deployed-008B8B?style=flat-square" alt="Contracts"/>
+  <img src="https://img.shields.io/badge/Tests-381_passing-00CED1?style=flat-square" alt="Tests"/>
   <img src="https://img.shields.io/badge/Chain_ID-84532-0052FF?style=flat-square&logo=coinbase&logoColor=white" alt="Chain ID"/>
   <img src="https://img.shields.io/badge/ERC-CAIRN_Proposal-008B8B?style=flat-square" alt="ERC"/>
 </p>
@@ -238,7 +238,7 @@ Routing: `r ≥ 0.40` → RECOVERING (full scope) | `0.35 ≤ r < 0.40` → RECO
 
 The multiplicative form captures the "any-factor-kills-it" dynamic: if budget, deadline, or class recoverability approaches zero, the score collapses to zero — matching the ground-truth recovery dynamics. The formula was selected after Monte Carlo simulation across 100,000 task-failure events and 16 experiments comparing it against three linear alternatives; see [Whitepaper §6.4](./WHITEPAPER_V2.md) and [`simulation/RESULTS_EQ4.md`](./simulation/RESULTS_EQ4.md).
 
-> **v1 testnet note.** The contracts currently deployed on Base Sepolia implement the interim linear formula `r = 0.5·F + 0.3·B + 0.2·D` with class weights (0.90, 0.50, 0.10) and a single threshold at 0.30. The v2 multiplicative formula ships in `RecoveryRouterV2.sol` (24 unit tests passing) and migrates via governance through the `IRecoveryRouter` interface. See [PRD-04](./PRDs/PRD-04-V2-UPGRADE/PRD.md) for the migration plan.
+> **Deployment note.** The v2 multiplicative formula with three-tier routing is **deployed and activated** on Base Sepolia (`RecoveryRouterV2` + `CairnCore` with `threeTierRoutingEnabled`). The earlier v1 interim-linear deployment has been superseded. See [PRD-04](./PRDs/PRD-04-V2-UPGRADE/PRD.md) for the upgrade history.
 
 ---
 
@@ -360,7 +360,7 @@ import os
 
 client = CairnClient(
     rpc_url="https://sepolia.base.org",
-    contract_address="0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640",  # CairnCore
+    contract_address="0x9917E509742495EbEedfF6335406096B2e1aFB3a",  # CairnCore (v2)
     private_key=os.environ["PRIVATE_KEY"]
 )
 
@@ -431,7 +431,7 @@ These endpoints return markdown that AI agents can parse to integrate CAIRN into
 | Property | Value |
 |----------|-------|
 | Specification | **v2** (this paper — multiplicative recovery score, three-tier routing) |
-| Testnet deployment | **v1** (interim linear formula) — Live on Base Sepolia, Chain ID 84532 |
+| Testnet deployment | **v2** (multiplicative, three-tier routing) — Live on Base Sepolia, Chain ID 84532 |
 | Whitepaper | [v2.0 — April 2026](./WHITEPAPER_V2.md) |
 | ERC Dependencies | ERC-8183, ERC-8004, ERC-7710 |
 | v1 → v2 migration | Governance-gated via `IRecoveryRouter` interface; see [PRD-04](./PRDs/PRD-04-V2-UPGRADE/PRD.md) |
@@ -457,16 +457,17 @@ See [`PRDs/README.md`](./PRDs/README.md) for the full roadmap.
 
 ### Deployed Contracts (Base Sepolia)
 
+The **v2 protocol** (multiplicative recovery score, three-tier routing, 20% arbiter stake, checkpoint schema validation) is deployed and activated on Base Sepolia:
+
 | Contract | Address | Description |
 |----------|---------|-------------|
-| **CairnCore** | [`0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640`](https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640) | Main entry point — 6-state machine, task lifecycle |
-| CairnGovernance | [`0x7A09567e0348889Cc14264bEcf08F8d72Dc6987f`](https://sepolia.basescan.org/address/0x7A09567e0348889Cc14264bEcf08F8d72Dc6987f) | Protocol parameters, admin controls |
-| RecoveryRouter | [`0xE52703946cb44c12A6A38A41f638BA2D7197a84d`](https://sepolia.basescan.org/address/0xE52703946cb44c12A6A38A41f638BA2D7197a84d) | Failure classification, recovery scoring |
-| FallbackPool | [`0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0`](https://sepolia.basescan.org/address/0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0) | Agent registration, selection algorithm |
-| ArbiterRegistry | [`0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68`](https://sepolia.basescan.org/address/0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68) | Dispute resolution, appeals |
-| CairnTaskMVP *(legacy)* | [`0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417`](https://sepolia.basescan.org/address/0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417) | Legacy MVP (4-state) — use CairnCore for production |
+| **CairnCore** | [`0x9917E509742495EbEedfF6335406096B2e1aFB3a`](https://sepolia.basescan.org/address/0x9917E509742495EbEedfF6335406096B2e1aFB3a) | Main entry point — 6-state machine, task lifecycle |
+| CairnGovernance | [`0xA14272Ab4B782Dc139B76Ea994117b924727221C`](https://sepolia.basescan.org/address/0xA14272Ab4B782Dc139B76Ea994117b924727221C) | Protocol parameters, admin executor |
+| RecoveryRouterV2 | [`0x1481586D976454ad17CfB2E9a4176a0826Ec9A70`](https://sepolia.basescan.org/address/0x1481586D976454ad17CfB2E9a4176a0826Ec9A70) | Multiplicative recovery scoring, three-tier routing |
+| FallbackPool | [`0x363a0812333aE98945bE4c9Cd17E97aD383C5D07`](https://sepolia.basescan.org/address/0x363a0812333aE98945bE4c9Cd17E97aD383C5D07) | Agent registration, selection algorithm |
+| ArbiterRegistry | [`0x3AF10DDAd783Cf10d5CD938F641B8CB96e1F35eB`](https://sepolia.basescan.org/address/0x3AF10DDAd783Cf10d5CD938F641B8CB96e1F35eB) | Dispute resolution (20% arbiter stake) |
 
-The contracts currently deployed on Base Sepolia are the **non-upgradeable base implementations**. UUPS-upgradeable variants (OpenZeppelin 5.x) are implemented in `contracts/src/upgradeable/` for the planned v1 → v2 migration, but are **not yet deployed**. See [PRD-04](./PRDs/PRD-04-V2-UPGRADE/PRD.md).
+All five contracts are source-verified on BaseScan. The deployed contracts are the **non-upgradeable base implementations**; UUPS-upgradeable variants (OpenZeppelin 5.x) exist in `contracts/src/upgradeable/` but are not deployed. See [PRD-04](./PRDs/PRD-04-V2-UPGRADE/PRD.md).
 
 ### Live Demo
 
