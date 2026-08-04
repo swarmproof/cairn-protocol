@@ -19,7 +19,7 @@ from langgraph.prebuilt import create_react_agent
 # Initialize CAIRN (Base Sepolia)
 cairn = CairnClient(
     rpc_url="https://sepolia.base.org",
-    contract="0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417"
+    contract="0x9917E509742495EbEedfF6335406096B2e1aFB3a"
 )
 
 # Wrap your agent with CAIRN protection
@@ -37,7 +37,7 @@ import { AgentKit } from '@coinbase/agentkit';
 // Initialize CAIRN (Base Sepolia)
 const cairn = new CairnClient({
   rpcUrl: 'https://sepolia.base.org',
-  contract: '0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417'
+  contract: '0x9917E509742495EbEedfF6335406096B2e1aFB3a'
 });
 
 // Create protected agent
@@ -57,7 +57,7 @@ from olas import OlasAgent
 # Initialize CAIRN
 cairn = CairnClient(
     rpc_url="https://sepolia.base.org",
-    contract="0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417"
+    contract="0x9917E509742495EbEedfF6335406096B2e1aFB3a"
 )
 
 # Wrap Olas agent with CAIRN
@@ -77,7 +77,7 @@ class ProtectedOlasAgent(OlasAgent):
 # Initialize CAIRN client
 cairn = CairnClient(
     rpc_url="https://sepolia.base.org",
-    contract="0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417"
+    contract="0x9917E509742495EbEedfF6335406096B2e1aFB3a"
 )
 
 # Submit task with escrow
