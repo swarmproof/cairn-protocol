@@ -1,6 +1,6 @@
 # CAIRN Protocol - Agent Failure & Recovery Integration
 
-> **Base Contract:** `0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640` (Base Sepolia)
+> **Base Contract:** `0x9917E509742495EbEedfF6335406096B2e1aFB3a` (Base Sepolia)
 > **Chain ID:** 84532
 > **RPC:** `https://sepolia.base.org`
 
@@ -30,7 +30,7 @@ from sdk.checkpoint import CheckpointStore
 # Initialize
 client = CairnClient(
     rpc_url="https://sepolia.base.org",
-    contract_address="0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640",
+    contract_address="0x9917E509742495EbEedfF6335406096B2e1aFB3a",
     private_key="YOUR_PRIVATE_KEY",
 )
 ipfs = CheckpointStore(pinata_jwt="YOUR_PINATA_JWT")
@@ -116,7 +116,7 @@ function submitTask(
 ```
 
 ```bash
-cast send 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
+cast send 0x9917E509742495EbEedfF6335406096B2e1aFB3a \
   "submitTask(bytes32,bytes32,address,uint256,uint256)" \
   $(cast --format-bytes32 "defi.rebalance") \
   $(cast keccak "QmTaskSpec...") \
@@ -135,7 +135,7 @@ function heartbeat(bytes32 taskId) external;
 ```
 
 ```bash
-cast send 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
+cast send 0x9917E509742495EbEedfF6335406096B2e1aFB3a \
   "heartbeat(bytes32)" \
   0xYOUR_TASK_ID \
   --private-key $PRIVATE_KEY \
@@ -157,7 +157,7 @@ function commitCheckpointBatch(
 
 ```bash
 # Build Merkle tree off-chain from checkpoint CIDs, then commit root
-cast send 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
+cast send 0x9917E509742495EbEedfF6335406096B2e1aFB3a \
   "commitCheckpointBatch(bytes32,uint256,bytes32,bytes32)" \
   0xYOUR_TASK_ID \
   5 \
@@ -176,7 +176,7 @@ function completeTask(bytes32 taskId) external;
 ```
 
 ```bash
-cast send 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
+cast send 0x9917E509742495EbEedfF6335406096B2e1aFB3a \
   "completeTask(bytes32)" \
   0xYOUR_TASK_ID \
   --private-key $PRIVATE_KEY \
@@ -194,13 +194,13 @@ function isStale(bytes32 taskId) public view returns (bool);
 
 ```bash
 # Check if task is stale (2x heartbeat interval passed)
-cast call 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
+cast call 0x9917E509742495EbEedfF6335406096B2e1aFB3a \
   "isStale(bytes32)" \
   0xYOUR_TASK_ID \
   --rpc-url https://sepolia.base.org
 
 # Trigger failure detection (anyone can call)
-cast send 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
+cast send 0x9917E509742495EbEedfF6335406096B2e1aFB3a \
   "detectFailure(bytes32)" \
   0xYOUR_TASK_ID \
   --private-key $PRIVATE_KEY \
@@ -256,7 +256,7 @@ curl -X POST https://tnt-v2.api.bonfires.ai/delve \
 
 ```bash
 # Get task details
-cast call 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640 \
+cast call 0x9917E509742495EbEedfF6335406096B2e1aFB3a \
   "getTask(bytes32)" \
   0xYOUR_TASK_ID \
   --rpc-url https://sepolia.base.org
@@ -286,7 +286,7 @@ await agent.register_as_fallback(
 
 ```bash
 # Direct contract call
-cast send 0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0 \
+cast send 0x363a0812333aE98945bE4c9Cd17E97aD383C5D07 \
   "register(bytes32[])" \
   "[$(cast --format-bytes32 'defi.rebalance')]" \
   --value 0.1ether \
@@ -300,11 +300,11 @@ cast send 0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0 \
 
 | Contract | Address | Purpose |
 |----------|---------|---------|
-| **CairnCore** | `0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640` | Main entry point |
+| **CairnCore** | `0x9917E509742495EbEedfF6335406096B2e1aFB3a` | Main entry point |
 | **CairnTaskMVP** | `0x2eFd1De57BfF1Ea3E40b049F70bb58590Ea73417` | Simplified 4-state version |
-| **FallbackPool** | `0x4dCeA24eaD4026987d97a205598c1Ee1CE1649B0` | Agent registration |
-| **RecoveryRouter** | `0xE52703946cb44c12A6A38A41f638BA2D7197a84d` | Failure classification |
-| **ArbiterRegistry** | `0xfb50F4F778F166ADd684E0eFe7aD5133CE34aE68` | Dispute resolution |
+| **FallbackPool** | `0x363a0812333aE98945bE4c9Cd17E97aD383C5D07` | Agent registration |
+| **RecoveryRouter** | `0x1481586D976454ad17CfB2E9a4176a0826Ec9A70` | Failure classification |
+| **ArbiterRegistry** | `0x3AF10DDAd783Cf10d5CD938F641B8CB96e1F35eB` | Dispute resolution |
 
 ---
 
@@ -389,7 +389,7 @@ async def run_rebalance_task(task_id: str):
     # Initialize client and stores
     client = CairnClient(
         rpc_url="https://sepolia.base.org",
-        contract_address="0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640",
+        contract_address="0x9917E509742495EbEedfF6335406096B2e1aFB3a",
         private_key=os.environ["AGENT_PRIVATE_KEY"],
     )
     ipfs = CheckpointStore(pinata_jwt=os.environ["PINATA_JWT"])

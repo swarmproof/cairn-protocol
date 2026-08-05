@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Github, FileText, ExternalLink } from 'lucide-react';
 
 // CairnCore contract on Base Sepolia
-const CAIRN_CONTRACT = '0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640';
+const CAIRN_CONTRACT = '0x9917E509742495EbEedfF6335406096B2e1aFB3a';
 
 const footerLinks = {
   protocol: [
