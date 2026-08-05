@@ -13,6 +13,10 @@ local-docs/
 # Foundry build artifacts
 contracts/cache/
 contracts/out/
+contracts/lcov.info
+# Broadcast: keep run-latest.json for provenance, ignore dry-runs + timestamped runs
+contracts/broadcast/*/*/dry-run/
+contracts/broadcast/*/*/run-[0-9]*.json
 
 # Node
 node_modules/
