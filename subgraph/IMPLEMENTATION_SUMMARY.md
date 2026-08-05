@@ -90,7 +90,7 @@ All 9 CairnCore events are handled:
 
 ```yaml
 network: base-sepolia
-address: 0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640
+address: 0x9917E509742495EbEedfF6335406096B2e1aFB3a
 startBlock: 17741070  # Approximate deployment block
 ```
 
@@ -173,7 +173,7 @@ make setup
 
 ```graphql
 {
-  protocol(id: "0xb65596b21d670b6c670106c3e3c7e5fff8e3a640") {
+  protocol(id: "0x9917e509742495ebeedff6335406096b2e1afb3a") {
     totalTasksCreated
     totalTasksResolved
     overallSuccessRate

@@ -12,7 +12,7 @@ pip install cairn-sdk
 
 ```bash
 export CAIRN_RPC_URL="https://sepolia.base.org"
-export CAIRN_CONTRACT="0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640"
+export CAIRN_CONTRACT="0x9917E509742495EbEedfF6335406096B2e1aFB3a"
 export AGENT_PRIVATE_KEY="0x..."
 export PINATA_JWT="eyJ..."
 ```
