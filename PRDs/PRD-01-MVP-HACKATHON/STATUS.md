@@ -84,7 +84,7 @@
 | 19 | Demo control panel | `claude/frontend` | ✅ | 2026-03-22 | DemoMode toggle |
 | 20 | Checkpoint viewer | `claude/frontend` | ✅ | 2026-03-22 | CheckpointViewer |
 | 21 | Settlement display | `claude/frontend` | ✅ | 2026-03-22 | EscrowSettlement |
-| 22 | Deploy to Vercel | `claude/frontend` | ✅ | 2026-03-23 | [Live](https://cairn-protocol-iona-78423aa1.vercel.app) |
+| 22 | Deploy to Vercel | `claude/frontend` | ✅ | 2026-03-23 | [Live](https://cairn-protocol.vercel.app) |
 
 ### Phase 4: Integration & Polish ✅
 
@@ -118,7 +118,7 @@
 
 | Resource | URL |
 |----------|-----|
-| Frontend | [cairn-protocol-iona-78423aa1.vercel.app](https://cairn-protocol-iona-78423aa1.vercel.app) |
+| Frontend | [cairn-protocol.vercel.app](https://cairn-protocol.vercel.app) |
 | Subgraph | [The Graph Studio](https://thegraph.com/studio/subgraph/cairn) |
 | Basescan | [CairnCore](https://sepolia.basescan.org/address/0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640) |
 

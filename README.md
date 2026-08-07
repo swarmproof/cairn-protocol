@@ -12,7 +12,7 @@
 </p>
 
 <p>
-  <a href="https://cairn-protocol-iona-78423aa1.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-Frontend-00CED1?style=flat-square" alt="Live Demo"/></a>
+  <a href="https://cairn-protocol.vercel.app"><img src="https://img.shields.io/badge/Live_Demo-Frontend-00CED1?style=flat-square" alt="Live Demo"/></a>
   <a href="./WHITEPAPER_V2.md"><img src="https://img.shields.io/badge/Whitepaper-v2.0-008B8B?style=flat-square" alt="Whitepaper"/></a>
   <a href="./ERC-CAIRN.md"><img src="https://img.shields.io/badge/ERC_Spec-Draft-20B2AA?style=flat-square" alt="ERC Spec"/></a>
   <a href="./docs/architecture.md"><img src="https://img.shields.io/badge/Architecture-Docs-008B8B?style=flat-square" alt="Architecture"/></a>
@@ -389,10 +389,10 @@ CAIRN exposes machine-readable endpoints for AI agents to fetch integration inst
 
 ```bash
 # Quick integration guide (5-minute setup)
-curl -s https://cairn-protocol-iona-78423aa1.vercel.app/skill.md
+curl -s https://cairn-protocol.vercel.app/skill.md
 
 # Full protocol documentation
-curl -s https://cairn-protocol-iona-78423aa1.vercel.app/cairn.md
+curl -s https://cairn-protocol.vercel.app/cairn.md
 ```
 
 These endpoints return markdown that AI agents can parse to integrate CAIRN into their workflows automatically.
@@ -473,7 +473,7 @@ All five contracts are source-verified on BaseScan. The deployed contracts are t
 
 | Resource | URL |
 |----------|-----|
-| **Frontend** | [cairn-protocol-iona-78423aa1.vercel.app](https://cairn-protocol-iona-78423aa1.vercel.app) |
+| **Frontend** | [cairn-protocol.vercel.app](https://cairn-protocol.vercel.app) |
 | **Subgraph** | [The Graph Studio](https://thegraph.com/studio/subgraph/cairn) |
 | **Query Endpoint** | `https://api.studio.thegraph.com/query/1744842/cairn/v1.0.0` |
 
