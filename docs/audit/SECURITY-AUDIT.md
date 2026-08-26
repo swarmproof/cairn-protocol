@@ -28,9 +28,9 @@ across **both** the non-upgradeable and upgradeable contract lines.
 | M-7 | Medium | `activeTaskCount--` underflow could brick finalization | ✅ | #47 |
 | M-8 | Medium | `setCairnCore` deploy-race stake drain | ✅ | #46 (via H-2) |
 | M-10 | Medium | Missing zero-address validation (setContracts / initialize) | ✅ | #47 |
+| M-9 | Medium | V2 router vs binary-path threshold mismatch | ✅ | (this PR) |
 | M-2 | Medium | Appeals cosmetic — escrow settled before appeal window | ☐ | — |
 | M-6 | Medium | Slashing recipient/amounts diverge from documented policy | ☐ | — |
-| M-9 | Medium | V2 router vs binary-path threshold mismatch | ☐ | — |
 | M-11 | Medium | Olas mech selected but not registered → activation reverts | ☐ | — |
 
 Plus Low/Informational items (reputation gate default, recovery recorded as SUCCESS,
@@ -86,6 +86,9 @@ bias). Tracked for a hardening pass.
 - **M-7** — guarded the `activeTaskCount` decrement against underflow.
 - **M-10** — zero-address validation on `setContracts` (router/registry) and `initialize`
   (governance).
+- **M-9** — Core's binary routing path now reads `recoveryRouter.recoveryThreshold()`
+  instead of its local constant, so a wired V2 router's boundary is respected even when
+  three-tier routing has not been enabled (no `[0.30, 0.35)` misroute).
 
 ## Medium — tracked (follow-up)
 
@@ -100,8 +103,10 @@ bias). Tracked for a hardening pass.
   misroutes scores in `[0.30, 0.35)`. Make Core read the router threshold or make the
   migration atomic.
 - **M-11** — `selectFallback` can return an Olas mech not present in `_agents`, so
-  `activateFallback` reverts. Give Olas selections a distinct activation path or a
-  stake-backed record.
+  `activateFallback` reverts. A conservative "only select registered mechs" guard was
+  tried but effectively disables Olas selection entirely (mechs are external and never
+  registered as `_agents`). The correct fix is a distinct Olas activation/slash path that
+  does not assume pool registration — a design change tracked here rather than a one-line guard.
 
 ## Verified clean (do not "fix" incorrectly)
 
