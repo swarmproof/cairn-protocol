@@ -53,6 +53,9 @@ contract CairnCoreUpgradeable is
     /// @notice Dispute timeout (7 days)
     uint256 public constant override disputeTimeout = 7 days;
 
+    /// @notice Upper bound on a single checkpoint batch's self-reported size (H-5)
+    uint256 public constant MAX_CHECKPOINTS_PER_BATCH = 1000;
+
     // ═══════════════════════════════════════════════════════════════
     // STATE
     // ═══════════════════════════════════════════════════════════════
@@ -299,6 +302,14 @@ contract CairnCoreUpgradeable is
         // PRD-04 Phase 3: enforce the committed schema against the task's specHash
         if (schemaHash != task.specHash) {
             revert InvalidCheckpointSchema(schemaHash, task.specHash);
+        }
+
+        // H-5: bound the self-reported batch size. The escrow split is weighted by
+        // checkpoint counts, so an unbounded count lets an agent capture the whole
+        // payout. This caps per-batch inflation; binding count to the Merkle tree's
+        // leaf count is tracked as a follow-up hardening item.
+        if (count == 0 || count > MAX_CHECKPOINTS_PER_BATCH) {
+            revert InvalidCheckpointCount(count, MAX_CHECKPOINTS_PER_BATCH);
         }
 
         uint256 batchStart = task.checkpointCount;

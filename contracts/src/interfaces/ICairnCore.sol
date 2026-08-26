@@ -178,6 +178,7 @@ interface ICairnCore {
     error InvalidReducedScopeCap(uint256 bps);
     error InvalidCheckpointSchema(bytes32 provided, bytes32 expected);
     error ArbiterIsOperator();
+    error InvalidCheckpointCount(uint256 provided, uint256 max);
 
     // ═══════════════════════════════════════════════════════════════
     // TASK LIFECYCLE

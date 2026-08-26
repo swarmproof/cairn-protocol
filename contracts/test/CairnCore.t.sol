@@ -627,6 +627,28 @@ contract CairnCoreTest is Test {
         }
     }
 
+    /// @notice H-5: a checkpoint batch's self-reported count is bounded, defeating
+    ///         the count=1e9 escrow-split-capture exploit.
+    function test_H5_CheckpointCountIsBounded() public {
+        bytes32 taskId = _submitAndStartTask();
+        uint256 max = core.MAX_CHECKPOINTS_PER_BATCH();
+
+        // count == 0 rejected.
+        vm.prank(primaryAgent);
+        vm.expectRevert(abi.encodeWithSelector(ICairnCore.InvalidCheckpointCount.selector, 0, max));
+        core.commitCheckpointBatch(taskId, 0, keccak256("r"), cid1, specHash);
+
+        // count > MAX rejected (the inflation-to-steal vector).
+        vm.prank(primaryAgent);
+        vm.expectRevert(abi.encodeWithSelector(ICairnCore.InvalidCheckpointCount.selector, max + 1, max));
+        core.commitCheckpointBatch(taskId, max + 1, keccak256("r"), cid1, specHash);
+
+        // count within the bound is accepted.
+        vm.prank(primaryAgent);
+        core.commitCheckpointBatch(taskId, 5, keccak256("r"), cid1, specHash);
+        assertEq(core.getTask(taskId).primaryCheckpoints, 5);
+    }
+
     /// @notice CR-3: the operator cannot resolve (arbitrate) their own dispute.
     function test_CR3_OperatorCannotArbitrateOwnDispute() public {
         // No-fallback system → failure deterministically enters DISPUTED.
