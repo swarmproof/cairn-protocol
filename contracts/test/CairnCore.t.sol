@@ -14,6 +14,25 @@ import {IFallbackPool} from "../src/interfaces/IFallbackPool.sol";
 /// @title CairnCore Tests
 /// @notice Comprehensive tests for the main protocol with 6-state machine
 /// @dev Based on PRD-01 through PRD-07
+/// @dev Operator that rejects ETH on receipt — used to prove M-1 (a reverting
+///      recipient must not block settlement).
+contract RejectEther {
+    function submit(
+        CairnCore core,
+        bytes32 taskType,
+        bytes32 specHash,
+        address primary,
+        uint256 heartbeat,
+        uint256 deadline
+    ) external payable returns (bytes32) {
+        return core.submitTask{value: msg.value}(taskType, specHash, primary, heartbeat, deadline);
+    }
+
+    receive() external payable {
+        revert("no ether");
+    }
+}
+
 contract CairnCoreTest is Test {
     CairnCore public core;
     RecoveryRouter public router;
@@ -641,6 +660,35 @@ contract CairnCoreTest is Test {
         // Zero pool is allowed (disables auto-fallback).
         vm.prank(address(governance));
         core.setContracts(address(router), address(0), address(registry));
+    }
+
+    /// @notice M-1: a recipient that reverts on receive must not block settlement;
+    ///         its payout is deferred to a claimable balance instead.
+    function test_M1_RevertingRecipientDoesNotBlockSettlement() public {
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+        CairnCore c = new CairnCore(
+            feeRecipient, address(newRouter), address(0), address(newRegistry), address(governance)
+        );
+        newRouter.setCairnCore(address(c));
+        newRegistry.setCairnCore(address(c));
+
+        RejectEther rejecter = new RejectEther();
+        vm.deal(address(rejecter), 1 ether);
+        bytes32 taskId =
+            rejecter.submit{value: 0.1 ether}(c, taskType, specHash, primaryAgent, 60, block.timestamp + 1 hours);
+        vm.prank(primaryAgent);
+        c.startTask(taskId);
+        vm.warp(block.timestamp + 121);
+        c.detectFailure(taskId); // no fallback → DISPUTED
+        vm.warp(block.timestamp + 7 days + 1);
+
+        // Operator (rejecter) can't receive ETH — settlement must still succeed.
+        c.resolveDisputeTimeout(taskId);
+        assertEq(uint8(c.getTask(taskId).state), uint8(ICairnTypes.TaskState.RESOLVED));
+        // The refund is held as a claimable balance rather than reverting the tx.
+        assertEq(c.pendingWithdrawals(address(rejecter)), 0.1 ether);
+        assertEq(c.totalEscrowLocked(), 0);
     }
 
     /// @notice M-3: a SPLIT ruling with agentShare > 100 is rejected (previously
