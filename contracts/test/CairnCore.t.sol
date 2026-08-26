@@ -627,6 +627,28 @@ contract CairnCoreTest is Test {
         }
     }
 
+    /// @notice M-5: pausing the protocol blocks fund-moving / state-critical
+    ///         functions, not just submitTask.
+    function test_M5_PauseBlocksCriticalFunctions() public {
+        bytes32 taskId = _submitAndStartTask();
+
+        vm.prank(address(governance));
+        core.pause();
+
+        bytes4 paused = bytes4(keccak256(bytes("EnforcedPause()")));
+
+        vm.prank(primaryAgent);
+        vm.expectRevert(paused);
+        core.commitCheckpointBatch(taskId, 1, keccak256("r"), cid1, specHash);
+
+        vm.prank(primaryAgent);
+        vm.expectRevert(paused);
+        core.completeTask(taskId);
+
+        vm.expectRevert(paused);
+        core.detectFailure(taskId);
+    }
+
     /// @notice H-5: a checkpoint batch's self-reported count is bounded, defeating
     ///         the count=1e9 escrow-split-capture exploit.
     function test_H5_CheckpointCountIsBounded() public {

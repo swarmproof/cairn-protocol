@@ -276,7 +276,7 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         bytes32 merkleRoot,
         bytes32 latestCID,
         bytes32 schemaHash
-    ) external override taskExists(taskId) onlyCurrentAgent(taskId) {
+    ) external override taskExists(taskId) onlyCurrentAgent(taskId) whenNotPaused {
         Task storage task = _tasks[taskId];
 
         // Can checkpoint in RUNNING or RECOVERING
@@ -337,6 +337,7 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         taskExists(taskId)
         onlyCurrentAgent(taskId)
         nonReentrant
+        whenNotPaused
     {
         Task storage task = _tasks[taskId];
 
@@ -391,6 +392,7 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         override
         taskExists(taskId)
         nonReentrant
+        whenNotPaused
     {
         Task storage task = _tasks[taskId];
 
@@ -559,6 +561,7 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         taskExists(taskId)
         inState(taskId, ICairnTypes.TaskState.DISPUTED)
         nonReentrant
+        whenNotPaused
     {
         Task storage task = _tasks[taskId];
 
@@ -591,6 +594,7 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         taskExists(taskId)
         inState(taskId, ICairnTypes.TaskState.DISPUTED)
         nonReentrant
+        whenNotPaused
     {
         Task storage task = _tasks[taskId];
 
