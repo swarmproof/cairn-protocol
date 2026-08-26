@@ -775,6 +775,39 @@ contract CairnCoreTest is Test {
         assertGt(operator.balance, opBefore);
     }
 
+    /// @notice H-3: when a fallback recovery fails, the pool is notified with
+    ///         success=false so the fallback's activeTaskCount is released (stake
+    ///         no longer frozen) and the slashing path actually runs.
+    function test_H3_FailedRecoveryReleasesAndSlashesFallback() public {
+        vm.prank(operator);
+        bytes32 taskId = core.submitTask{value: 0.1 ether}(taskType, specHash, primaryAgent, 60, block.timestamp + 1 hours);
+        vm.prank(primaryAgent);
+        core.startTask(taskId);
+
+        // Primary stalls → first failure → RECOVERING; fallback is activated.
+        vm.warp(block.timestamp + 121);
+        core.detectFailure(taskId);
+        assertEq(uint8(core.getTask(taskId).state), uint8(ICairnTypes.TaskState.RECOVERING));
+        assertEq(pool.getAgent(fallbackAgent).activeTaskCount, 1, "fallback should be active");
+        uint256 stakeBefore = pool.getAgent(fallbackAgent).stake;
+
+        // Fallback also stalls → second failure → DISPUTED; fallback released.
+        vm.warp(block.timestamp + 121);
+        core.detectFailure(taskId);
+        assertEq(uint8(core.getTask(taskId).state), uint8(ICairnTypes.TaskState.DISPUTED));
+
+        // H-3: activeTaskCount decremented back to 0 → stake no longer frozen.
+        assertEq(pool.getAgent(fallbackAgent).activeTaskCount, 0, "activeTaskCount not released");
+        // Dead slashing path revived: zero-checkpoint recovery failure was slashed.
+        assertLt(pool.getAgent(fallbackAgent).stake, stakeBefore, "failed recovery not slashed");
+
+        // The fallback can now withdraw remaining stake (previously bricked).
+        uint256 balBefore = fallbackAgent.balance;
+        vm.prank(fallbackAgent);
+        pool.withdrawStake(0.1 ether);
+        assertGt(fallbackAgent.balance, balBefore);
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // MERKLE VERIFICATION TESTS (PRD-07)
     // ═══════════════════════════════════════════════════════════════

@@ -71,6 +71,12 @@ interface ICairnCore {
         // Dispute onset timestamp (H-1: timeout window anchors here, not createdAt;
         // appended for storage safety)
         uint256 disputedAt;
+
+        // Whether a fallback recovery is currently active for this task (H-3:
+        // ensures the fallback pool is notified exactly once on the terminal
+        // transition, so activeTaskCount is released and slashing runs on failed
+        // recoveries). Appended for storage safety.
+        bool fallbackActivated;
     }
 
     // ═══════════════════════════════════════════════════════════════

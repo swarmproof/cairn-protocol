@@ -343,15 +343,9 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         task.state = ICairnTypes.TaskState.RESOLVED;
         task.resolutionType = ICairnTypes.ResolutionType.SUCCESS;
 
-        // Notify fallback pool if this was a recovery
-        if (task.currentAgent == task.fallbackAgent && address(fallbackPool) != address(0)) {
-            fallbackPool.completeFallbackTask(
-                taskId,
-                task.fallbackAgent,
-                true,
-                task.fallbackCheckpoints
-            );
-        }
+        // H-3: notify the fallback pool of a successful recovery (releases the
+        // fallback's activeTaskCount). No-op if the primary completed directly.
+        _releaseFallback(task, taskId, true);
 
         emit TaskCompleted(taskId, msg.sender, task.checkpointCount);
 
@@ -438,6 +432,14 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
             return;
         }
 
+        // H-3: allow only one fallback recovery attempt. If a fallback was already
+        // activated and the task failed again, release it and move to dispute
+        // rather than re-activating (which would double-count and never resolve).
+        if (task.fallbackActivated) {
+            _enterDispute(task, taskId);
+            return;
+        }
+
         // v2: three-tier routing via the router's tier classifier (PRD-04)
         if (threeTierRoutingEnabled) {
             _routeThreeTier(task, taskId);
@@ -453,6 +455,7 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
 
                 // Notify fallback pool
                 if (address(fallbackPool) != address(0)) {
+                    task.fallbackActivated = true;
                     fallbackPool.activateFallback(taskId, task.fallbackAgent);
                 }
 
@@ -492,6 +495,7 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         task.currentAgent = task.fallbackAgent;
 
         if (address(fallbackPool) != address(0)) {
+            task.fallbackActivated = true;
             fallbackPool.activateFallback(taskId, task.fallbackAgent);
         }
 
@@ -505,11 +509,32 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         // H-1: anchor the timeout window to dispute onset, not task creation.
         task.disputedAt = block.timestamp;
 
+        // H-3: release an active fallback as a failed recovery so its stake is
+        // freed (activeTaskCount decremented) and slashing runs. No-op if no
+        // fallback was activated (task disputed without a recovery attempt).
+        _releaseFallback(task, taskId, false);
+
         emit TaskDisputed(
             taskId,
             task.recoveryScore,
             task.disputedAt + disputeTimeout
         );
+    }
+
+    /// @notice Notify the fallback pool exactly once when an active fallback
+    ///         recovery terminates (H-3), decrementing its activeTaskCount and
+    ///         triggering slashing on failure.
+    function _releaseFallback(Task storage task, bytes32 taskId, bool success) internal {
+        if (!task.fallbackActivated) return;
+        task.fallbackActivated = false;
+        if (address(fallbackPool) != address(0)) {
+            fallbackPool.completeFallbackTask(
+                taskId,
+                task.fallbackAgent,
+                success,
+                task.fallbackCheckpoints
+            );
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════
