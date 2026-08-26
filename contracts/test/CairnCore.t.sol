@@ -627,6 +627,77 @@ contract CairnCoreTest is Test {
         }
     }
 
+    /// @notice CR-3: the operator cannot resolve (arbitrate) their own dispute.
+    function test_CR3_OperatorCannotArbitrateOwnDispute() public {
+        // No-fallback system → failure deterministically enters DISPUTED.
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+        CairnCore coreNoFallback = new CairnCore(
+            feeRecipient, address(newRouter), address(0), address(newRegistry), address(governance)
+        );
+        newRouter.setCairnCore(address(coreNoFallback));
+        newRegistry.setCairnCore(address(coreNoFallback));
+
+        vm.deal(operator, 10 ether);
+        vm.prank(operator);
+        bytes32 taskId =
+            coreNoFallback.submitTask{value: 0.1 ether}(taskType, specHash, primaryAgent, 60, block.timestamp + 1 hours);
+        vm.prank(primaryAgent);
+        coreNoFallback.startTask(taskId);
+        vm.warp(block.timestamp + 121);
+        coreNoFallback.detectFailure(taskId);
+        assertEq(uint8(coreNoFallback.getTask(taskId).state), uint8(ICairnTypes.TaskState.DISPUTED));
+
+        ICairnTypes.Ruling memory ruling = ICairnTypes.Ruling({
+            outcome: ICairnTypes.RulingOutcome.REFUND_OPERATOR,
+            agentShare: 0,
+            rationaleCID: keccak256("self-deal")
+        });
+
+        // Operator attempts to arbitrate their own dispute → reverts.
+        vm.prank(operator);
+        vm.expectRevert(ICairnCore.ArbiterIsOperator.selector);
+        coreNoFallback.resolveDispute(taskId, ruling);
+    }
+
+    /// @notice H-1: the dispute timeout is measured from dispute onset, not task
+    ///         creation. A task disputed long after creation must still grant the
+    ///         full window rather than being instantly timeout-refundable.
+    function test_H1_DisputeTimeoutMeasuredFromOnset() public {
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+        CairnCore coreNoFallback = new CairnCore(
+            feeRecipient, address(newRouter), address(0), address(newRegistry), address(governance)
+        );
+        newRouter.setCairnCore(address(coreNoFallback));
+        newRegistry.setCairnCore(address(coreNoFallback));
+
+        vm.deal(operator, 10 ether);
+        // Long deadline so the task can fail well after createdAt + disputeTimeout.
+        vm.prank(operator);
+        bytes32 taskId =
+            coreNoFallback.submitTask{value: 0.1 ether}(taskType, specHash, primaryAgent, 60, block.timestamp + 30 days);
+        vm.prank(primaryAgent);
+        coreNoFallback.startTask(taskId);
+
+        // Advance 8 days (> 7-day disputeTimeout measured from createdAt), then fail.
+        vm.warp(block.timestamp + 8 days);
+        coreNoFallback.detectFailure(taskId);
+        assertEq(uint8(coreNoFallback.getTask(taskId).state), uint8(ICairnTypes.TaskState.DISPUTED));
+
+        // Under the old (createdAt-anchored) logic this would already be timed out.
+        // Under H-1 it must revert because the dispute only just started.
+        vm.expectRevert(ICairnCore.DisputeTimeoutNotReached.selector);
+        coreNoFallback.resolveDisputeTimeout(taskId);
+
+        // After the full window from dispute onset, timeout refund succeeds.
+        vm.warp(block.timestamp + 7 days + 1);
+        uint256 operatorBefore = operator.balance;
+        coreNoFallback.resolveDisputeTimeout(taskId);
+        assertEq(uint8(coreNoFallback.getTask(taskId).state), uint8(ICairnTypes.TaskState.RESOLVED));
+        assertGt(operator.balance, operatorBefore);
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // MERKLE VERIFICATION TESTS (PRD-07)
     // ═══════════════════════════════════════════════════════════════

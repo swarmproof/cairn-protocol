@@ -493,11 +493,13 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
     /// @notice Enter DISPUTED state
     function _enterDispute(Task storage task, bytes32 taskId) internal {
         task.state = ICairnTypes.TaskState.DISPUTED;
+        // H-1: anchor the timeout window to dispute onset, not task creation.
+        task.disputedAt = block.timestamp;
 
         emit TaskDisputed(
             taskId,
             task.recoveryScore,
-            block.timestamp + disputeTimeout
+            task.disputedAt + disputeTimeout
         );
     }
 
@@ -514,6 +516,10 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         nonReentrant
     {
         Task storage task = _tasks[taskId];
+
+        // CR-3: the operator must not arbitrate their own dispute (conflict of
+        // interest — the registry already excludes the primary/fallback agents).
+        if (msg.sender == task.operator) revert ArbiterIsOperator();
 
         // Execute ruling via arbiter registry
         uint256 arbiterFee = arbiterRegistry.executeRuling(
@@ -543,8 +549,8 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
     {
         Task storage task = _tasks[taskId];
 
-        // Check timeout has passed
-        if (block.timestamp < task.createdAt + disputeTimeout) {
+        // Check timeout has passed (H-1: measured from dispute onset)
+        if (block.timestamp < task.disputedAt + disputeTimeout) {
             revert DisputeTimeoutNotReached();
         }
 

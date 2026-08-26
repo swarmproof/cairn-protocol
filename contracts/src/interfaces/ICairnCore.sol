@@ -67,6 +67,10 @@ interface ICairnCore {
 
         // Recovery routing tier (PRD-04 three-tier routing; appended for storage safety)
         ICairnTypes.RecoveryScope recoveryScope;
+
+        // Dispute onset timestamp (H-1: timeout window anchors here, not createdAt;
+        // appended for storage safety)
+        uint256 disputedAt;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -167,6 +171,7 @@ interface ICairnCore {
     error ZeroAddress();
     error InvalidReducedScopeCap(uint256 bps);
     error InvalidCheckpointSchema(bytes32 provided, bytes32 expected);
+    error ArbiterIsOperator();
 
     // ═══════════════════════════════════════════════════════════════
     // TASK LIFECYCLE
