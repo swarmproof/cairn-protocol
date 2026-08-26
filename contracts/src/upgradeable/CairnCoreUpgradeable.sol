@@ -90,8 +90,13 @@ contract CairnCoreUpgradeable is
     /// @notice Operator nonces for task ID generation
     mapping(address => uint256) private _operatorNonces;
 
-    /// @dev Storage gap to allow for future variable additions
-    uint256[50] private __gap;
+    /// @notice Amounts owed to recipients whose push payout failed (M-1: pull
+    ///         fallback so one reverting recipient can't block a settlement).
+    mapping(address => uint256) public pendingWithdrawals;
+
+    /// @dev Storage gap to allow for future variable additions.
+    ///      Reduced by 1 when pendingWithdrawals was appended (storage-safe).
+    uint256[49] private __gap;
 
     // ═══════════════════════════════════════════════════════════════
     // INITIALIZATION
@@ -640,6 +645,35 @@ contract CairnCoreUpgradeable is
     // SETTLEMENT
     // ═══════════════════════════════════════════════════════════════
 
+    /// @notice Emitted when a push payout failed and was credited for later pull
+    event PayoutDeferred(address indexed to, uint256 amount);
+    /// @notice Emitted when a deferred payout is withdrawn
+    event Withdrawn(address indexed to, uint256 amount);
+    /// @notice No deferred balance to withdraw
+    error NothingToWithdraw();
+
+    /// @notice Pay `to` `amount`, falling back to a claimable balance if the push
+    ///         transfer fails (M-1: prevents a reverting recipient from blocking
+    ///         the whole settlement / locking escrow).
+    function _payout(address to, uint256 amount) internal {
+        if (amount == 0) return;
+        (bool ok, ) = to.call{value: amount}("");
+        if (!ok) {
+            pendingWithdrawals[to] += amount;
+            emit PayoutDeferred(to, amount);
+        }
+    }
+
+    /// @notice Withdraw a payout that was deferred because its push transfer failed.
+    function withdraw() external nonReentrant {
+        uint256 amount = pendingWithdrawals[msg.sender];
+        if (amount == 0) revert NothingToWithdraw();
+        pendingWithdrawals[msg.sender] = 0;
+        (bool ok, ) = msg.sender.call{value: amount}("");
+        require(ok, "Withdraw failed");
+        emit Withdrawn(msg.sender, amount);
+    }
+
     /// @notice Calculate and distribute escrow for successful task
     function _settleEscrow(bytes32 taskId) internal {
         Task storage task = _tasks[taskId];
@@ -672,19 +706,10 @@ contract CairnCoreUpgradeable is
         task.settledPrimary = primaryPayout;
         task.settledFallback = fallbackPayout;
 
-        // Transfer funds
-        if (primaryPayout > 0) {
-            (bool s1, ) = task.primaryAgent.call{value: primaryPayout}("");
-            require(s1, "Primary transfer failed");
-        }
-        if (fallbackPayout > 0) {
-            (bool s2, ) = task.fallbackAgent.call{value: fallbackPayout}("");
-            require(s2, "Fallback transfer failed");
-        }
-        if (protocolFee > 0) {
-            (bool s3, ) = feeRecipient.call{value: protocolFee}("");
-            require(s3, "Fee transfer failed");
-        }
+        // Transfer funds (M-1: push with pull fallback)
+        _payout(task.primaryAgent, primaryPayout);
+        _payout(task.fallbackAgent, fallbackPayout);
+        _payout(feeRecipient, protocolFee);
 
         // Update state
         totalEscrowLocked -= escrow;
@@ -748,29 +773,14 @@ contract CairnCoreUpgradeable is
         task.settledPrimary = primaryPayout;
         task.settledFallback = fallbackPayout;
 
-        // Transfer funds
-        if (primaryPayout > 0) {
-            (bool s1, ) = task.primaryAgent.call{value: primaryPayout}("");
-            require(s1, "Primary transfer failed");
-        }
-        if (fallbackPayout > 0) {
-            (bool s2, ) = task.fallbackAgent.call{value: fallbackPayout}("");
-            require(s2, "Fallback transfer failed");
-        }
-        if (operatorRefund > 0) {
-            (bool s3, ) = task.operator.call{value: operatorRefund}("");
-            require(s3, "Operator refund failed");
-        }
-        if (protocolFee > 0) {
-            (bool s4, ) = feeRecipient.call{value: protocolFee}("");
-            require(s4, "Fee transfer failed");
-        }
+        // Transfer funds (M-1: push with pull fallback)
+        _payout(task.primaryAgent, primaryPayout);
+        _payout(task.fallbackAgent, fallbackPayout);
+        _payout(task.operator, operatorRefund);
+        _payout(feeRecipient, protocolFee);
         // H-2: pay the arbiter their fee out of escrow (previously subtracted
         // from distributable but never transferred → ETH stranded in Core).
-        if (arbiterFee > 0) {
-            (bool s5, ) = arbiter.call{value: arbiterFee}("");
-            require(s5, "Arbiter fee transfer failed");
-        }
+        _payout(arbiter, arbiterFee);
 
         totalEscrowLocked -= escrow;
         totalTasksResolved++;
@@ -790,8 +800,7 @@ contract CairnCoreUpgradeable is
 
         uint256 escrow = task.escrowAmount;
 
-        (bool success, ) = task.operator.call{value: escrow}("");
-        require(success, "Refund failed");
+        _payout(task.operator, escrow); // M-1: push with pull fallback
 
         totalEscrowLocked -= escrow;
         totalTasksResolved++;
