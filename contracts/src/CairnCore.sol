@@ -463,8 +463,11 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
             return;
         }
 
-        // v1: binary routing (unchanged)
-        if (task.recoveryScore >= recoveryThreshold) {
+        // v1: binary routing. M-9: compare against the wired router's threshold
+        // (not Core's local constant) so a V2 router's boundary is respected even
+        // when three-tier routing has not been enabled — avoids misrouting the
+        // [0.30, 0.35) band on a half-applied migration.
+        if (task.recoveryScore >= recoveryRouter.recoveryThreshold()) {
             // High recovery score → automatic fallback
             if (task.fallbackAgent != address(0)) {
                 task.state = ICairnTypes.TaskState.RECOVERING;
