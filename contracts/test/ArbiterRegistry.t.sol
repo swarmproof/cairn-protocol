@@ -294,9 +294,11 @@ contract ArbiterRegistryTest is Test {
             taskType
         );
 
-        // Arbiter fee = 3% of escrow
+        // Arbiter fee = 3% of escrow, returned for CairnCore to pay from escrow.
         assertEq(arbiterFee, 0.03 ether);
-        assertEq(arbiter1.balance - arbiterBalanceBefore, 0.03 ether);
+        // H-2: executeRuling no longer pays the arbiter from the registry's own
+        // (stake) balance — the fee is disbursed by CairnCore._settleDispute.
+        assertEq(arbiter1.balance, arbiterBalanceBefore);
 
         // Check ruling was stored
         IArbiterRegistry.StoredRuling memory storedRuling = registry.getRuling(taskId);

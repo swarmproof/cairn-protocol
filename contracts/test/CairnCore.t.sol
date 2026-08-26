@@ -698,6 +698,55 @@ contract CairnCoreTest is Test {
         assertGt(operator.balance, operatorBefore);
     }
 
+    /// @notice H-2: the arbiter fee is paid from the disputed escrow (by Core),
+    ///         not from the registry's arbiter-stake balance. The stake pool must
+    ///         be untouched by a ruling, and no escrow may be stranded in Core.
+    function test_H2_ArbiterFeePaidFromEscrowNotStakePool() public {
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+        CairnCore coreNoFallback = new CairnCore(
+            feeRecipient, address(newRouter), address(0), address(newRegistry), address(governance)
+        );
+        newRouter.setCairnCore(address(coreNoFallback));
+        newRegistry.setCairnCore(address(coreNoFallback));
+
+        // Arbiter stakes into the registry.
+        bytes32[] memory domains = new bytes32[](1);
+        domains[0] = taskType;
+        vm.prank(arbiter);
+        newRegistry.registerArbiter{value: 0.5 ether}(domains);
+        uint256 registryBalBefore = address(newRegistry).balance; // = staked funds
+
+        vm.deal(operator, 10 ether);
+        vm.prank(operator);
+        bytes32 taskId =
+            coreNoFallback.submitTask{value: 1 ether}(taskType, specHash, primaryAgent, 60, block.timestamp + 1 hours);
+        vm.prank(primaryAgent);
+        coreNoFallback.startTask(taskId);
+        vm.prank(primaryAgent);
+        coreNoFallback.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1, specHash);
+        vm.warp(block.timestamp + 121);
+        coreNoFallback.detectFailure(taskId);
+        assertEq(uint8(coreNoFallback.getTask(taskId).state), uint8(ICairnTypes.TaskState.DISPUTED));
+
+        ICairnTypes.Ruling memory ruling = ICairnTypes.Ruling({
+            outcome: ICairnTypes.RulingOutcome.PAY_AGENT,
+            agentShare: 0,
+            rationaleCID: keccak256("rationale")
+        });
+
+        uint256 arbiterBefore = arbiter.balance;
+        vm.prank(arbiter);
+        coreNoFallback.resolveDispute(taskId, ruling);
+
+        // Arbiter received the 3% fee (of 1 ether = 0.03 ether) from escrow.
+        assertEq(arbiter.balance - arbiterBefore, 0.03 ether, "arbiter fee not paid from escrow");
+        // Registry stake pool is untouched by the ruling (no insolvency drain).
+        assertEq(address(newRegistry).balance, registryBalBefore, "registry stake pool was drained");
+        // No escrow stranded: Core distributed everything for this task.
+        assertEq(coreNoFallback.totalEscrowLocked(), 0, "escrow stranded in Core");
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // MERKLE VERIFICATION TESTS (PRD-07)
     // ═══════════════════════════════════════════════════════════════

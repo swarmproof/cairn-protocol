@@ -535,8 +535,8 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         task.state = ICairnTypes.TaskState.RESOLVED;
         task.resolutionType = ICairnTypes.ResolutionType.ARBITER_RULING;
 
-        // Settle based on ruling
-        _settleDispute(taskId, ruling, arbiterFee);
+        // Settle based on ruling (H-2: arbiter paid from escrow here)
+        _settleDispute(taskId, ruling, arbiterFee, msg.sender);
     }
 
     /// @inheritdoc ICairnCore
@@ -702,7 +702,8 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
     function _settleDispute(
         bytes32 taskId,
         ICairnTypes.Ruling calldata ruling,
-        uint256 arbiterFee
+        uint256 arbiterFee,
+        address arbiter
     ) internal {
         Task storage task = _tasks[taskId];
 
@@ -751,6 +752,12 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         if (protocolFee > 0) {
             (bool s4, ) = feeRecipient.call{value: protocolFee}("");
             require(s4, "Fee transfer failed");
+        }
+        // H-2: pay the arbiter their fee out of escrow (previously subtracted
+        // from distributable but never transferred → ETH stranded in Core).
+        if (arbiterFee > 0) {
+            (bool s5, ) = arbiter.call{value: arbiterFee}("");
+            require(s5, "Arbiter fee transfer failed");
         }
 
         totalEscrowLocked -= escrow;

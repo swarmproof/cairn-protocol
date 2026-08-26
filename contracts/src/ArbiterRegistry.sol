@@ -212,14 +212,13 @@ contract ArbiterRegistry is IArbiterRegistry, ReentrancyGuard {
         });
 
         // Update arbiter stats
+        // H-2: the fee is paid by CairnCore out of the disputed escrow (see
+        // CairnCore._settleDispute); the registry no longer pays it from its own
+        // balance, which previously drained the arbiter stake pool into insolvency.
         Arbiter storage arbiterData = _arbiters[arbiter];
         arbiterData.rulingCount++;
         arbiterData.earnings += arbiterFee;
         arbiterData.lastActive = block.timestamp;
-
-        // Pay arbiter fee
-        (bool success, ) = arbiter.call{value: arbiterFee}("");
-        require(success, "Arbiter fee transfer failed");
 
         emit DisputeRuled(
             taskId,

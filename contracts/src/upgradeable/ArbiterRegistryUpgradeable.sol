@@ -249,14 +249,13 @@ contract ArbiterRegistryUpgradeable is
         });
 
         // Update arbiter stats
+        // H-2: the fee is paid by CairnCore out of the disputed escrow (see
+        // CairnCoreUpgradeable._settleDispute); the registry no longer pays it
+        // from its own balance, which previously drained the arbiter stake pool.
         Arbiter storage arbiterData = _arbiters[arbiter];
         arbiterData.rulingCount++;
         arbiterData.earnings += arbiterFee;
         arbiterData.lastActive = block.timestamp;
-
-        // Pay arbiter fee
-        (bool success, ) = arbiter.call{value: arbiterFee}("");
-        require(success, "Arbiter fee transfer failed");
 
         emit DisputeRuled(
             taskId,
