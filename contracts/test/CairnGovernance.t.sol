@@ -302,14 +302,36 @@ contract CairnGovernanceTest is Test {
         vm.prank(admin);
         governance.transferAdmin(newAdmin);
 
+        // H-7: two-step — admin unchanged until the new admin accepts.
+        assertEq(governance.admin(), admin);
+        assertEq(governance.pendingAdmin(), newAdmin);
+
+        vm.prank(newAdmin);
+        governance.acceptAdmin();
         assertEq(governance.admin(), newAdmin);
+        assertEq(governance.pendingAdmin(), address(0));
     }
 
     function test_TransferAdminEmitsEvent() public {
         vm.prank(admin);
         vm.expectEmit(true, true, false, false);
-        emit IGovernance.AdminTransferred(admin, newAdmin);
+        emit CairnGovernance.AdminTransferStarted(admin, newAdmin);
         governance.transferAdmin(newAdmin);
+
+        vm.prank(newAdmin);
+        vm.expectEmit(true, true, false, false);
+        emit IGovernance.AdminTransferred(admin, newAdmin);
+        governance.acceptAdmin();
+    }
+
+    function test_RevertAcceptAdminNotPending() public {
+        vm.prank(admin);
+        governance.transferAdmin(newAdmin);
+
+        // Only the pending admin can accept.
+        vm.prank(randomUser);
+        vm.expectRevert(CairnGovernance.NotPendingAdmin.selector);
+        governance.acceptAdmin();
     }
 
     function test_RevertTransferAdminNotAdmin() public {
@@ -329,6 +351,8 @@ contract CairnGovernanceTest is Test {
 
         vm.prank(admin);
         governance.transferAdmin(newAdmin);
+        vm.prank(newAdmin);
+        governance.acceptAdmin();
 
         // New admin can propose
         vm.prank(newAdmin);

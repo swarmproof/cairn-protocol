@@ -36,6 +36,10 @@ contract CairnGovernance is IGovernance {
     /// @notice Current admin address
     address public override admin;
 
+    /// @notice Proposed next admin (H-7: two-step transfer prevents an
+    ///         irrecoverable transfer to a wrong/dead address).
+    address public pendingAdmin;
+
     /// @notice Timelock duration for parameter changes (48 hours)
     uint256 public constant override timelockDuration = 48 hours;
 
@@ -99,6 +103,12 @@ contract CairnGovernance is IGovernance {
         if (msg.sender != admin) revert NotAdmin();
         _;
     }
+
+    /// @notice Emitted when a two-step admin transfer is initiated (H-7)
+    event AdminTransferStarted(address indexed currentAdmin, address indexed pendingAdmin);
+
+    /// @notice Caller is not the pending admin
+    error NotPendingAdmin();
 
     // ═══════════════════════════════════════════════════════════════
     // PARAMETER MANAGEMENT
@@ -179,13 +189,24 @@ contract CairnGovernance is IGovernance {
     // ═══════════════════════════════════════════════════════════════
 
     /// @inheritdoc IGovernance
+    /// @notice Begin an admin transfer (H-7). The new admin must call
+    ///         acceptAdmin() to take effect, so a wrong/dead address cannot
+    ///         irrecoverably capture governance. Enables safely handing admin to
+    ///         a TimelockController / multisig (the recommended production admin).
     function transferAdmin(address newAdmin) external override onlyAdmin {
         if (newAdmin == address(0)) revert ZeroAddress();
+        pendingAdmin = newAdmin;
+        emit AdminTransferStarted(admin, newAdmin);
+    }
 
+    /// @notice Complete an admin transfer; callable only by the pending admin,
+    ///         proving the new address is live and controllable.
+    function acceptAdmin() external {
+        if (msg.sender != pendingAdmin) revert NotPendingAdmin();
         address oldAdmin = admin;
-        admin = newAdmin;
-
-        emit AdminTransferred(oldAdmin, newAdmin);
+        admin = pendingAdmin;
+        pendingAdmin = address(0);
+        emit AdminTransferred(oldAdmin, admin);
     }
 
     // ═══════════════════════════════════════════════════════════════
