@@ -294,9 +294,11 @@ contract ArbiterRegistryTest is Test {
             taskType
         );
 
-        // Arbiter fee = 3% of escrow
+        // Arbiter fee = 3% of escrow, returned for CairnCore to pay from escrow.
         assertEq(arbiterFee, 0.03 ether);
-        assertEq(arbiter1.balance - arbiterBalanceBefore, 0.03 ether);
+        // H-2: executeRuling no longer pays the arbiter from the registry's own
+        // (stake) balance — the fee is disbursed by CairnCore._settleDispute.
+        assertEq(arbiter1.balance, arbiterBalanceBefore);
 
         // Check ruling was stored
         IArbiterRegistry.StoredRuling memory storedRuling = registry.getRuling(taskId);
@@ -487,6 +489,46 @@ contract ArbiterRegistryTest is Test {
         assertTrue(storedRuling.overturned);
         assertEq(uint8(storedRuling.outcome), uint8(ICairnTypes.RulingOutcome.PAY_AGENT));
         assertEq(storedRuling.agentShare, 100);
+    }
+
+    /// @notice H-6: an arbiter cannot dodge an overturn slash by withdrawing or
+    ///         deregistering during the appeal window; the slash finds full stake.
+    function test_H6_ArbiterCannotDodgeSlashDuringAppealWindow() public {
+        _registerArbiter(arbiter1, 1 ether);
+
+        bytes32 taskId = keccak256("h6task");
+        ICairnTypes.Ruling memory ruling = ICairnTypes.Ruling({
+            outcome: ICairnTypes.RulingOutcome.SPLIT,
+            agentShare: 60,
+            rationaleCID: keccak256("rationale")
+        });
+        vm.prank(cairnCore);
+        registry.executeRuling(taskId, ruling, arbiter1, 1 ether, primaryAgent, fallbackAgent, taskType);
+
+        // During the appeal window the arbiter can neither exit nor withdraw.
+        vm.prank(arbiter1);
+        vm.expectRevert(IArbiterRegistry.AppealWindowActive.selector);
+        registry.deregisterArbiter();
+
+        vm.prank(arbiter1);
+        vm.expectRevert(IArbiterRegistry.AppealWindowActive.selector);
+        registry.withdrawStake(0.5 ether);
+
+        // Overturn therefore still finds the full stake to slash (50%).
+        ICairnTypes.Ruling memory newRuling = ICairnTypes.Ruling({
+            outcome: ICairnTypes.RulingOutcome.PAY_AGENT,
+            agentShare: 100,
+            rationaleCID: keccak256("new_rationale")
+        });
+        vm.prank(governance);
+        registry.overturnRuling(taskId, newRuling);
+        assertEq(registry.getArbiter(arbiter1).stake, 0.5 ether, "slash must hit full stake");
+
+        // Once the appeal window closes, exit is allowed again.
+        vm.warp(block.timestamp + registry.appealWindow() + 1);
+        vm.prank(arbiter1);
+        registry.deregisterArbiter();
+        assertFalse(registry.getArbiter(arbiter1).registered);
     }
 
     function test_OverturnRulingEmitsEvent() public {

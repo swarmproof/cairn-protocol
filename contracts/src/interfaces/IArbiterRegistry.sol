@@ -31,6 +31,10 @@ interface IArbiterRegistry {
         uint256 overturnedCount;
         uint256 earnings;
         uint256 lastActive;
+        // H-6: stake is locked until this timestamp (latest ruling's appeal
+        // window end) so an arbiter cannot dodge an overturn slash by exiting.
+        // Appended for storage-layout safety.
+        uint256 stakeLockedUntil;
     }
 
     /// @notice Stored ruling data

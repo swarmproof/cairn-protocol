@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import {IRecoveryRouter} from "./interfaces/IRecoveryRouter.sol";
 import {ICairnTypes} from "./interfaces/ICairnTypes.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title RecoveryRouter - Failure classification and recovery scoring
 /// @author CAIRN Protocol
@@ -20,7 +21,7 @@ import {ICairnTypes} from "./interfaces/ICairnTypes.sol";
 /// Routing Decision:
 ///   - score >= 0.3 → RECOVERING (fallback assigned)
 ///   - score < 0.3 → DISPUTED (arbiter needed)
-contract RecoveryRouter is IRecoveryRouter {
+contract RecoveryRouter is IRecoveryRouter, Ownable {
     // ═══════════════════════════════════════════════════════════════
     // CONSTANTS (PRD-02 Section 2.2)
     // ═══════════════════════════════════════════════════════════════
@@ -60,7 +61,7 @@ contract RecoveryRouter is IRecoveryRouter {
     // CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════
 
-    constructor(address _cairnCore) {
+    constructor(address _cairnCore) Ownable(msg.sender) {
         cairnCore = _cairnCore;
         recoveryThreshold = DEFAULT_THRESHOLD;
 
@@ -72,6 +73,15 @@ contract RecoveryRouter is IRecoveryRouter {
         // LOGIC: Low recovery - likely to repeat
         classRecoveryPotential[ICairnTypes.FailureClass.LOGIC] = 0.1e18;
     }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ERRORS & EVENTS
+    // ═══════════════════════════════════════════════════════════════
+
+    error ZeroAddress();
+
+    event CairnCoreUpdated(address indexed cairnCore);
+    event RecoveryThresholdUpdated(uint256 threshold);
 
     // ═══════════════════════════════════════════════════════════════
     // MODIFIERS
@@ -261,17 +271,18 @@ contract RecoveryRouter is IRecoveryRouter {
     // ═══════════════════════════════════════════════════════════════
 
     /// @notice Update CairnCore address (for upgrades)
-    /// @dev Should be called via governance in production
-    function setCairnCore(address _cairnCore) external {
-        // In production, add onlyGovernance modifier
+    /// @dev Gated by owner (transfer to governance/multisig post-deploy).
+    function setCairnCore(address _cairnCore) external onlyOwner {
+        if (_cairnCore == address(0)) revert ZeroAddress();
         cairnCore = _cairnCore;
+        emit CairnCoreUpdated(_cairnCore);
     }
 
     /// @notice Update recovery threshold
-    /// @dev Should be called via governance in production
-    function setRecoveryThreshold(uint256 _threshold) external {
-        // In production, add onlyGovernance modifier
+    /// @dev Gated by owner (transfer to governance/multisig post-deploy).
+    function setRecoveryThreshold(uint256 _threshold) external onlyOwner {
         require(_threshold >= 0.1e18 && _threshold <= 0.9e18, "Invalid threshold");
         recoveryThreshold = _threshold;
+        emit RecoveryThresholdUpdated(_threshold);
     }
 }

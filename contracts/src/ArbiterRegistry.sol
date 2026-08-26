@@ -109,7 +109,8 @@ contract ArbiterRegistry is IArbiterRegistry, ReentrancyGuard {
             rulingCount: 0,
             overturnedCount: 0,
             earnings: 0,
-            lastActive: block.timestamp
+            lastActive: block.timestamp,
+            stakeLockedUntil: 0
         });
 
         _arbiterList.push(msg.sender);
@@ -130,6 +131,8 @@ contract ArbiterRegistry is IArbiterRegistry, ReentrancyGuard {
     function withdrawStake(uint256 amount) external override nonReentrant {
         Arbiter storage arbiter = _arbiters[msg.sender];
         if (!arbiter.registered) revert NotRegistered();
+        // H-6: cannot withdraw while a ruling is still within its appeal window.
+        if (block.timestamp < arbiter.stakeLockedUntil) revert AppealWindowActive();
         if (arbiter.stake < amount) {
             revert InsufficientStake(amount, arbiter.stake);
         }
@@ -148,6 +151,8 @@ contract ArbiterRegistry is IArbiterRegistry, ReentrancyGuard {
     function deregisterArbiter() external override nonReentrant {
         Arbiter storage arbiter = _arbiters[msg.sender];
         if (!arbiter.registered) revert NotRegistered();
+        // H-6: cannot deregister while a ruling is still within its appeal window.
+        if (block.timestamp < arbiter.stakeLockedUntil) revert AppealWindowActive();
 
         uint256 stakeToReturn = arbiter.stake;
 
@@ -212,14 +217,19 @@ contract ArbiterRegistry is IArbiterRegistry, ReentrancyGuard {
         });
 
         // Update arbiter stats
+        // H-2: the fee is paid by CairnCore out of the disputed escrow (see
+        // CairnCore._settleDispute); the registry no longer pays it from its own
+        // balance, which previously drained the arbiter stake pool into insolvency.
         Arbiter storage arbiterData = _arbiters[arbiter];
         arbiterData.rulingCount++;
         arbiterData.earnings += arbiterFee;
         arbiterData.lastActive = block.timestamp;
-
-        // Pay arbiter fee
-        (bool success, ) = arbiter.call{value: arbiterFee}("");
-        require(success, "Arbiter fee transfer failed");
+        // H-6: lock the arbiter's stake through this ruling's appeal window so it
+        // remains slashable if the ruling is overturned.
+        uint256 lockUntil = block.timestamp + appealWindow;
+        if (lockUntil > arbiterData.stakeLockedUntil) {
+            arbiterData.stakeLockedUntil = lockUntil;
+        }
 
         emit DisputeRuled(
             taskId,

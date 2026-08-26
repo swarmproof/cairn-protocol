@@ -53,6 +53,9 @@ contract CairnCoreUpgradeable is
     /// @notice Dispute timeout (7 days)
     uint256 public constant override disputeTimeout = 7 days;
 
+    /// @notice Upper bound on a single checkpoint batch's self-reported size (H-5)
+    uint256 public constant MAX_CHECKPOINTS_PER_BATCH = 1000;
+
     // ═══════════════════════════════════════════════════════════════
     // STATE
     // ═══════════════════════════════════════════════════════════════
@@ -301,6 +304,14 @@ contract CairnCoreUpgradeable is
             revert InvalidCheckpointSchema(schemaHash, task.specHash);
         }
 
+        // H-5: bound the self-reported batch size. The escrow split is weighted by
+        // checkpoint counts, so an unbounded count lets an agent capture the whole
+        // payout. This caps per-batch inflation; binding count to the Merkle tree's
+        // leaf count is tracked as a follow-up hardening item.
+        if (count == 0 || count > MAX_CHECKPOINTS_PER_BATCH) {
+            revert InvalidCheckpointCount(count, MAX_CHECKPOINTS_PER_BATCH);
+        }
+
         uint256 batchStart = task.checkpointCount;
 
         // Track who committed these checkpoints
@@ -351,15 +362,9 @@ contract CairnCoreUpgradeable is
         task.state = ICairnTypes.TaskState.RESOLVED;
         task.resolutionType = ICairnTypes.ResolutionType.SUCCESS;
 
-        // Notify fallback pool if this was a recovery
-        if (task.currentAgent == task.fallbackAgent && address(fallbackPool) != address(0)) {
-            fallbackPool.completeFallbackTask(
-                taskId,
-                task.fallbackAgent,
-                true,
-                task.fallbackCheckpoints
-            );
-        }
+        // H-3: notify the fallback pool of a successful recovery (releases the
+        // fallback's activeTaskCount). No-op if the primary completed directly.
+        _releaseFallback(task, taskId, true);
 
         emit TaskCompleted(taskId, msg.sender, task.checkpointCount);
 
@@ -431,6 +436,23 @@ contract CairnCoreUpgradeable is
     function _routeFailedTask(bytes32 taskId) internal {
         Task storage task = _tasks[taskId];
 
+        // H-4: a task already past its deadline can never be completed by a
+        // recovering fallback (completeTask reverts past the deadline), which
+        // would trap the escrow in an unresolvable RECOVERING loop. Route it
+        // straight to dispute so it can reach timeout refund / arbitration.
+        if (block.timestamp > task.deadline) {
+            _enterDispute(task, taskId);
+            return;
+        }
+
+        // H-3: allow only one fallback recovery attempt. If a fallback was already
+        // activated and the task failed again, release it and move to dispute
+        // rather than re-activating (which would double-count and never resolve).
+        if (task.fallbackActivated) {
+            _enterDispute(task, taskId);
+            return;
+        }
+
         if (task.recoveryScore >= recoveryThreshold) {
             // High recovery score → automatic fallback
             if (task.fallbackAgent != address(0)) {
@@ -439,6 +461,7 @@ contract CairnCoreUpgradeable is
 
                 // Notify fallback pool
                 if (address(fallbackPool) != address(0)) {
+                    task.fallbackActivated = true;
                     fallbackPool.activateFallback(taskId, task.fallbackAgent);
                 }
 
@@ -460,12 +483,35 @@ contract CairnCoreUpgradeable is
     /// @notice Enter DISPUTED state
     function _enterDispute(Task storage task, bytes32 taskId) internal {
         task.state = ICairnTypes.TaskState.DISPUTED;
+        // H-1: anchor the timeout window to dispute onset, not task creation.
+        task.disputedAt = block.timestamp;
+
+        // H-3: release an active fallback as a failed recovery so its stake is
+        // freed (activeTaskCount decremented) and slashing runs. No-op if no
+        // fallback was activated (task disputed without a recovery attempt).
+        _releaseFallback(task, taskId, false);
 
         emit TaskDisputed(
             taskId,
             task.recoveryScore,
-            block.timestamp + disputeTimeout
+            task.disputedAt + disputeTimeout
         );
+    }
+
+    /// @notice Notify the fallback pool exactly once when an active fallback
+    ///         recovery terminates (H-3), decrementing its activeTaskCount and
+    ///         triggering slashing on failure.
+    function _releaseFallback(Task storage task, bytes32 taskId, bool success) internal {
+        if (!task.fallbackActivated) return;
+        task.fallbackActivated = false;
+        if (address(fallbackPool) != address(0)) {
+            fallbackPool.completeFallbackTask(
+                taskId,
+                task.fallbackAgent,
+                success,
+                task.fallbackCheckpoints
+            );
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -482,6 +528,10 @@ contract CairnCoreUpgradeable is
     {
         Task storage task = _tasks[taskId];
 
+        // CR-3: the operator must not arbitrate their own dispute (conflict of
+        // interest — the registry already excludes the primary/fallback agents).
+        if (msg.sender == task.operator) revert ArbiterIsOperator();
+
         // Execute ruling via arbiter registry
         uint256 arbiterFee = arbiterRegistry.executeRuling(
             taskId,
@@ -497,7 +547,7 @@ contract CairnCoreUpgradeable is
         task.resolutionType = ICairnTypes.ResolutionType.ARBITER_RULING;
 
         // Settle based on ruling
-        _settleDispute(taskId, ruling, arbiterFee);
+        _settleDispute(taskId, ruling, arbiterFee, msg.sender);
     }
 
     /// @inheritdoc ICairnCore
@@ -510,8 +560,8 @@ contract CairnCoreUpgradeable is
     {
         Task storage task = _tasks[taskId];
 
-        // Check timeout has passed
-        if (block.timestamp < task.createdAt + disputeTimeout) {
+        // Check timeout has passed (H-1: measured from dispute onset)
+        if (block.timestamp < task.disputedAt + disputeTimeout) {
             revert DisputeTimeoutNotReached();
         }
 
@@ -647,7 +697,8 @@ contract CairnCoreUpgradeable is
     function _settleDispute(
         bytes32 taskId,
         ICairnTypes.Ruling calldata ruling,
-        uint256 arbiterFee
+        uint256 arbiterFee,
+        address arbiter
     ) internal {
         Task storage task = _tasks[taskId];
 
@@ -696,6 +747,12 @@ contract CairnCoreUpgradeable is
         if (protocolFee > 0) {
             (bool s4, ) = feeRecipient.call{value: protocolFee}("");
             require(s4, "Fee transfer failed");
+        }
+        // H-2: pay the arbiter their fee out of escrow (previously subtracted
+        // from distributable but never transferred → ETH stranded in Core).
+        if (arbiterFee > 0) {
+            (bool s5, ) = arbiter.call{value: arbiterFee}("");
+            require(s5, "Arbiter fee transfer failed");
         }
 
         totalEscrowLocked -= escrow;

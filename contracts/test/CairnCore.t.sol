@@ -627,6 +627,209 @@ contract CairnCoreTest is Test {
         }
     }
 
+    /// @notice H-5: a checkpoint batch's self-reported count is bounded, defeating
+    ///         the count=1e9 escrow-split-capture exploit.
+    function test_H5_CheckpointCountIsBounded() public {
+        bytes32 taskId = _submitAndStartTask();
+        uint256 max = core.MAX_CHECKPOINTS_PER_BATCH();
+
+        // count == 0 rejected.
+        vm.prank(primaryAgent);
+        vm.expectRevert(abi.encodeWithSelector(ICairnCore.InvalidCheckpointCount.selector, 0, max));
+        core.commitCheckpointBatch(taskId, 0, keccak256("r"), cid1, specHash);
+
+        // count > MAX rejected (the inflation-to-steal vector).
+        vm.prank(primaryAgent);
+        vm.expectRevert(abi.encodeWithSelector(ICairnCore.InvalidCheckpointCount.selector, max + 1, max));
+        core.commitCheckpointBatch(taskId, max + 1, keccak256("r"), cid1, specHash);
+
+        // count within the bound is accepted.
+        vm.prank(primaryAgent);
+        core.commitCheckpointBatch(taskId, 5, keccak256("r"), cid1, specHash);
+        assertEq(core.getTask(taskId).primaryCheckpoints, 5);
+    }
+
+    /// @notice CR-3: the operator cannot resolve (arbitrate) their own dispute.
+    function test_CR3_OperatorCannotArbitrateOwnDispute() public {
+        // No-fallback system → failure deterministically enters DISPUTED.
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+        CairnCore coreNoFallback = new CairnCore(
+            feeRecipient, address(newRouter), address(0), address(newRegistry), address(governance)
+        );
+        newRouter.setCairnCore(address(coreNoFallback));
+        newRegistry.setCairnCore(address(coreNoFallback));
+
+        vm.deal(operator, 10 ether);
+        vm.prank(operator);
+        bytes32 taskId =
+            coreNoFallback.submitTask{value: 0.1 ether}(taskType, specHash, primaryAgent, 60, block.timestamp + 1 hours);
+        vm.prank(primaryAgent);
+        coreNoFallback.startTask(taskId);
+        vm.warp(block.timestamp + 121);
+        coreNoFallback.detectFailure(taskId);
+        assertEq(uint8(coreNoFallback.getTask(taskId).state), uint8(ICairnTypes.TaskState.DISPUTED));
+
+        ICairnTypes.Ruling memory ruling = ICairnTypes.Ruling({
+            outcome: ICairnTypes.RulingOutcome.REFUND_OPERATOR,
+            agentShare: 0,
+            rationaleCID: keccak256("self-deal")
+        });
+
+        // Operator attempts to arbitrate their own dispute → reverts.
+        vm.prank(operator);
+        vm.expectRevert(ICairnCore.ArbiterIsOperator.selector);
+        coreNoFallback.resolveDispute(taskId, ruling);
+    }
+
+    /// @notice H-1: the dispute timeout is measured from dispute onset, not task
+    ///         creation. A task disputed long after creation must still grant the
+    ///         full window rather than being instantly timeout-refundable.
+    function test_H1_DisputeTimeoutMeasuredFromOnset() public {
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+        CairnCore coreNoFallback = new CairnCore(
+            feeRecipient, address(newRouter), address(0), address(newRegistry), address(governance)
+        );
+        newRouter.setCairnCore(address(coreNoFallback));
+        newRegistry.setCairnCore(address(coreNoFallback));
+
+        vm.deal(operator, 10 ether);
+        // Long deadline so the task can fail well after createdAt + disputeTimeout.
+        vm.prank(operator);
+        bytes32 taskId =
+            coreNoFallback.submitTask{value: 0.1 ether}(taskType, specHash, primaryAgent, 60, block.timestamp + 30 days);
+        vm.prank(primaryAgent);
+        coreNoFallback.startTask(taskId);
+
+        // Advance 8 days (> 7-day disputeTimeout measured from createdAt), then fail.
+        vm.warp(block.timestamp + 8 days);
+        coreNoFallback.detectFailure(taskId);
+        assertEq(uint8(coreNoFallback.getTask(taskId).state), uint8(ICairnTypes.TaskState.DISPUTED));
+
+        // Under the old (createdAt-anchored) logic this would already be timed out.
+        // Under H-1 it must revert because the dispute only just started.
+        vm.expectRevert(ICairnCore.DisputeTimeoutNotReached.selector);
+        coreNoFallback.resolveDisputeTimeout(taskId);
+
+        // After the full window from dispute onset, timeout refund succeeds.
+        vm.warp(block.timestamp + 7 days + 1);
+        uint256 operatorBefore = operator.balance;
+        coreNoFallback.resolveDisputeTimeout(taskId);
+        assertEq(uint8(coreNoFallback.getTask(taskId).state), uint8(ICairnTypes.TaskState.RESOLVED));
+        assertGt(operator.balance, operatorBefore);
+    }
+
+    /// @notice H-2: the arbiter fee is paid from the disputed escrow (by Core),
+    ///         not from the registry's arbiter-stake balance. The stake pool must
+    ///         be untouched by a ruling, and no escrow may be stranded in Core.
+    function test_H2_ArbiterFeePaidFromEscrowNotStakePool() public {
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+        CairnCore coreNoFallback = new CairnCore(
+            feeRecipient, address(newRouter), address(0), address(newRegistry), address(governance)
+        );
+        newRouter.setCairnCore(address(coreNoFallback));
+        newRegistry.setCairnCore(address(coreNoFallback));
+
+        // Arbiter stakes into the registry.
+        bytes32[] memory domains = new bytes32[](1);
+        domains[0] = taskType;
+        vm.prank(arbiter);
+        newRegistry.registerArbiter{value: 0.5 ether}(domains);
+        uint256 registryBalBefore = address(newRegistry).balance; // = staked funds
+
+        vm.deal(operator, 10 ether);
+        vm.prank(operator);
+        bytes32 taskId =
+            coreNoFallback.submitTask{value: 1 ether}(taskType, specHash, primaryAgent, 60, block.timestamp + 1 hours);
+        vm.prank(primaryAgent);
+        coreNoFallback.startTask(taskId);
+        vm.prank(primaryAgent);
+        coreNoFallback.commitCheckpointBatch(taskId, 3, keccak256("root"), cid1, specHash);
+        vm.warp(block.timestamp + 121);
+        coreNoFallback.detectFailure(taskId);
+        assertEq(uint8(coreNoFallback.getTask(taskId).state), uint8(ICairnTypes.TaskState.DISPUTED));
+
+        ICairnTypes.Ruling memory ruling = ICairnTypes.Ruling({
+            outcome: ICairnTypes.RulingOutcome.PAY_AGENT,
+            agentShare: 0,
+            rationaleCID: keccak256("rationale")
+        });
+
+        uint256 arbiterBefore = arbiter.balance;
+        vm.prank(arbiter);
+        coreNoFallback.resolveDispute(taskId, ruling);
+
+        // Arbiter received the 3% fee (of 1 ether = 0.03 ether) from escrow.
+        assertEq(arbiter.balance - arbiterBefore, 0.03 ether, "arbiter fee not paid from escrow");
+        // Registry stake pool is untouched by the ruling (no insolvency drain).
+        assertEq(address(newRegistry).balance, registryBalBefore, "registry stake pool was drained");
+        // No escrow stranded: Core distributed everything for this task.
+        assertEq(coreNoFallback.totalEscrowLocked(), 0, "escrow stranded in Core");
+    }
+
+    /// @notice H-4: a failure detected after the deadline must route to DISPUTED
+    ///         (recoverable via timeout), not RECOVERING (which can never complete
+    ///         past the deadline and would trap the escrow forever).
+    function test_H4_PastDeadlineFailureRoutesToDispute() public {
+        uint256 deadline = block.timestamp + 1 hours;
+        vm.prank(operator);
+        bytes32 taskId = core.submitTask{value: 0.1 ether}(taskType, specHash, primaryAgent, 60, deadline);
+        // A fallback is available, so pre-fix this would route to RECOVERING.
+        assertEq(core.getTask(taskId).fallbackAgent, fallbackAgent);
+
+        vm.prank(primaryAgent);
+        core.startTask(taskId);
+
+        // Fail after the deadline has passed.
+        vm.warp(deadline + 1);
+        core.detectFailure(taskId);
+
+        // Must be DISPUTED, not RECOVERING.
+        assertEq(uint8(core.getTask(taskId).state), uint8(ICairnTypes.TaskState.DISPUTED));
+
+        // Escrow is recoverable: timeout refund succeeds after the window.
+        vm.warp(block.timestamp + 7 days + 1);
+        uint256 opBefore = operator.balance;
+        core.resolveDisputeTimeout(taskId);
+        assertEq(uint8(core.getTask(taskId).state), uint8(ICairnTypes.TaskState.RESOLVED));
+        assertGt(operator.balance, opBefore);
+    }
+
+    /// @notice H-3: when a fallback recovery fails, the pool is notified with
+    ///         success=false so the fallback's activeTaskCount is released (stake
+    ///         no longer frozen) and the slashing path actually runs.
+    function test_H3_FailedRecoveryReleasesAndSlashesFallback() public {
+        vm.prank(operator);
+        bytes32 taskId = core.submitTask{value: 0.1 ether}(taskType, specHash, primaryAgent, 60, block.timestamp + 1 hours);
+        vm.prank(primaryAgent);
+        core.startTask(taskId);
+
+        // Primary stalls → first failure → RECOVERING; fallback is activated.
+        vm.warp(block.timestamp + 121);
+        core.detectFailure(taskId);
+        assertEq(uint8(core.getTask(taskId).state), uint8(ICairnTypes.TaskState.RECOVERING));
+        assertEq(pool.getAgent(fallbackAgent).activeTaskCount, 1, "fallback should be active");
+        uint256 stakeBefore = pool.getAgent(fallbackAgent).stake;
+
+        // Fallback also stalls → second failure → DISPUTED; fallback released.
+        vm.warp(block.timestamp + 121);
+        core.detectFailure(taskId);
+        assertEq(uint8(core.getTask(taskId).state), uint8(ICairnTypes.TaskState.DISPUTED));
+
+        // H-3: activeTaskCount decremented back to 0 → stake no longer frozen.
+        assertEq(pool.getAgent(fallbackAgent).activeTaskCount, 0, "activeTaskCount not released");
+        // Dead slashing path revived: zero-checkpoint recovery failure was slashed.
+        assertLt(pool.getAgent(fallbackAgent).stake, stakeBefore, "failed recovery not slashed");
+
+        // The fallback can now withdraw remaining stake (previously bricked).
+        uint256 balBefore = fallbackAgent.balance;
+        vm.prank(fallbackAgent);
+        pool.withdrawStake(0.1 ether);
+        assertGt(fallbackAgent.balance, balBefore);
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // MERKLE VERIFICATION TESTS (PRD-07)
     // ═══════════════════════════════════════════════════════════════
