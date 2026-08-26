@@ -776,9 +776,20 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
                 primaryPayout = distributable;
             }
         } else {
-            // SPLIT: custom split from ruling
-            primaryPayout = (distributable * ruling.agentShare) / 100;
-            operatorRefund = distributable - primaryPayout;
+            // SPLIT: agentShare% goes to the agents, split by checkpoint
+            // contribution; the remainder is refunded to the operator.
+            // M-3: bound agentShare (prevents underflow-revert griefing) and pay
+            // the fallback its share instead of sending everything to the primary.
+            if (ruling.agentShare > 100) revert InvalidAgentShare(ruling.agentShare);
+            uint256 agentTotal = (distributable * ruling.agentShare) / 100;
+            operatorRefund = distributable - agentTotal;
+            uint256 total = task.primaryCheckpoints + task.fallbackCheckpoints;
+            if (total > 0) {
+                primaryPayout = (agentTotal * task.primaryCheckpoints) / total;
+                fallbackPayout = agentTotal - primaryPayout;
+            } else {
+                primaryPayout = agentTotal;
+            }
         }
 
         // Store settlement

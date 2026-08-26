@@ -627,6 +627,39 @@ contract CairnCoreTest is Test {
         }
     }
 
+    /// @notice M-3: a SPLIT ruling with agentShare > 100 is rejected (previously
+    ///         underflow-reverted, a griefing/foot-gun) rather than silently trusted.
+    function test_M3_SplitRulingRejectsShareOver100() public {
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+        CairnCore c = new CairnCore(
+            feeRecipient, address(newRouter), address(0), address(newRegistry), address(governance)
+        );
+        newRouter.setCairnCore(address(c));
+        newRegistry.setCairnCore(address(c));
+        bytes32[] memory domains = new bytes32[](1);
+        domains[0] = taskType;
+        vm.prank(arbiter);
+        newRegistry.registerArbiter{value: 0.5 ether}(domains);
+
+        vm.deal(operator, 10 ether);
+        vm.prank(operator);
+        bytes32 taskId = c.submitTask{value: 0.1 ether}(taskType, specHash, primaryAgent, 60, block.timestamp + 1 hours);
+        vm.prank(primaryAgent);
+        c.startTask(taskId);
+        vm.warp(block.timestamp + 121);
+        c.detectFailure(taskId);
+
+        ICairnTypes.Ruling memory bad = ICairnTypes.Ruling({
+            outcome: ICairnTypes.RulingOutcome.SPLIT,
+            agentShare: 150,
+            rationaleCID: keccak256("x")
+        });
+        vm.prank(arbiter);
+        vm.expectRevert(abi.encodeWithSelector(ICairnCore.InvalidAgentShare.selector, uint256(150)));
+        c.resolveDispute(taskId, bad);
+    }
+
     /// @notice M-5: pausing the protocol blocks fund-moving / state-critical
     ///         functions, not just submitTask.
     function test_M5_PauseBlocksCriticalFunctions() public {
