@@ -6,6 +6,7 @@ import {IERC8004} from "./interfaces/IERC8004.sol";
 import {IERC7710} from "./interfaces/IERC7710.sol";
 import {OlasMechAdapter} from "./adapters/OlasMechAdapter.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title FallbackPool - Reputation-gated, stake-secured fallback agent pool
 /// @author CAIRN Protocol
@@ -23,7 +24,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 ///   - Accept + 0 checkpoints + fail → 100% stake to operator
 ///   - Accept + some checkpoints + fail → 50% stake to treasury
 ///   - Timeout without response → 25% stake to treasury
-contract FallbackPool is IFallbackPool, ReentrancyGuard {
+contract FallbackPool is IFallbackPool, ReentrancyGuard, Ownable {
     // ═══════════════════════════════════════════════════════════════
     // CONSTANTS (PRD-04 Section 2.2)
     // ═══════════════════════════════════════════════════════════════
@@ -78,7 +79,7 @@ contract FallbackPool is IFallbackPool, ReentrancyGuard {
         address _reputationRegistry,
         address _delegationRegistry,
         address _olasMechAdapter
-    ) {
+    ) Ownable(msg.sender) {
         // cairnCore can be zero - set via setCairnCore() after deployment
         if (_feeRecipient == address(0)) revert ZeroAddress();
 
@@ -101,6 +102,9 @@ contract FallbackPool is IFallbackPool, ReentrancyGuard {
         if (msg.sender != cairnCore) revert NotCairnCore();
         _;
     }
+
+    /// @notice Emitted when the CairnCore address is updated by the owner
+    event CairnCoreUpdated(address indexed cairnCore);
 
     // ═══════════════════════════════════════════════════════════════
     // REGISTRATION (PRD-04 Section 2.2)
@@ -463,29 +467,31 @@ contract FallbackPool is IFallbackPool, ReentrancyGuard {
     // ═══════════════════════════════════════════════════════════════
 
     /// @notice Update CairnCore address
-    /// @dev In production, add onlyGovernance modifier
-    function setCairnCore(address _cairnCore) external {
+    /// @dev Gated by owner (transfer to governance/multisig post-deploy).
+    function setCairnCore(address _cairnCore) external onlyOwner {
+        if (_cairnCore == address(0)) revert ZeroAddress();
         cairnCore = _cairnCore;
+        emit CairnCoreUpdated(_cairnCore);
     }
 
     /// @notice Update reputation registry address
-    /// @dev In production, add onlyGovernance modifier
+    /// @dev Gated by owner (transfer to governance/multisig post-deploy).
     /// @param _reputationRegistry New ERC-8004 registry address
-    function setReputationRegistry(address _reputationRegistry) external {
+    function setReputationRegistry(address _reputationRegistry) external onlyOwner {
         reputationRegistry = IERC8004(_reputationRegistry);
     }
 
     /// @notice Update delegation registry address
-    /// @dev In production, add onlyGovernance modifier
+    /// @dev Gated by owner (transfer to governance/multisig post-deploy).
     /// @param _delegationRegistry New ERC-7710 registry address
-    function setDelegationRegistry(address _delegationRegistry) external {
+    function setDelegationRegistry(address _delegationRegistry) external onlyOwner {
         delegationRegistry = IERC7710(_delegationRegistry);
     }
 
     /// @notice Update Olas Mech adapter address
-    /// @dev In production, add onlyGovernance modifier
+    /// @dev Gated by owner (transfer to governance/multisig post-deploy).
     /// @param _olasMechAdapter New Olas adapter address (can be zero to disable)
-    function setOlasMechAdapter(address _olasMechAdapter) external {
+    function setOlasMechAdapter(address _olasMechAdapter) external onlyOwner {
         if (_olasMechAdapter != address(0)) {
             olasMechAdapter = OlasMechAdapter(_olasMechAdapter);
         } else {

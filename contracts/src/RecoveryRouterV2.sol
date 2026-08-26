@@ -4,6 +4,7 @@ pragma solidity 0.8.24;
 import {IRecoveryRouter} from "./interfaces/IRecoveryRouter.sol";
 import {ICairnTypes} from "./interfaces/ICairnTypes.sol";
 import {UD60x18, ud, unwrap, pow as udPow} from "@prb/math/UD60x18.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title RecoveryRouterV2 - Multiplicative recovery scoring (CAIRN v2)
 /// @author CAIRN Protocol
@@ -29,7 +30,7 @@ import {UD60x18, ud, unwrap, pow as udPow} from "@prb/math/UD60x18.sol";
 /// v1 callers that only check a single threshold continue to behave
 /// correctly (they skip the FULL/REDUCED distinction but make the same
 /// recover/dispute decision the lower threshold would yield).
-contract RecoveryRouterV2 is IRecoveryRouter {
+contract RecoveryRouterV2 is IRecoveryRouter, Ownable {
     // ═══════════════════════════════════════════════════════════════
     // CONSTANTS — fixed-point exponents and lookup values (v2)
     // ═══════════════════════════════════════════════════════════════
@@ -90,11 +91,17 @@ contract RecoveryRouterV2 is IRecoveryRouter {
     /// @notice Input scaled fixed-point value exceeds 1e18
     error InputOutOfRange();
 
+    /// @notice Zero address supplied where a contract address is required
+    error ZeroAddress();
+
+    event CairnCoreUpdated(address indexed cairnCore);
+    event ThresholdsUpdated(uint256 upper, uint256 lower);
+
     // ═══════════════════════════════════════════════════════════════
     // CONSTRUCTOR
     // ═══════════════════════════════════════════════════════════════
 
-    constructor(address _cairnCore) {
+    constructor(address _cairnCore) Ownable(msg.sender) {
         cairnCore = _cairnCore;
         upperThreshold = DEFAULT_UPPER_THRESHOLD;
         lowerThreshold = DEFAULT_LOWER_THRESHOLD;
@@ -310,19 +317,24 @@ contract RecoveryRouterV2 is IRecoveryRouter {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // GOVERNANCE (placeholder — should gate behind onlyGovernance in prod)
+    // GOVERNANCE
     // ═══════════════════════════════════════════════════════════════
 
-    function setCairnCore(address _cairnCore) external {
+    /// @dev Gated by owner (transfer to governance/multisig post-deploy).
+    function setCairnCore(address _cairnCore) external onlyOwner {
+        if (_cairnCore == address(0)) revert ZeroAddress();
         cairnCore = _cairnCore;
+        emit CairnCoreUpdated(_cairnCore);
     }
 
     /// @notice Update both thresholds atomically (must respect ordering)
-    function setThresholds(uint256 _upper, uint256 _lower) external {
+    /// @dev Gated by owner (transfer to governance/multisig post-deploy).
+    function setThresholds(uint256 _upper, uint256 _lower) external onlyOwner {
         if (_upper < _lower) revert InvalidThresholdOrder();
         if (_upper < 0.1e18 || _upper > 0.9e18) revert InvalidThresholdRange();
         if (_lower < 0.1e18 || _lower > 0.9e18) revert InvalidThresholdRange();
         upperThreshold = _upper;
         lowerThreshold = _lower;
+        emit ThresholdsUpdated(_upper, _lower);
     }
 }
