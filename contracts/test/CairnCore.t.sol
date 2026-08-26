@@ -747,6 +747,34 @@ contract CairnCoreTest is Test {
         assertEq(coreNoFallback.totalEscrowLocked(), 0, "escrow stranded in Core");
     }
 
+    /// @notice H-4: a failure detected after the deadline must route to DISPUTED
+    ///         (recoverable via timeout), not RECOVERING (which can never complete
+    ///         past the deadline and would trap the escrow forever).
+    function test_H4_PastDeadlineFailureRoutesToDispute() public {
+        uint256 deadline = block.timestamp + 1 hours;
+        vm.prank(operator);
+        bytes32 taskId = core.submitTask{value: 0.1 ether}(taskType, specHash, primaryAgent, 60, deadline);
+        // A fallback is available, so pre-fix this would route to RECOVERING.
+        assertEq(core.getTask(taskId).fallbackAgent, fallbackAgent);
+
+        vm.prank(primaryAgent);
+        core.startTask(taskId);
+
+        // Fail after the deadline has passed.
+        vm.warp(deadline + 1);
+        core.detectFailure(taskId);
+
+        // Must be DISPUTED, not RECOVERING.
+        assertEq(uint8(core.getTask(taskId).state), uint8(ICairnTypes.TaskState.DISPUTED));
+
+        // Escrow is recoverable: timeout refund succeeds after the window.
+        vm.warp(block.timestamp + 7 days + 1);
+        uint256 opBefore = operator.balance;
+        core.resolveDisputeTimeout(taskId);
+        assertEq(uint8(core.getTask(taskId).state), uint8(ICairnTypes.TaskState.RESOLVED));
+        assertGt(operator.balance, opBefore);
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // MERKLE VERIFICATION TESTS (PRD-07)
     // ═══════════════════════════════════════════════════════════════

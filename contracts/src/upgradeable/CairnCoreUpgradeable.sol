@@ -431,6 +431,15 @@ contract CairnCoreUpgradeable is
     function _routeFailedTask(bytes32 taskId) internal {
         Task storage task = _tasks[taskId];
 
+        // H-4: a task already past its deadline can never be completed by a
+        // recovering fallback (completeTask reverts past the deadline), which
+        // would trap the escrow in an unresolvable RECOVERING loop. Route it
+        // straight to dispute so it can reach timeout refund / arbitration.
+        if (block.timestamp > task.deadline) {
+            _enterDispute(task, taskId);
+            return;
+        }
+
         if (task.recoveryScore >= recoveryThreshold) {
             // High recovery score → automatic fallback
             if (task.fallbackAgent != address(0)) {
