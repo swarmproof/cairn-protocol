@@ -115,7 +115,9 @@ contract CairnCoreUpgradeable is
         address _arbiterRegistry,
         address _governance
     ) external initializer {
-        if (_feeRecipient == address(0)) revert ZeroAddress();
+        // M-10: a zero governance address would permanently brick upgrades
+        // (_authorizeUpgrade is onlyGovernance) and all governance actions.
+        if (_feeRecipient == address(0) || _governance == address(0)) revert ZeroAddress();
 
         __Pausable_init();
 
@@ -855,6 +857,9 @@ contract CairnCoreUpgradeable is
         address _fallbackPool,
         address _arbiterRegistry
     ) external onlyGovernance {
+        // M-10: router and registry are required for failure handling / disputes;
+        // the fallback pool is intentionally optional (zero disables auto-fallback).
+        if (_recoveryRouter == address(0) || _arbiterRegistry == address(0)) revert ZeroAddress();
         recoveryRouter = IRecoveryRouter(_recoveryRouter);
         fallbackPool = IFallbackPool(_fallbackPool);
         arbiterRegistry = IArbiterRegistry(_arbiterRegistry);

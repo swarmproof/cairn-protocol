@@ -917,6 +917,9 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         address _fallbackPool,
         address _arbiterRegistry
     ) external onlyGovernance {
+        // M-10: router and registry are required for failure handling / disputes;
+        // the fallback pool is intentionally optional (zero disables auto-fallback).
+        if (_recoveryRouter == address(0) || _arbiterRegistry == address(0)) revert ZeroAddress();
         recoveryRouter = IRecoveryRouter(_recoveryRouter);
         fallbackPool = IFallbackPool(_fallbackPool);
         arbiterRegistry = IArbiterRegistry(_arbiterRegistry);

@@ -272,7 +272,11 @@ contract FallbackPoolUpgradeable is
         FallbackAgent storage agent = _agents[fallbackAgent];
         if (!agent.registered) revert NotRegistered();
 
-        agent.activeTaskCount--;
+        // M-7: guard against underflow (defense-in-depth; the CairnCore fallback
+        // flag keeps activate/release balanced). A desync must not brick finalization.
+        if (agent.activeTaskCount > 0) {
+            agent.activeTaskCount--;
+        }
         agent.lastActive = block.timestamp;
 
         if (success) {

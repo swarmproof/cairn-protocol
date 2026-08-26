@@ -627,6 +627,22 @@ contract CairnCoreTest is Test {
         }
     }
 
+    /// @notice M-10: setContracts rejects a zero router or registry (would break
+    ///         failure handling / disputes); the pool is intentionally optional.
+    function test_M10_SetContractsRejectsZeroRouterOrRegistry() public {
+        vm.prank(address(governance));
+        vm.expectRevert(ICairnCore.ZeroAddress.selector);
+        core.setContracts(address(0), address(pool), address(registry));
+
+        vm.prank(address(governance));
+        vm.expectRevert(ICairnCore.ZeroAddress.selector);
+        core.setContracts(address(router), address(pool), address(0));
+
+        // Zero pool is allowed (disables auto-fallback).
+        vm.prank(address(governance));
+        core.setContracts(address(router), address(0), address(registry));
+    }
+
     /// @notice M-3: a SPLIT ruling with agentShare > 100 is rejected (previously
     ///         underflow-reverted, a griefing/foot-gun) rather than silently trusted.
     function test_M3_SplitRulingRejectsShareOver100() public {
