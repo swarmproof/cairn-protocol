@@ -134,8 +134,20 @@ contract FallbackPoolTest is Test {
         taskTypes[0] = taskType1;
 
         vm.prank(agent1);
-        vm.expectRevert(abi.encodeWithSelector(IFallbackPool.InsufficientStake.selector, 1, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(IFallbackPool.InsufficientStake.selector, pool.MIN_REGISTRATION_STAKE(), 0)
+        );
         pool.register{value: 0}(taskTypes, 3);
+    }
+
+    function test_M4_RegisterRejectsDustStake() public {
+        bytes32[] memory taskTypes = new bytes32[](1);
+        taskTypes[0] = taskType1;
+
+        // 1 wei previously registered a Sybil agent; now rejected.
+        vm.prank(agent1);
+        vm.expectRevert(abi.encodeWithSelector(IFallbackPool.InsufficientStake.selector, pool.MIN_REGISTRATION_STAKE(), 1));
+        pool.register{value: 1}(taskTypes, 3);
     }
 
     function test_RevertRegisterNoTaskTypes() public {
