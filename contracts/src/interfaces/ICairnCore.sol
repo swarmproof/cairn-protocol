@@ -179,6 +179,7 @@ interface ICairnCore {
     error InvalidCheckpointSchema(bytes32 provided, bytes32 expected);
     error ArbiterIsOperator();
     error InvalidCheckpointCount(uint256 provided, uint256 max);
+    error InvalidAgentShare(uint256 share);
 
     // ═══════════════════════════════════════════════════════════════
     // TASK LIFECYCLE

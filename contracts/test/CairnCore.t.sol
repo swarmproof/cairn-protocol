@@ -627,6 +627,77 @@ contract CairnCoreTest is Test {
         }
     }
 
+    /// @notice M-10: setContracts rejects a zero router or registry (would break
+    ///         failure handling / disputes); the pool is intentionally optional.
+    function test_M10_SetContractsRejectsZeroRouterOrRegistry() public {
+        vm.prank(address(governance));
+        vm.expectRevert(ICairnCore.ZeroAddress.selector);
+        core.setContracts(address(0), address(pool), address(registry));
+
+        vm.prank(address(governance));
+        vm.expectRevert(ICairnCore.ZeroAddress.selector);
+        core.setContracts(address(router), address(pool), address(0));
+
+        // Zero pool is allowed (disables auto-fallback).
+        vm.prank(address(governance));
+        core.setContracts(address(router), address(0), address(registry));
+    }
+
+    /// @notice M-3: a SPLIT ruling with agentShare > 100 is rejected (previously
+    ///         underflow-reverted, a griefing/foot-gun) rather than silently trusted.
+    function test_M3_SplitRulingRejectsShareOver100() public {
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+        CairnCore c = new CairnCore(
+            feeRecipient, address(newRouter), address(0), address(newRegistry), address(governance)
+        );
+        newRouter.setCairnCore(address(c));
+        newRegistry.setCairnCore(address(c));
+        bytes32[] memory domains = new bytes32[](1);
+        domains[0] = taskType;
+        vm.prank(arbiter);
+        newRegistry.registerArbiter{value: 0.5 ether}(domains);
+
+        vm.deal(operator, 10 ether);
+        vm.prank(operator);
+        bytes32 taskId = c.submitTask{value: 0.1 ether}(taskType, specHash, primaryAgent, 60, block.timestamp + 1 hours);
+        vm.prank(primaryAgent);
+        c.startTask(taskId);
+        vm.warp(block.timestamp + 121);
+        c.detectFailure(taskId);
+
+        ICairnTypes.Ruling memory bad = ICairnTypes.Ruling({
+            outcome: ICairnTypes.RulingOutcome.SPLIT,
+            agentShare: 150,
+            rationaleCID: keccak256("x")
+        });
+        vm.prank(arbiter);
+        vm.expectRevert(abi.encodeWithSelector(ICairnCore.InvalidAgentShare.selector, uint256(150)));
+        c.resolveDispute(taskId, bad);
+    }
+
+    /// @notice M-5: pausing the protocol blocks fund-moving / state-critical
+    ///         functions, not just submitTask.
+    function test_M5_PauseBlocksCriticalFunctions() public {
+        bytes32 taskId = _submitAndStartTask();
+
+        vm.prank(address(governance));
+        core.pause();
+
+        bytes4 paused = bytes4(keccak256(bytes("EnforcedPause()")));
+
+        vm.prank(primaryAgent);
+        vm.expectRevert(paused);
+        core.commitCheckpointBatch(taskId, 1, keccak256("r"), cid1, specHash);
+
+        vm.prank(primaryAgent);
+        vm.expectRevert(paused);
+        core.completeTask(taskId);
+
+        vm.expectRevert(paused);
+        core.detectFailure(taskId);
+    }
+
     /// @notice H-5: a checkpoint batch's self-reported count is bounded, defeating
     ///         the count=1e9 escrow-split-capture exploit.
     function test_H5_CheckpointCountIsBounded() public {

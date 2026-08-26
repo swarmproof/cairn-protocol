@@ -115,7 +115,9 @@ contract CairnCoreUpgradeable is
         address _arbiterRegistry,
         address _governance
     ) external initializer {
-        if (_feeRecipient == address(0)) revert ZeroAddress();
+        // M-10: a zero governance address would permanently brick upgrades
+        // (_authorizeUpgrade is onlyGovernance) and all governance actions.
+        if (_feeRecipient == address(0) || _governance == address(0)) revert ZeroAddress();
 
         __Pausable_init();
 
@@ -290,7 +292,7 @@ contract CairnCoreUpgradeable is
         bytes32 merkleRoot,
         bytes32 latestCID,
         bytes32 schemaHash
-    ) external override taskExists(taskId) onlyCurrentAgent(taskId) {
+    ) external override taskExists(taskId) onlyCurrentAgent(taskId) whenNotPaused {
         Task storage task = _tasks[taskId];
 
         // Can checkpoint in RUNNING or RECOVERING
@@ -345,6 +347,7 @@ contract CairnCoreUpgradeable is
         taskExists(taskId)
         onlyCurrentAgent(taskId)
         nonReentrant
+        whenNotPaused
     {
         Task storage task = _tasks[taskId];
 
@@ -393,6 +396,7 @@ contract CairnCoreUpgradeable is
         override
         taskExists(taskId)
         nonReentrant
+        whenNotPaused
     {
         Task storage task = _tasks[taskId];
 
@@ -525,6 +529,7 @@ contract CairnCoreUpgradeable is
         taskExists(taskId)
         inState(taskId, ICairnTypes.TaskState.DISPUTED)
         nonReentrant
+        whenNotPaused
     {
         Task storage task = _tasks[taskId];
 
@@ -557,6 +562,7 @@ contract CairnCoreUpgradeable is
         taskExists(taskId)
         inState(taskId, ICairnTypes.TaskState.DISPUTED)
         nonReentrant
+        whenNotPaused
     {
         Task storage task = _tasks[taskId];
 
@@ -722,9 +728,20 @@ contract CairnCoreUpgradeable is
                 primaryPayout = distributable;
             }
         } else {
-            // SPLIT: custom split from ruling
-            primaryPayout = (distributable * ruling.agentShare) / 100;
-            operatorRefund = distributable - primaryPayout;
+            // SPLIT: agentShare% goes to the agents, split by checkpoint
+            // contribution; the remainder is refunded to the operator.
+            // M-3: bound agentShare (prevents underflow-revert griefing) and pay
+            // the fallback its share instead of sending everything to the primary.
+            if (ruling.agentShare > 100) revert InvalidAgentShare(ruling.agentShare);
+            uint256 agentTotal = (distributable * ruling.agentShare) / 100;
+            operatorRefund = distributable - agentTotal;
+            uint256 total = task.primaryCheckpoints + task.fallbackCheckpoints;
+            if (total > 0) {
+                primaryPayout = (agentTotal * task.primaryCheckpoints) / total;
+                fallbackPayout = agentTotal - primaryPayout;
+            } else {
+                primaryPayout = agentTotal;
+            }
         }
 
         // Store settlement
@@ -840,6 +857,9 @@ contract CairnCoreUpgradeable is
         address _fallbackPool,
         address _arbiterRegistry
     ) external onlyGovernance {
+        // M-10: router and registry are required for failure handling / disputes;
+        // the fallback pool is intentionally optional (zero disables auto-fallback).
+        if (_recoveryRouter == address(0) || _arbiterRegistry == address(0)) revert ZeroAddress();
         recoveryRouter = IRecoveryRouter(_recoveryRouter);
         fallbackPool = IFallbackPool(_fallbackPool);
         arbiterRegistry = IArbiterRegistry(_arbiterRegistry);

@@ -41,6 +41,11 @@ contract FallbackPool is IFallbackPool, ReentrancyGuard, Ownable {
     /// @notice Precision for percentage calculations
     uint256 private constant PRECISION = 100;
 
+    /// @notice Absolute minimum stake to register (M-4: raises Sybil-flood cost;
+    ///         registration previously accepted 1 wei, enabling gas-DoS of
+    ///         selectFallback via mass registration).
+    uint256 public constant MIN_REGISTRATION_STAKE = 0.01 ether;
+
     // ═══════════════════════════════════════════════════════════════
     // STATE
     // ═══════════════════════════════════════════════════════════════
@@ -113,7 +118,7 @@ contract FallbackPool is IFallbackPool, ReentrancyGuard, Ownable {
     /// @inheritdoc IFallbackPool
     function register(bytes32[] calldata taskTypes, uint256 maxConcurrent) external payable override {
         if (_agents[msg.sender].registered) revert AlreadyRegistered();
-        if (msg.value == 0) revert InsufficientStake(1, 0);
+        if (msg.value < MIN_REGISTRATION_STAKE) revert InsufficientStake(MIN_REGISTRATION_STAKE, msg.value);
         if (taskTypes.length == 0) revert InvalidTaskTypes();
 
         // Check reputation (mocked - replace with ERC-8004)
@@ -281,7 +286,11 @@ contract FallbackPool is IFallbackPool, ReentrancyGuard, Ownable {
         FallbackAgent storage agent = _agents[fallbackAgent];
         if (!agent.registered) revert NotRegistered();
 
-        agent.activeTaskCount--;
+        // M-7: guard against underflow (defense-in-depth; the CairnCore fallback
+        // flag keeps activate/release balanced). A desync must not brick finalization.
+        if (agent.activeTaskCount > 0) {
+            agent.activeTaskCount--;
+        }
         agent.lastActive = block.timestamp;
 
         if (success) {
