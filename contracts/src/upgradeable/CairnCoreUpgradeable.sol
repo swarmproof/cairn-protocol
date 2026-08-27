@@ -462,7 +462,9 @@ contract CairnCoreUpgradeable is
             return;
         }
 
-        if (task.recoveryScore >= recoveryThreshold) {
+        // M-9: compare against the wired router's threshold (not Core's local
+        // constant) so a V2 router's boundary is respected even without three-tier.
+        if (task.recoveryScore >= recoveryRouter.recoveryThreshold()) {
             // High recovery score → automatic fallback
             if (task.fallbackAgent != address(0)) {
                 task.state = ICairnTypes.TaskState.RECOVERING;

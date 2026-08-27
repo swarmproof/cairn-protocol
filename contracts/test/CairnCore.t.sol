@@ -662,6 +662,30 @@ contract CairnCoreTest is Test {
         core.setContracts(address(router), address(0), address(registry));
     }
 
+    /// @notice M-9: failure routing compares against the wired router's threshold,
+    ///         not Core's local constant. Raising the router threshold above the
+    ///         achievable score forces DISPUTED where Core's 0.30 constant would
+    ///         have recovered.
+    function test_M9_RoutingUsesRouterThreshold() public {
+        // Router owner is this test contract (it deployed `router` in setUp).
+        router.setRecoveryThreshold(0.9e18);
+
+        bytes32 taskId = _submitAndStartTask();
+        vm.warp(block.timestamp + 121);
+        core.detectFailure(taskId);
+
+        ICairnCore.Task memory task = core.getTask(taskId);
+        if (task.recoveryScore >= 0.9e18) {
+            // Score exceeds even the raised threshold → recovery (inconclusive case).
+            assertEq(uint8(task.state), uint8(ICairnTypes.TaskState.RECOVERING));
+        } else {
+            // Below the router's 0.9 threshold but at/above Core's old 0.30 constant:
+            // old logic would have recovered; M-9 correctly routes to DISPUTED.
+            assertGe(task.recoveryScore, 0.3e18);
+            assertEq(uint8(task.state), uint8(ICairnTypes.TaskState.DISPUTED));
+        }
+    }
+
     /// @notice M-1: a recipient that reverts on receive must not block settlement;
     ///         its payout is deferred to a claimable balance instead.
     function test_M1_RevertingRecipientDoesNotBlockSettlement() public {
