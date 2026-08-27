@@ -9,11 +9,21 @@ import {IGovernance} from "./interfaces/IGovernance.sol";
 /// @dev Based on PRD-06 Section 3
 ///
 /// Governance Phases:
-///   1. Launch: Single admin key (this contract)
-///   2. Multi-sig: Transfer admin to multi-sig (external)
-///   3. Token: Token governance (future)
+///   1. Launch: Single admin key. For production this admin SHOULD be a
+///      TimelockController / multisig (Safe), set at deploy — the two-step
+///      transferAdmin/acceptAdmin handoff exists for exactly this. `execute()`
+///      itself imposes no delay, so the timelock/multisig admin is the enforcement
+///      point for privileged calls (H-7).
+///   2. Multi-sig / timelock admin (external)
+///   3. Token governance (future)
 ///
-/// All parameter changes go through a 48-hour timelock.
+/// @dev PARAMETER STORE STATUS (H-7): the timelocked parameter store below
+///      (proposeParameter/executeProposal + `getParameter`) is NOT yet read by the
+///      protocol contracts, which currently use compile-time `constant` values.
+///      Changing a parameter here therefore does NOT change on-chain behavior. It is
+///      retained as forward-looking governance scaffolding; wiring consumers to read
+///      these values (or making the constants formally immutable and removing this
+///      store) is a tracked follow-up. Do not rely on it to tune live parameters.
 contract CairnGovernance is IGovernance {
     // ═══════════════════════════════════════════════════════════════
     // CONSTANTS - Parameter Keys

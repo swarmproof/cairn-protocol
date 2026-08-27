@@ -28,9 +28,9 @@ across **both** the non-upgradeable and upgradeable contract lines.
 | M-7 | Medium | `activeTaskCount--` underflow could brick finalization | ✅ | #47 |
 | M-8 | Medium | `setCairnCore` deploy-race stake drain | ✅ | #46 (via H-2) |
 | M-10 | Medium | Missing zero-address validation (setContracts / initialize) | ✅ | #47 |
-| M-9 | Medium | V2 router vs binary-path threshold mismatch | ✅ | (this PR) |
-| M-2 | Medium | Appeals cosmetic — escrow settled before appeal window | ☐ | — |
-| M-6 | Medium | Slashing recipient/amounts diverge from documented policy | ☐ | — |
+| M-9 | Medium | V2 router vs binary-path threshold mismatch | ✅ | #49 |
+| M-6 | Medium | Slashing recipient/amounts diverge from documented policy | ✅ | #50 |
+| M-2 | Medium | Appeals cosmetic — escrow settled before appeal window | ✅ | (this PR) |
 | M-11 | Medium | Olas mech selected but not registered → activation reverts | ☐ | — |
 
 Plus Low/Informational items (reputation gate default, recovery recorded as SUCCESS,
@@ -71,8 +71,11 @@ bias). Tracked for a hardening pass.
   until the appeal window closes, so an overturn slash always lands.
 - **H-7 ◑** — two-step admin transfer (`transferAdmin` + `acceptAdmin`) prevents an
   irrecoverable handoff and enables safely moving admin to a `TimelockController`/multisig.
-  **Follow-up:** route `execute()` through that timelock/multisig (deployment invariant) and
-  wire governance parameters into consumers (currently hardcoded constants).
+  The parameter store is now accurately documented as advisory (not read by consumers), so
+  it no longer misrepresents on-chain mutability. **Follow-up:** (1) deploy with a
+  timelock/multisig admin — the enforcement point for `execute()` (a deployment invariant,
+  see the runbook); (2) either wire the parameter store into consumers or make the
+  constants formally immutable and remove the store.
 
 ## Medium — fixed
 
@@ -89,19 +92,17 @@ bias). Tracked for a hardening pass.
 - **M-9** — Core's binary routing path now reads `recoveryRouter.recoveryThreshold()`
   instead of its local constant, so a wired V2 router's boundary is respected even when
   three-tier routing has not been enabled (no `[0.30, 0.35)` misroute).
+- **M-6** — replaced the old slashing (25% zero-checkpoint to treasury, nothing for partial,
+  plus a separately-compounding 10% penalty) with a single graduated slash to the treasury:
+  50% zero-checkpoint, 25% partial, +10% escalation above `MAX_FAILURE_RATE`, capped at 100%.
+  Directed to the treasury, not the operator — the documented "100% to operator" policy was
+  itself unsound (the operator is already escrow-refunded, so it would incentivize griefing).
+- **M-2** — `resolveDispute` now records the ruling and holds escrow; `finalizeDispute`
+  settles the possibly-overturned ruling after the appeal window, so overturns actually
+  redirect funds (overturned rulings pay no arbiter fee).
 
 ## Medium — tracked (follow-up)
 
-- **M-2** — settlement happens in the same tx as the ruling, so `overturnRuling` can punish
-  an arbiter but cannot claw back distributed escrow. Requires holding escrow until the
-  appeal window closes, or a re-settlement/clawback path.
-- **M-6** — zero-checkpoint failure slashes 25% to the treasury; the documented policy is
-  100% to the affected operator, with partial-failure and timeout tiers. Needs the intended
-  slashing matrix confirmed.
-- **M-9** — Core's binary routing path compares against its own `recoveryThreshold` constant
-  while a wired V2 router's boundary is the lower threshold; a half-applied V2 migration
-  misroutes scores in `[0.30, 0.35)`. Make Core read the router threshold or make the
-  migration atomic.
 - **M-11** — `selectFallback` can return an Olas mech not present in `_agents`, so
   `activateFallback` reverts. A conservative "only select registered mechs" guard was
   tried but effectively disables Olas selection entirely (mechs are external and never

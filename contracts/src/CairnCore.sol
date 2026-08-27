@@ -576,8 +576,17 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         // interest — the registry already excludes the primary/fallback agents).
         if (msg.sender == task.operator) revert ArbiterIsOperator();
 
-        // Execute ruling via arbiter registry
-        uint256 arbiterFee = arbiterRegistry.executeRuling(
+        // M-2: only one ruling may be recorded; settlement happens later in
+        // finalizeDispute after the appeal window (so an overturn can redirect funds).
+        if (task.disputeRuledAt != 0) revert DisputeAlreadyRuled();
+
+        // M-3: validate agentShare at ruling time so a bad value can't be recorded
+        // and then permanently block finalizeDispute (task stuck DISPUTED).
+        if (ruling.agentShare > 100) revert InvalidAgentShare(ruling.agentShare);
+
+        // Record the ruling via the arbiter registry (validates eligibility, stores
+        // the ruling for the appeal window, and locks the arbiter's stake).
+        arbiterRegistry.executeRuling(
             taskId,
             ruling,
             msg.sender,
@@ -587,11 +596,46 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
             task.taskType
         );
 
+        // M-2: escrow is NOT distributed here. The task stays DISPUTED until
+        // finalizeDispute settles it after the appeal window elapses.
+        task.disputeRuledAt = block.timestamp;
+    }
+
+    /// @inheritdoc ICairnCore
+    function finalizeDispute(bytes32 taskId)
+        external
+        override
+        taskExists(taskId)
+        inState(taskId, ICairnTypes.TaskState.DISPUTED)
+        nonReentrant
+        whenNotPaused
+    {
+        Task storage task = _tasks[taskId];
+
+        // M-2: a ruling must have been recorded, and its appeal window must have
+        // fully elapsed (so any governance overturn has already taken effect).
+        if (task.disputeRuledAt == 0) revert DisputeNotRuled();
+        if (block.timestamp < task.disputeRuledAt + arbiterRegistry.appealWindow()) {
+            revert AppealWindowNotClosed();
+        }
+
+        // Settle the current (possibly overturned) stored ruling.
+        IArbiterRegistry.StoredRuling memory sr = arbiterRegistry.getRuling(taskId);
+        ICairnTypes.Ruling memory ruling = ICairnTypes.Ruling({
+            outcome: sr.outcome,
+            agentShare: sr.agentShare,
+            rationaleCID: sr.rationaleCID
+        });
+
+        // An overturned ruling pays no arbiter fee — the original arbiter was wrong
+        // (and already slashed); the corrected outcome distributes that share too.
+        uint256 arbiterFee =
+            sr.overturned ? 0 : (task.escrowAmount * arbiterRegistry.arbiterFeeBps()) / 10000;
+
         task.state = ICairnTypes.TaskState.RESOLVED;
         task.resolutionType = ICairnTypes.ResolutionType.ARBITER_RULING;
 
-        // Settle based on ruling (H-2: arbiter paid from escrow here)
-        _settleDispute(taskId, ruling, arbiterFee, msg.sender);
+        _settleDispute(taskId, ruling, arbiterFee, sr.arbiter);
     }
 
     /// @inheritdoc ICairnCore
@@ -604,6 +648,10 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
         whenNotPaused
     {
         Task storage task = _tasks[taskId];
+
+        // M-2: once an arbiter has ruled, settlement goes through finalizeDispute,
+        // not the timeout refund.
+        if (task.disputeRuledAt != 0) revert DisputeAlreadyRuled();
 
         // Check timeout has passed (H-1: measured from dispute onset)
         if (block.timestamp < task.disputedAt + disputeTimeout) {
@@ -774,7 +822,7 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
     /// @notice Settle based on arbiter ruling
     function _settleDispute(
         bytes32 taskId,
-        ICairnTypes.Ruling calldata ruling,
+        ICairnTypes.Ruling memory ruling,
         uint256 arbiterFee,
         address arbiter
     ) internal {
