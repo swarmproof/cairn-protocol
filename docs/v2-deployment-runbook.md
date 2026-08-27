@@ -24,6 +24,13 @@ put v2 on Base Sepolia.
 - [ ] Coverage gate: `forge coverage` → deployed-core contracts ≥95% lines
 - [ ] `contracts/.env` set: `DEPLOYER_PRIVATE_KEY`, `ADMIN_ADDRESS`, `FEE_RECIPIENT_ADDRESS`, `BASE_SEPOLIA_RPC_URL`, `BASESCAN_API_KEY`
 - [ ] Deployer funded with Base Sepolia ETH
+- [ ] **Governance admin (H-7):** for anything beyond throwaway testing, `ADMIN_ADDRESS`
+      MUST be a **multisig (Gnosis Safe) or `TimelockController`**, not a single EOA.
+      `CairnGovernance.execute()` is an unrestricted, immediate privileged call (it can
+      swap module contracts and redirect fees), so the admin *is* the security boundary —
+      a compromised single EOA is total protocol compromise. If you must bootstrap with an
+      EOA, hand off immediately afterward via the two-step `transferAdmin` → `acceptAdmin`
+      (the new admin calls `acceptAdmin`, proving control before it takes effect).
 
 ## 1. Deploy the v2 stack
 
