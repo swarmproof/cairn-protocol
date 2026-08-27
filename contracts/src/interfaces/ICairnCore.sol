@@ -77,6 +77,11 @@ interface ICairnCore {
         // transition, so activeTaskCount is released and slashing runs on failed
         // recoveries). Appended for storage safety.
         bool fallbackActivated;
+
+        // Timestamp an arbiter ruling was recorded (M-2: escrow is held until the
+        // appeal window elapses, then finalizeDispute settles the possibly-overturned
+        // ruling). Zero means no ruling recorded yet. Appended for storage safety.
+        uint256 disputeRuledAt;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -180,6 +185,9 @@ interface ICairnCore {
     error ArbiterIsOperator();
     error InvalidCheckpointCount(uint256 provided, uint256 max);
     error InvalidAgentShare(uint256 share);
+    error DisputeAlreadyRuled();
+    error DisputeNotRuled();
+    error AppealWindowNotClosed();
 
     // ═══════════════════════════════════════════════════════════════
     // TASK LIFECYCLE
@@ -253,6 +261,10 @@ interface ICairnCore {
     /// @notice Timeout resolution for disputed tasks
     /// @param taskId The disputed task
     function resolveDisputeTimeout(bytes32 taskId) external;
+
+    /// @notice Settle a disputed task after its arbiter ruling's appeal window has
+    ///         elapsed (M-2). Uses the current (possibly overturned) stored ruling.
+    function finalizeDispute(bytes32 taskId) external;
 
     // ═══════════════════════════════════════════════════════════════
     // MERKLE VERIFICATION (PRD-07)

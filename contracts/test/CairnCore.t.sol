@@ -715,6 +715,72 @@ contract CairnCoreTest is Test {
         assertEq(c.totalEscrowLocked(), 0);
     }
 
+    /// @notice M-2: escrow is held until the appeal window closes, and a governance
+    ///         overturn within the window redirects the funds at finalize (appeals are
+    ///         no longer cosmetic).
+    function test_M2_OverturnRedirectsFundsAtFinalize() public {
+        RecoveryRouter newRouter = new RecoveryRouter(address(0));
+        ArbiterRegistry newRegistry = new ArbiterRegistry(address(0), address(governance), feeRecipient);
+        CairnCore c = new CairnCore(
+            feeRecipient, address(newRouter), address(0), address(newRegistry), address(governance)
+        );
+        newRouter.setCairnCore(address(c));
+        newRegistry.setCairnCore(address(c));
+        bytes32[] memory domains = new bytes32[](1);
+        domains[0] = taskType;
+        vm.prank(arbiter);
+        newRegistry.registerArbiter{value: 0.5 ether}(domains);
+
+        vm.deal(operator, 10 ether);
+        vm.prank(operator);
+        bytes32 taskId = c.submitTask{value: 1 ether}(taskType, specHash, primaryAgent, 60, block.timestamp + 1 hours);
+        vm.prank(primaryAgent);
+        c.startTask(taskId);
+        vm.warp(block.timestamp + 121);
+        c.detectFailure(taskId); // no fallback → DISPUTED
+
+        // Arbiter rules in favor of the agent.
+        ICairnTypes.Ruling memory ruling = ICairnTypes.Ruling({
+            outcome: ICairnTypes.RulingOutcome.PAY_AGENT,
+            agentShare: 0,
+            rationaleCID: keccak256("r")
+        });
+        vm.prank(arbiter);
+        c.resolveDispute(taskId, ruling);
+
+        // M-2: not settled yet — escrow still locked, task still DISPUTED.
+        assertEq(uint8(c.getTask(taskId).state), uint8(ICairnTypes.TaskState.DISPUTED));
+        assertEq(c.totalEscrowLocked(), 1 ether);
+
+        // Finalizing before the appeal window closes reverts.
+        vm.expectRevert(ICairnCore.AppealWindowNotClosed.selector);
+        c.finalizeDispute(taskId);
+
+        // Governance overturns to refund the operator, within the appeal window.
+        ICairnTypes.Ruling memory corrected = ICairnTypes.Ruling({
+            outcome: ICairnTypes.RulingOutcome.REFUND_OPERATOR,
+            agentShare: 0,
+            rationaleCID: keccak256("overturned")
+        });
+        vm.prank(address(governance));
+        newRegistry.overturnRuling(taskId, corrected);
+
+        // After the window, finalize settles the CORRECTED ruling.
+        uint256 opBefore = operator.balance;
+        uint256 primaryBefore = primaryAgent.balance;
+        uint256 arbiterBefore = arbiter.balance;
+        vm.warp(block.timestamp + newRegistry.appealWindow() + 1);
+        c.finalizeDispute(taskId);
+
+        assertEq(uint8(c.getTask(taskId).state), uint8(ICairnTypes.TaskState.RESOLVED));
+        assertGt(operator.balance, opBefore, "operator should be refunded by the overturn");
+        assertEq(primaryAgent.balance, primaryBefore, "agent gets nothing after overturn");
+        assertEq(arbiter.balance, arbiterBefore, "overturned arbiter earns no fee");
+        // Original arbiter was slashed 50% (1 ether stake was 0.5 → 0.25).
+        assertEq(newRegistry.getArbiter(arbiter).stake, 0.25 ether);
+        assertEq(c.totalEscrowLocked(), 0);
+    }
+
     /// @notice M-3: a SPLIT ruling with agentShare > 100 is rejected (previously
     ///         underflow-reverted, a griefing/foot-gun) rather than silently trusted.
     function test_M3_SplitRulingRejectsShareOver100() public {
@@ -903,6 +969,10 @@ contract CairnCoreTest is Test {
         uint256 arbiterBefore = arbiter.balance;
         vm.prank(arbiter);
         coreNoFallback.resolveDispute(taskId, ruling);
+
+        // M-2: settlement occurs at finalize, after the appeal window elapses.
+        vm.warp(block.timestamp + newRegistry.appealWindow() + 1);
+        coreNoFallback.finalizeDispute(taskId);
 
         // Arbiter received the 3% fee (of 1 ether = 0.03 ether) from escrow.
         assertEq(arbiter.balance - arbiterBefore, 0.03 ether, "arbiter fee not paid from escrow");
@@ -1294,6 +1364,10 @@ contract CairnCoreTest is Test {
             vm.prank(arbiter);
             coreNoFallback.resolveDispute(taskId, ruling);
 
+            // M-2: settlement occurs at finalize, after the appeal window.
+            vm.warp(block.timestamp + newRegistry.appealWindow() + 1);
+            coreNoFallback.finalizeDispute(taskId);
+
             task = coreNoFallback.getTask(taskId);
             assertEq(uint8(task.state), uint8(ICairnTypes.TaskState.RESOLVED));
             assertEq(uint8(task.resolutionType), uint8(ICairnTypes.ResolutionType.ARBITER_RULING));
@@ -1353,6 +1427,10 @@ contract CairnCoreTest is Test {
 
             vm.prank(arbiter);
             coreNoFallback.resolveDispute(taskId, ruling);
+
+            // M-2: settlement occurs at finalize, after the appeal window.
+            vm.warp(block.timestamp + newRegistry.appealWindow() + 1);
+            coreNoFallback.finalizeDispute(taskId);
 
             task = coreNoFallback.getTask(taskId);
             assertEq(uint8(task.state), uint8(ICairnTypes.TaskState.RESOLVED));
