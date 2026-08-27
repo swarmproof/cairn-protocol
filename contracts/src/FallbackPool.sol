@@ -20,10 +20,11 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /// Selection Algorithm:
 ///   score = (success_rate × 0.4) + (reputation × 0.3) + (stake_ratio × 0.2) + (availability × 0.1)
 ///
-/// Slashing Rules:
-///   - Accept + 0 checkpoints + fail → 100% stake to operator
-///   - Accept + some checkpoints + fail → 50% stake to treasury
-///   - Timeout without response → 25% stake to treasury
+/// Slashing Rules (M-6: single graduated slash to the treasury):
+///   - Fail with 0 checkpoints → 50% of stake slashed
+///   - Fail with some checkpoints → 25% of stake slashed
+///   - +10% escalation when the agent's failure rate exceeds MAX_FAILURE_RATE
+///   Directed to the treasury (not the operator, who is already escrow-refunded).
 contract FallbackPool is IFallbackPool, ReentrancyGuard, Ownable {
     // ═══════════════════════════════════════════════════════════════
     // CONSTANTS (PRD-04 Section 2.2)
@@ -396,25 +397,26 @@ contract FallbackPool is IFallbackPool, ReentrancyGuard, Ownable {
     ) internal {
         FallbackAgent storage agent = _agents[fallbackAgent];
 
-        // Check failure rate
+        // M-6: a single graduated slash to the treasury (feeRecipient), scaled by
+        // how badly the recovery failed, plus an escalation for chronically failing
+        // agents. Directed to the treasury — NOT the operator, who is already made
+        // whole by the escrow refund; paying the operator the fallback's stake on
+        // top would incentivize operators to grief fallbacks into slashing.
+        // (Supersedes the old policy that slashed 25% for zero-checkpoint failures,
+        // nothing for partial failures, and separately compounded a 10% penalty.)
+        uint256 slashPct = checkpointsCommitted == 0 ? 50 : 25;
+
         uint256 totalTasks = agent.completedTasks + agent.failedTasks;
         if (totalTasks > 5) {
             uint256 failureRate = (agent.failedTasks * PRECISION) / totalTasks;
             if (failureRate > MAX_FAILURE_RATE) {
-                // Auto-slash 10% for high failure rate
-                uint256 slashAmount = agent.stake / 10;
-                _slash(fallbackAgent, slashAmount, feeRecipient, "High failure rate");
+                slashPct += 10; // escalate for a high failure rate
             }
         }
+        if (slashPct > PRECISION) slashPct = PRECISION;
 
-        // Slash based on checkpoints committed (PRD-04 Section 2.5)
-        if (checkpointsCommitted == 0) {
-            // Complete failure: 100% slash (up to reasonable limit)
-            uint256 slashAmount = agent.stake > 0 ? agent.stake / 4 : 0;
-            _slash(fallbackAgent, slashAmount, feeRecipient, "Zero checkpoints failure");
-        }
-        // Note: For partial failure (some checkpoints), we don't auto-slash
-        // This is handled by the arbiter if disputed
+        uint256 slashAmount = (agent.stake * slashPct) / PRECISION;
+        _slash(fallbackAgent, slashAmount, feeRecipient, "Recovery failure");
     }
 
     /// @notice Execute slashing
