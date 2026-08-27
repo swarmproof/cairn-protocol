@@ -533,14 +533,14 @@ contract FallbackPoolTest is Test {
 
         uint256 feeRecipientBefore = feeRecipient.balance;
 
-        // Fail with zero checkpoints → 25% slash
+        // M-6: fail with zero checkpoints → 50% slash to treasury
         vm.prank(cairnCore);
         pool.completeFallbackTask(taskId, agent1, false, 0);
 
         IFallbackPool.FallbackAgent memory agent = pool.getAgent(agent1);
-        // 1 ether - 0.25 ether (25% slash) = 0.75 ether
-        assertEq(agent.stake, 0.75 ether);
-        assertEq(feeRecipient.balance - feeRecipientBefore, 0.25 ether);
+        // 1 ether - 0.5 ether (50% slash) = 0.5 ether
+        assertEq(agent.stake, 0.5 ether);
+        assertEq(feeRecipient.balance - feeRecipientBefore, 0.5 ether);
     }
 
     function test_SlashOnHighFailureRate() public {
@@ -568,7 +568,7 @@ contract FallbackPoolTest is Test {
         assertTrue(agent.stake < 1 ether);
     }
 
-    function test_NoSlashOnSomeCheckpointsFailure() public {
+    function test_SlashOnPartialCheckpointFailure() public {
         _registerAgent(agent1, 1 ether);
 
         bytes32 taskId = keccak256("task1");
@@ -576,13 +576,15 @@ contract FallbackPoolTest is Test {
         vm.prank(cairnCore);
         pool.activateFallback(taskId, agent1);
 
-        // Fail with some checkpoints → no auto-slash (arbiter decides)
+        uint256 feeRecipientBefore = feeRecipient.balance;
+
+        // M-6: fail with some checkpoints → 25% slash to treasury (previously none)
         vm.prank(cairnCore);
         pool.completeFallbackTask(taskId, agent1, false, 3);
 
         IFallbackPool.FallbackAgent memory agent = pool.getAgent(agent1);
-        // No slash for partial completion
-        assertEq(agent.stake, 1 ether);
+        assertEq(agent.stake, 0.75 ether);
+        assertEq(feeRecipient.balance - feeRecipientBefore, 0.25 ether);
     }
 
     function test_SlashEmitsEvent() public {
