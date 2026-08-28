@@ -303,7 +303,7 @@ export default function IntegratePage() {
           </div>
           <div className="p-4 rounded-lg bg-muted/50 text-center">
             <div className="font-semibold mb-1 text-amber-500">✓</div>
-            <div className="text-sm">MPL-2.0</div>
+            <div className="text-sm">AGPL-3.0</div>
           </div>
         </div>
 
