@@ -90,7 +90,11 @@ export const cairnAbi = [
           { name: "failureRecordCID", type: "bytes32", internalType: "bytes32" },
           { name: "recoveryScore", type: "uint256", internalType: "uint256" },
           { name: "resolutionType", type: "uint8", internalType: "enum ICairnTypes.ResolutionType" },
-          { name: "resolutionRecordCID", type: "bytes32", internalType: "bytes32" }
+          { name: "resolutionRecordCID", type: "bytes32", internalType: "bytes32" },
+          { name: "recoveryScope", type: "uint8", internalType: "enum ICairnTypes.RecoveryScope" },
+          { name: "disputedAt", type: "uint256", internalType: "uint256" },
+          { name: "fallbackActivated", type: "bool", internalType: "bool" },
+          { name: "disputeRuledAt", type: "uint256", internalType: "uint256" }
         ]
       }
     ],
@@ -201,7 +205,8 @@ export const cairnAbi = [
       { name: "taskId", type: "bytes32", internalType: "bytes32" },
       { name: "count", type: "uint256", internalType: "uint256" },
       { name: "merkleRoot", type: "bytes32", internalType: "bytes32" },
-      { name: "latestCID", type: "bytes32", internalType: "bytes32" }
+      { name: "latestCID", type: "bytes32", internalType: "bytes32" },
+      { name: "schemaHash", type: "bytes32", internalType: "bytes32" }
     ],
     outputs: [],
     stateMutability: "nonpayable"

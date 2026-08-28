@@ -42,6 +42,9 @@ export function DemoControls({
   const { address, isConnected } = useAccount();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Persist the submitted specHash so a later checkpoint can pass a matching
+  // schemaHash (v2 CairnCore enforces schemaHash == task.specHash).
+  const [demoSpecHash, setDemoSpecHash] = useState<`0x${string}` | null>(null);
 
   const { submitTask, isPending: isSubmitPending } = useSubmitTask();
   const { heartbeat, isPending: isHeartbeatPending } = useHeartbeat();
@@ -62,14 +65,17 @@ export function DemoControls({
     setError(null);
 
     try {
-      // Generate a random spec hash
+      // Generate a demo task type + spec hash; persist the spec hash for checkpoints.
+      const taskType = keccak256(toBytes('demo.task'));
       const specHash = keccak256(toBytes(`demo-task-${Date.now()}`));
+      setDemoSpecHash(specHash);
 
-      // Use connected wallet as both primary and fallback for demo
+      // v2: submitTask(taskType, specHash, primaryAgent, heartbeat, deadline).
+      // The fallback agent is auto-selected from the pool (not passed).
       const result = await submitTask(
-        address, // primary agent
-        address, // fallback agent (same for demo)
+        taskType,
         specHash,
+        address, // primary agent
         BigInt(60), // 60 second heartbeat interval
         BigInt(Math.floor(Date.now() / 1000) + 3600), // 1 hour deadline
         '0.002' // 0.002 ETH escrow
@@ -117,9 +123,11 @@ export function DemoControls({
 
     try {
       // Generate a demo checkpoint batch
-      // For demo purposes: single checkpoint (count=1), same hash for merkle root and CID
+      // For demo purposes: single checkpoint (count=1), same hash for merkle root and CID.
+      // schemaHash must equal the task's specHash (v2 enforcement); use the persisted one.
       const cid = keccak256(toBytes(`checkpoint-${Date.now()}`));
-      await commitCheckpoint(taskId, BigInt(1), cid, cid);
+      const schemaHash = demoSpecHash ?? cid;
+      await commitCheckpoint(taskId, BigInt(1), cid, cid, schemaHash);
       onActionComplete?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to commit checkpoint');

@@ -83,18 +83,20 @@ export function useSubmitTask() {
   const { writeContractAsync, isPending, error } = useWriteContract();
 
   const submitTask = async (
-    primaryAgent: `0x${string}`,
-    fallbackAgent: `0x${string}`,
+    taskType: `0x${string}`,
     specHash: `0x${string}`,
+    primaryAgent: `0x${string}`,
     heartbeatInterval: bigint,
     deadline: bigint,
     escrowEth: string
   ) => {
+    // v2 CairnCore: submitTask(taskType, specHash, primaryAgent, heartbeatInterval,
+    // deadline) payable. The fallback agent is auto-selected from the pool, not passed.
     return writeContractAsync({
       address: CAIRN_CONTRACT_ADDRESS,
       abi: cairnAbi,
       functionName: 'submitTask',
-      args: [primaryAgent, fallbackAgent, specHash, heartbeatInterval, deadline],
+      args: [taskType, specHash, primaryAgent, heartbeatInterval, deadline],
       value: parseEther(escrowEth),
     });
   };
@@ -162,13 +164,15 @@ export function useCommitCheckpoint() {
     taskId: `0x${string}`,
     count: bigint,
     merkleRoot: `0x${string}`,
-    latestCID: `0x${string}`
+    latestCID: `0x${string}`,
+    schemaHash: `0x${string}`
   ) => {
+    // v2 CairnCore requires schemaHash and enforces schemaHash == task.specHash.
     return writeContractAsync({
       address: CAIRN_CONTRACT_ADDRESS,
       abi: cairnAbi,
       functionName: 'commitCheckpointBatch',
-      args: [taskId, count, merkleRoot, latestCID],
+      args: [taskId, count, merkleRoot, latestCID, schemaHash],
     });
   };
 
