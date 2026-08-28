@@ -72,6 +72,14 @@ contract DeployCairnV2 is Script {
         fallbackPool.setCairnCore(address(cairnCore));
         arbiterRegistry.setCairnCore(address(cairnCore));
 
+        // H-7 / centralization: hand Ownable control of the router and pool to the
+        // governance admin (a multisig/timelock in production) so the deployer EOA
+        // does not retain control of their setters after deployment. Done last, so
+        // the wiring above (owner-only setCairnCore) still runs as the deployer.
+        recoveryRouter.transferOwnership(admin);
+        fallbackPool.transferOwnership(admin);
+        console.log("  -> router/pool ownership transferred to admin:", admin);
+
         vm.stopBroadcast();
 
         console.log("");
