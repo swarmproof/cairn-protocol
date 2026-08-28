@@ -153,7 +153,7 @@ export default function HomePage() {
                 <div className="text-xs text-muted-foreground">Checkpoints</div>
               </div>
               <div className="p-4 rounded-lg bg-muted/50 text-center">
-                <div className="font-semibold mb-1">MPL-2.0</div>
+                <div className="font-semibold mb-1">AGPL-3.0</div>
                 <div className="text-xs text-muted-foreground">License</div>
               </div>
             </div>

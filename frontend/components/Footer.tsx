@@ -113,7 +113,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} CAIRN Protocol. Licensed under <a href="https://github.com/MarouaBoud/cairn-protocol/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:underline">MPL-2.0</a>.
+            &copy; {new Date().getFullYear()} CAIRN Protocol. Licensed under <a href="https://github.com/swarmproof/cairn-protocol/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:underline">AGPL-3.0</a>.
           </p>
           <div className="flex items-center gap-4">
             <a

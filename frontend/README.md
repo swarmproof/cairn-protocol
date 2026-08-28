@@ -126,4 +126,4 @@ This enables judges and testers to experience the full protocol flow without run
 
 ## License
 
-BUSL-1.1 — See main repository LICENSE file.
+AGPL-3.0-or-later — See main repository LICENSE file.
