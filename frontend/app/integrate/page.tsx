@@ -31,7 +31,8 @@ async def my_agent(state):
   },
   agentkit: {
     name: 'Coinbase AgentKit',
-    code: `import { CairnClient } from '@cairn/sdk';
+    code: `// Illustrative — the JS/TS SDK (@cairn/sdk) is planned, not yet published.
+import { CairnClient } from '@cairn/sdk';
 import { AgentKit } from '@coinbase/agentkit';
 
 // Initialize CAIRN (Base Sepolia)
@@ -128,7 +129,7 @@ export default function IntegratePage() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <a
-              href="https://github.com/MarouaBoud/cairn-protocol/tree/main/sdk#readme"
+              href="https://github.com/swarmproof/cairn-protocol/tree/main/sdk#readme"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-amber-600 text-white font-semibold hover:bg-amber-700 transition-colors"
@@ -138,7 +139,7 @@ export default function IntegratePage() {
               <ArrowRight className="h-4 w-4" />
             </a>
             <a
-              href="https://github.com/MarouaBoud/cairn-protocol/tree/main/sdk"
+              href="https://github.com/swarmproof/cairn-protocol/tree/main/sdk"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors"
@@ -181,7 +182,7 @@ export default function IntegratePage() {
                   </a>
                 </div>
                 <code className="text-sm font-mono text-slate-300 block">
-                  curl -s https://cairn.protocol/skill.md
+                  curl -s https://cairn-protocol.vercel.app/skill.md
                 </code>
                 <p className="text-xs text-slate-500 mt-2">
                   Essential integration guide for agents
@@ -199,7 +200,7 @@ export default function IntegratePage() {
                   </a>
                 </div>
                 <code className="text-sm font-mono text-slate-300 block">
-                  curl -s https://cairn.protocol/cairn.md
+                  curl -s https://cairn-protocol.vercel.app/cairn.md
                 </code>
                 <p className="text-xs text-slate-500 mt-2">
                   Complete protocol specification
@@ -218,23 +219,25 @@ export default function IntegratePage() {
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Python</span>
+                  <span className="text-sm text-muted-foreground">Python SDK (alpha)</span>
                   <Terminal className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
-                  pip install cairn-sdk
+                <code className="text-xs font-mono bg-muted px-2 py-1 rounded block break-all">
+                  pip install &quot;git+https://github.com/swarmproof/cairn-protocol.git#subdirectory=sdk&quot;
                 </code>
+                <p className="text-xs text-muted-foreground mt-2">Not yet on PyPI — install from source.</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">JavaScript</span>
+                  <span className="text-sm text-muted-foreground">JavaScript / TypeScript</span>
                   <Terminal className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
-                  npm i @cairn/sdk
+                  # planned
                 </code>
+                <p className="text-xs text-muted-foreground mt-2">JS/TS SDK is planned; use the Python SDK today.</p>
               </CardContent>
             </Card>
           </div>
@@ -285,21 +288,21 @@ export default function IntegratePage() {
         </div>
       </section>
 
-      {/* Production Signals */}
+      {/* What's shipped */}
       <section className="mb-16">
-        <h2 className="text-2xl font-bold text-center mb-8">Production Ready</h2>
+        <h2 className="text-2xl font-bold text-center mb-8">What&apos;s Shipped</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
           <div className="p-4 rounded-lg bg-muted/50 text-center">
             <div className="font-semibold mb-1 text-amber-500">✓</div>
-            <div className="text-sm">TypeScript Types</div>
+            <div className="text-sm">Base Sepolia (v2)</div>
           </div>
           <div className="p-4 rounded-lg bg-muted/50 text-center">
             <div className="font-semibold mb-1 text-amber-500">✓</div>
-            <div className="text-sm">Full Docs</div>
+            <div className="text-sm">Merkle Checkpoints</div>
           </div>
           <div className="p-4 rounded-lg bg-muted/50 text-center">
             <div className="font-semibold mb-1 text-amber-500">✓</div>
-            <div className="text-sm">95%+ Coverage</div>
+            <div className="text-sm">408 Contract Tests</div>
           </div>
           <div className="p-4 rounded-lg bg-muted/50 text-center">
             <div className="font-semibold mb-1 text-amber-500">✓</div>
@@ -324,11 +327,11 @@ export default function IntegratePage() {
       <section className="text-center">
         <h2 className="text-2xl font-bold mb-4">Start Building</h2>
         <p className="text-muted-foreground mb-6">
-          Questions? Join our Discord or check the docs.
+          Questions? Check the docs or open a GitHub issue.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <a
-            href="https://github.com/MarouaBoud/cairn-protocol#readme"
+            href="https://github.com/swarmproof/cairn-protocol#readme"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-amber-600 text-white font-semibold hover:bg-amber-700 transition-colors"

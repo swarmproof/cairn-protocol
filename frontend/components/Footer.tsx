@@ -14,8 +14,8 @@ const footerLinks = {
     { label: 'Roadmap', href: '/roadmap' },
   ],
   resources: [
-    { label: 'Documentation', href: 'https://github.com/MarouaBoud/cairn-protocol#readme', external: true },
-    { label: 'GitHub', href: 'https://github.com/MarouaBoud/cairn-protocol', external: true },
+    { label: 'Documentation', href: 'https://github.com/swarmproof/cairn-protocol#readme', external: true },
+    { label: 'GitHub', href: 'https://github.com/swarmproof/cairn-protocol', external: true },
     { label: 'Contract', href: `https://sepolia.basescan.org/address/${CAIRN_CONTRACT}`, external: true },
     { label: 'skill.md', href: '/skill.md', external: false },
     { label: 'cairn.md', href: '/cairn.md', external: false },
@@ -117,7 +117,7 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-4">
             <a
-              href="https://github.com/MarouaBoud/cairn-protocol"
+              href="https://github.com/swarmproof/cairn-protocol"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -126,7 +126,7 @@ export function Footer() {
               <Github className="h-5 w-5" />
             </a>
             <a
-              href="https://github.com/MarouaBoud/cairn-protocol#readme"
+              href="https://github.com/swarmproof/cairn-protocol#readme"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"

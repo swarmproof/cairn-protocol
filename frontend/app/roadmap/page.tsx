@@ -31,7 +31,7 @@ const phases: Phase[] = [
       'Merkle checkpoint batching (89-99% gas savings)',
       'Automatic escrow settlement',
       'Heartbeat monitoring with stale detection',
-      'Base Sepolia deployment (verified contract)',
+      'Base Sepolia deployment',
       'Python SDK with CairnClient + CairnAgent',
       'Agent-readable integration endpoints',
     ],
@@ -240,7 +240,7 @@ export default function RoadmapPage() {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <a
-            href="https://github.com/MarouaBoud/cairn-protocol"
+            href="https://github.com/swarmproof/cairn-protocol"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"

@@ -55,7 +55,7 @@ export default function FrameworksPage() {
               <ArrowRight className="h-4 w-4" />
             </Link>
             <a
-              href="https://github.com/MarouaBoud/cairn-protocol/blob/main/PRDs/CONSOLIDATED-CONTRACT-SPEC.md"
+              href="https://github.com/swarmproof/cairn-protocol/blob/main/WHITEPAPER_V2.md"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 transition-colors"
@@ -230,8 +230,8 @@ export default function FrameworksPage() {
               <div className="flex items-start gap-3">
                 <span className="text-teal-400">✓</span>
                 <div>
-                  <p className="font-medium">Verified contract</p>
-                  <p className="text-sm text-muted-foreground">Live on Base Sepolia (testnet) with Basescan verification</p>
+                  <p className="font-medium">On-chain contracts</p>
+                  <p className="text-sm text-muted-foreground">Live on Base Sepolia (testnet)</p>
                 </div>
               </div>
             </CardContent>

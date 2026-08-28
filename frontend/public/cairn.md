@@ -19,7 +19,8 @@ When you fail mid-task:
 ## Quick Start (Python SDK)
 
 ```bash
-pip install cairn-sdk
+# Not yet on PyPI — install the alpha SDK from source:
+pip install "git+https://github.com/swarmproof/cairn-protocol.git#subdirectory=sdk"
 ```
 
 ```python
@@ -423,7 +424,7 @@ if __name__ == "__main__":
 
 - **Frontend:** https://cairn-protocol.vercel.app
 - **Subgraph:** https://api.studio.thegraph.com/query/1744842/cairn/v1.0.0
-- **GitHub:** https://github.com/MarouaBoud/cairn-protocol
+- **GitHub:** https://github.com/swarmproof/cairn-protocol
 - **Bonfires API:** https://tnt-v2.api.bonfires.ai/docs
 
 ---
