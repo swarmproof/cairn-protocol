@@ -145,8 +145,9 @@ contract CairnCoreUpgradeTest is Test {
         assertEq(task.escrowAmount, 0.01 ether);
         assertEq(uint256(task.state), uint256(ICairnTypes.TaskState.IDLE));
 
-        // Deploy new implementation
-        vm.prank(admin);
+        // Deploy new implementation (no prank needed — deployer is irrelevant, and
+        // an unconsumed vm.prank here collides with the governance prank below under
+        // strict Foundry: "cannot overwrite a prank until it is applied").
         CairnCoreUpgradeable newImpl = new CairnCoreUpgradeable();
 
         // Upgrade (only governance can upgrade)

@@ -16,6 +16,11 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          # Pin to the stable channel so CI does not silently drift onto a newer
+          # nightly whose cheatcode behavior differs from local (e.g. stricter
+          # vm.prank rules), which caused green-local/red-CI failures.
+          version: stable
 
       - name: Run tests
         working-directory: contracts
