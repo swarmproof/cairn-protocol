@@ -15,22 +15,24 @@ simulation, not in production recoveries* — before anything is published or la
 
 | Item | Detail | Status | PR |
 |------|--------|--------|----|
-| Frontend↔contract ABI/events | `LiveStats` listens for non-existent `TaskSubmitted`; `submitTask`/`commitCheckpointBatch` ABI predate deployed Core; `Task` tuple missing v2 fields; pipeline listens for `TaskResolved` + stale Core `0xB655…` | ☐ | — |
-| Delete demo fallback numbers | Hardcoded `156/98.7%/12.4 ETH` on RPC error, hero `47`, intelligence `129`, `avgRecoveryTime=21`, fake trends | ☐ | — |
-| Remove false claims | `pip install cairn-sdk` (404), `npm i @cairn/sdk` (nonexistent), dead subgraph endpoint, "production ready", "verified", "no admin key", "95% coverage", Discord w/o URL, `cairn.protocol`/`docs.cairnprotocol.com` dead hosts | ☐ | — |
-| Unify license → AGPL-3.0 | Site says MPL-2.0, README says BUSL-1.1, package.json says AGPL. Standardize app to AGPL-3.0; footer link → org repo | ☐ | — |
+| CI green | `forge test` red on main (nightly Foundry double-prank); fixed + pinned to stable | ✅ | #56 |
+| Frontend↔contract ABI/events | `LiveStats` event `TaskSubmitted`→`TaskCreated`; `getTask` tuple + `submitTask`/`commitCheckpointBatch` ABI + callers aligned to v2 | ✅ | #55, #57 |
+| Delete demo fallback numbers | Removed error-fallback `156/98.7/12.4`, trends, `avgRecoveryTime`; hero `47` + fake insights; intelligence `129` + always-same detail pane + dead time-filter | ✅ | #55, #59 |
+| Remove false claims | `pip install cairn-sdk`/`npm i @cairn/sdk`, `cairn.protocol` host, "production ready"/"verified"/"95% coverage", Discord-no-URL, `MarouaBoud`→`swarmproof` | ✅ | #58 |
+| Unify license → AGPL-3.0 | Site/README/footer standardized to AGPL-3.0 | ✅ | #54 |
+| Pipeline event names | Pipeline listens for `TaskResolved` (Core emits `TaskSettled`/`TaskCompleted`); address fixed in #60, event names remain | ☐ | — |
 
 ## P1 — One true story (docs/paper consistency)
 
 | Item | Detail | Status | PR |
 |------|--------|--------|----|
-| Propagate the honest sentence | README, CHANGELOG, WHITEPAPER abstract/§6.4/§10.3, PRD-04 STATUS, arXiv comments all state v2-is-live + sim-validated | ☐ | — |
-| Paper drift: slashing §7.3 | Paper says 100% to operator; code (#50) is 50/25/+10 to treasury | ☐ | — |
-| Paper drift: governance §8 | Paper says timelock params; code (#51) has an advisory param store + constants | ☐ | — |
-| Implementation Status section | Add a single canonical status section to the paper | ☐ | — |
-| Spec↔code name map | `checkLiveness`→`detectFailure`, `commitCheckpoint`→`commitCheckpointBatch`, `settle`→internal, `confirmTask`→`startTask` | ☐ | — |
-| Standardize test count | Docs cite 381/339/375/401; actual is 408 | ☐ | — |
-| Fix stale addresses/URLs | pipeline README Core `0xB655…`, subgraph `DEPLOYMENT.md` startBlock, cite URL `MarouaBoud`→`swarmproof` | ☐ | — |
+| Propagate the honest sentence | README/CHANGELOG/CLAUDE.md aligned to v2-is-live + sim-validated | ✅ | #60 |
+| Paper drift: slashing §7.3 | Documented in Implementation Status (code = 50/25/+10 treasury; supersedes 100%-to-operator; §7.5 derivations flagged for re-derivation) | ✅ | #61 |
+| Paper drift: governance §8 | Documented in Implementation Status (param store advisory; multisig admin) | ✅ | #61 |
+| Implementation Status section | Added (authoritative) to the whitepaper | ✅ | #61 |
+| Spec↔code name map | Added to the Implementation Status section | ✅ | #61 |
+| Standardize test count | 339/375 → 408 (README, runbook) | ✅ | #60 |
+| Fix stale addresses/URLs | pipeline Core `0xB655…`→`0x9917…`; subgraph startBlock; cite URLs `MarouaBoud`→`swarmproof` | ✅ | #60 |
 
 ## P2 — Bigger (needs design/product decisions)
 
@@ -45,8 +47,8 @@ simulation, not in production recoveries* — before anything is published or la
 
 | Item | Detail | Status | PR |
 |------|--------|--------|----|
-| Close #41/#42 | Reentrancy + dispute-timeout — resolved (M-1/H-1) | ☐ | — |
-| Close #43/#44 | Stub "fixes" — superseded by #46/#48 | ☐ | — |
+| Close #41/#42 | Reentrancy + dispute-timeout — resolved (H-1 #46 / M-1 #48) | ✅ | closed |
+| Close #43/#44 | Stub "fixes" — superseded by #46/#48 | ✅ | closed |
 | M-11 (Olas) | Distinct Olas activation path (selection returns unregistered mech) | ⏸ | — |
 | H-5 follow-up | Bind checkpoint count to Merkle leaf count (cap shipped in #46) | ⏸ | — |
 | H-7 follow-up | Wire param store into consumers or remove it (advisory doc shipped in #51) | ⏸ | — |
