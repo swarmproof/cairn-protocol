@@ -8,7 +8,7 @@ CAIRN: A Protocol for Agent Failure Detection, Classification, and Recovery in t
 
 Maroua Boudoukha (corresponding author)
 — Independent researcher
-— Contact: github.com/MarouaBoud
+— Contact: github.com/swarmproof
 
 ## Abstract (for arXiv submission — plain-text, no markdown)
 
@@ -16,7 +16,7 @@ AI agent task completion rates remain at approximately 50% across popular framew
 
 CAIRN defines a 6-state machine with three-tier recovery routing enforced by smart contracts. On failure, the protocol classifies the failure into LIVENESS, RESOURCE, or LOGIC, computes a multiplicative recovery score r = F^0.80 × B^0.35 × D^0.15, and routes the task to a qualified fallback agent that resumes from the last IPFS checkpoint, or to dispute. The formula is calibrated against a ground-truth model derived from published failure-mode distributions: across 100,000 synthetic task-failure events and 16 experiments, it achieves 23.46% misrouting — within 0.93pp of the Bayes-optimal minimum (22.53%) for the same model — and reduces wasted-recovery false positives by 65% versus a linear baseline. We are explicit that this is near-optimality against the calibrated model, not production data; a staged roadmap replaces synthetic ground truth with observed outcomes as testnet data accumulates. Escrow settles proportionally to verified work. We prove escrow safety, termination, and state determinism.
 
-Economic enforcement — escrow-conditioned record writing — bootstraps a collective intelligence layer without requiring altruistic participation. CAIRN integrates ERC-8004, ERC-8183, and ERC-7710; deployed on Base, composable with LangGraph, Olas, CrewAI, AutoGen, Google A2A, and Anthropic MCP. Source and reproducible simulation (seed=42): github.com/MarouaBoud/cairn-protocol.
+Economic enforcement — escrow-conditioned record writing — bootstraps a collective intelligence layer without requiring altruistic participation. CAIRN integrates ERC-8004, ERC-8183, and ERC-7710; deployed on Base, composable with LangGraph, Olas, CrewAI, AutoGen, Google A2A, and Anthropic MCP. Source and reproducible simulation (seed=42): github.com/swarmproof/cairn-protocol.
 
 ## arXiv Categories
 
@@ -32,7 +32,7 @@ Economic enforcement — escrow-conditioned record writing — bootstraps a coll
 ## Comments Field (arXiv form)
 
 ```
-~1130 lines, 16 figures (ancillary). Source: github.com/MarouaBoud/cairn-protocol.
+~1130 lines, 16 figures (ancillary). Source: github.com/swarmproof/cairn-protocol.
 Reproducible simulation: python3 -m simulation.run_eq4 (seed=42).
 v1 testnet deployed on Base Sepolia; v2 specification in this paper.
 ```

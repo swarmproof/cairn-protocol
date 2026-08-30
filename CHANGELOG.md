@@ -23,9 +23,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - `PRDs/PRD-04-V2-UPGRADE/` — six-phase migration plan from v1 testnet to v2 contracts.
 - `PUBLICATION/arxiv/` — submission-ready arXiv bundle (`.tex`, figures, metadata) for the v2.0 whitepaper.
 
-### Documented (not yet deployed)
+### Deployed
 
-- The v2 spec is the **target protocol**. The Base Sepolia testnet currently runs v1; v2 ships via governance-gated migration through the `IRecoveryRouter` interface (no state-breaking redeployment).
+- The v2 protocol (multiplicative recovery score, three-tier routing) is **deployed and
+  activated on Base Sepolia**: `RecoveryRouterV2` is wired into `CairnCore` with
+  `threeTierRoutingEnabled = true`, superseding the v1 interim-linear router. There are
+  no tasks on-chain yet, and the formula's headline result is validated against a
+  calibrated simulation model, not production recoveries.
 
 ---
 

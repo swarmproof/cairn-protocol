@@ -6,7 +6,7 @@
 
 > **Author:** Maroua Boudoukha
 > **Affiliation:** Independent Researcher
-> **Contact:** github.com/MarouaBoud
+> **Contact:** github.com/swarmproof
 >
 > **Copyright 2026 Maroua BOUDOUKHA. All rights reserved.**
 >
@@ -1050,7 +1050,7 @@ where σ is the logistic function, *B* and *D* are budget and deadline remaining
 
 ### 10.2 Protocol Extensions
 
-**ERC standardization.** CAIRN is designed to become an Ethereum standard. The specification in [ERC-CAIRN.md](https://github.com/MarouaBoud/cairn-protocol/blob/main/ERC-CAIRN.md) follows the EIP-1 format. Working title: `ERC-CAIRN: Agent Failure and Recovery Standard`.
+**ERC standardization.** CAIRN is designed to become an Ethereum standard. The specification in [ERC-CAIRN.md](https://github.com/swarmproof/cairn-protocol/blob/main/ERC-CAIRN.md) follows the EIP-1 format. Working title: `ERC-CAIRN: Agent Failure and Recovery Standard`.
 
 **CAIRN MCP Server.** Exposing checkpoint, recovery, and intelligence query as MCP tools would enable any MCP-connected agent to participate in CAIRN without framework-specific integration.
 

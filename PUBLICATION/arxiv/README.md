@@ -156,7 +156,7 @@ simulation/RESULTS_EQ4.md      # Run 4
 simulation/figures/fig1..fig16 # all figures
 ```
 
-These files are in the parent repository (`github.com/MarouaBoud/cairn-protocol`) and should be preserved public alongside the arXiv submission for reproducibility.
+These files are in the parent repository (`github.com/swarmproof/cairn-protocol`) and should be preserved public alongside the arXiv submission for reproducibility.
 
 ## After submission
 

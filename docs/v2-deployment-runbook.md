@@ -20,7 +20,7 @@ put v2 on Base Sepolia.
 
 ## Pre-flight
 
-- [ ] `main` green: `cd contracts && forge test` → 375 passing
+- [ ] `main` green: `cd contracts && forge test` → 408 passing
 - [ ] Coverage gate: `forge coverage` → deployed-core contracts ≥95% lines
 - [ ] `contracts/.env` set: `DEPLOYER_PRIVATE_KEY`, `ADMIN_ADDRESS`, `FEE_RECIPIENT_ADDRESS`, `BASE_SEPOLIA_RPC_URL`, `BASESCAN_API_KEY`
 - [ ] Deployer funded with Base Sepolia ETH
