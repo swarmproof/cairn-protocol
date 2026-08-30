@@ -27,7 +27,51 @@ Our key insight is that **economic enforcement** — escrow-conditioned record w
 
 CAIRN integrates three Ethereum standards: ERC-8004 for agent identity and reputation, ERC-8183 for job escrow lifecycle, and ERC-7710 for scoped delegation. It is deployed on Base and composable with existing agent frameworks (LangGraph, Olas, CrewAI, AutoGen) and emerging coordination protocols (Google A2A, Anthropic MCP). All simulation code, results, and figures are reproducible from `simulation/` in the CAIRN repository via `python3 -m simulation.run_eq4` (seed=42); see reference [18].
 
-> **Note on protocol versions.** This paper specifies CAIRN **v2**, the simulation-validated protocol described throughout. The current testnet deployment (**v1**) uses an interim linear recovery score (Equation 1 in Section 6.4) with binary routing, reflecting the protocol's state prior to the calibration work reported here. The multiplicative formula, three-tier routing, and refined stake/threshold parameters described in Sections 2.2.1, 6.4, and 7.5 are the v2 specification, intended for adoption through the governance upgrade path outlined in Section 8.3. Sections marked *"v2 specification"* describe the target protocol; *"v1 deployment"* references describe what is live on testnet. This paper exists to motivate and document the v1 → v2 transition.
+> **Note on protocol versions.** This paper specifies CAIRN **v2** — the simulation-validated protocol described throughout — which is **deployed and activated on Base Sepolia** (`RecoveryRouterV2` wired into `CairnCore` with three-tier routing enabled). The earlier v1 interim-linear router has been superseded. References to "v1 deployment" throughout this text are historical (the pre-calibration state); where they imply v1 is what is currently live, see the **Implementation Status** section immediately below for the authoritative account of what is deployed and how the code differs from this specification. There are no tasks on-chain yet; the paper's headline results are validated against a calibrated simulation model, not production recoveries.
+
+---
+
+## Implementation Status (authoritative)
+
+This specification and the deployed code differ in a few places — some deliberate
+improvements made during implementation/audit, some naming. This section is the
+single source of truth for those differences; where the prose above and the code
+disagree, the code (and this section) govern what is live.
+
+**Deployed (Base Sepolia, chain 84532):** CairnCore `0x9917…FB3a`, RecoveryRouterV2
+`0x1481…9A70`, FallbackPool `0x363a…5D07`, ArbiterRegistry `0x3AF1…35eB`,
+CairnGovernance `0xA142…221C`. Zero tasks so far. **Note:** an internal security
+audit produced fixes (repo PRs #46–#59) that are on `main` but **not yet redeployed**
+— the live addresses run the pre-audit code until the redeploy.
+
+**Spec → code name map:**
+
+| Paper term | Deployed function |
+|------------|-------------------|
+| `confirmTask` (IDLE→RUNNING) | `startTask` (`onlyCurrentAgent`) |
+| `checkLiveness` / `checkProgress` | `detectFailure` (permissionless; `isStale`) |
+| `commitCheckpoint` | `commitCheckpointBatch(taskId, count, merkleRoot, latestCID, schemaHash)` |
+| `settle(taskId)` | internal `_settleEscrow` (invoked by `completeTask` / `finalizeDispute` / timeout refund) — there is no public `settle()` |
+
+**Deliberate divergences from this spec:**
+
+- **Slashing (§7.3, §7.4).** The spec describes a zero-checkpoint fallback failure as
+  slashing **100% of stake to the operator**. The deployed code instead applies a
+  **graduated slash to the treasury** — 50% (zero checkpoints), 25% (partial), +10%
+  for a high failure rate, capped at 100%. Rationale: the operator is already made
+  whole by the escrow refund, so also paying them the fallback's stake double-compensates
+  them and incentivises griefing fallbacks into slashing. The formal derivations in
+  §7.5 (e.g. the stake break-even in §7.4) assume the original 100%-to-operator
+  schedule and will be re-derived for the graduated schedule in a future revision.
+- **Governance parameters (§8).** The exponents, class weights, and thresholds are
+  described as governance-adjustable via a 48-hour timelock. In the deployed code the
+  timelocked parameter store exists but is **not yet read by the protocol contracts**,
+  which use compile-time constants; changing a parameter there does not (yet) alter
+  on-chain behaviour. The governance admin should be a multisig/timelock at deploy
+  (the two-step admin transfer supports this); `execute()` itself is immediate.
+- **Dispute settlement (§7).** Disputed escrow is held until a 48-hour appeal window
+  elapses, then settled via `finalizeDispute` using the (possibly governance-overturned)
+  ruling — so appeals can redirect funds, not merely punish the arbiter.
 
 ---
 
