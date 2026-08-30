@@ -24,15 +24,20 @@ It is a **polyglot monorepo** — Solidity contracts, a Python SDK + CLI, a Next
 frontend, a Graph subgraph, an off-chain event pipeline, and a Monte Carlo
 simulation — each with its own toolchain.
 
-### ⚠️ v1 (deployed) vs v2 (spec) — do not conflate
+### v1 vs v2 — v2 is live
 
-The contracts **deployed on Base Sepolia implement the interim linear** recovery
-formula `r = 0.5·F + 0.3·B + 0.2·D` with a single 0.30 routing threshold. The
-whitepaper/README describe the **v2 multiplicative** formula `r = F^0.80 · B^0.35
-· D^0.15` with three-tier routing — that lives only in `RecoveryRouterV2.sol`
-(not deployed) and migrates via governance through the `IRecoveryRouter`
-interface. When code and docs disagree on the formula, this is why. See
-`PRDs/PRD-04-V2-UPGRADE/PRD.md`.
+**v2 is deployed and activated on Base Sepolia.** The live stack runs
+`RecoveryRouterV2` (the **multiplicative** formula `r = F^0.80 · B^0.35 · D^0.15`
+with three-tier routing) wired into `CairnCore` with `threeTierRoutingEnabled = true`.
+The earlier **v1 interim-linear** router (`r = 0.5·F + 0.3·B + 0.2·D`, single 0.30
+threshold) still exists in-repo (`RecoveryRouter.sol`) and behind the
+`IRecoveryRouter` interface, but it is superseded. When older docs or comments
+imply "v1 is what's deployed / v2 is only a spec", they are stale — v2 is live.
+See `PRDs/PRD-04-V2-UPGRADE/PRD.md`.
+
+> Note: the audited security fixes (PRs #46–#59) are on `main` but **not yet
+> redeployed** — the currently-live addresses run the pre-audit code until the
+> redeploy (see `docs/v2-deployment-runbook.md`).
 
 ### Component map
 

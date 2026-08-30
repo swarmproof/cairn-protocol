@@ -91,7 +91,7 @@ All 9 CairnCore events are handled:
 ```yaml
 network: base-sepolia
 address: 0x9917E509742495EbEedfF6335406096B2e1aFB3a
-startBlock: 17741070  # Approximate deployment block
+startBlock: 45036020  # Approximate deployment block
 ```
 
 ### Dependencies
@@ -235,7 +235,7 @@ See `queries.graphql` for 20+ more examples.
 
 ### Start Block Optimization
 
-**Current**: `startBlock: 17741070` (approximate)
+**Current**: `startBlock: 45036020` (approximate)
 
 **Action Required**: Update to exact deployment block for faster syncing:
 

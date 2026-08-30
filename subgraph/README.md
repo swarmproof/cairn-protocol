@@ -311,7 +311,7 @@ If the CairnCore contract is redeployed or updated:
 - Network: `base-sepolia`
 - Chain ID: 84532
 - Contract: `0x9917E509742495EbEedfF6335406096B2e1aFB3a`
-- Start Block: ~17741070
+- Start Block: ~45036020
 
 To change networks, update `subgraph.yaml`:
 

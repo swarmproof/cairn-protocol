@@ -4,7 +4,7 @@
 
 <p>
   <img src="https://img.shields.io/badge/Status-Live_on_Base_Sepolia-00CED1?style=flat-square&logo=ethereum&logoColor=white" alt="Status"/>
-  <img src="https://github.com/MarouaBoud/cairn-protocol/actions/workflows/tests.yml/badge.svg" alt="Tests"/>
+  <img src="https://github.com/swarmproof/cairn-protocol/actions/workflows/tests.yml/badge.svg" alt="Tests"/>
   <img src="https://img.shields.io/badge/Contracts-5_Deployed-008B8B?style=flat-square" alt="Contracts"/>
   <img src="https://img.shields.io/badge/Tests-381_passing-00CED1?style=flat-square" alt="Tests"/>
   <img src="https://img.shields.io/badge/Chain_ID-84532-0052FF?style=flat-square&logo=coinbase&logoColor=white" alt="Chain ID"/>
@@ -350,7 +350,7 @@ Four layers. Only the CAIRN Protocol Layer is new code. Everything else integrat
 pip install cairn-sdk
 
 # or clone locally
-git clone https://github.com/MarouaBoud/cairn-protocol
+git clone https://github.com/swarmproof/cairn-protocol
 cd cairn-protocol && pip install -e ./sdk
 ```
 
@@ -441,12 +441,12 @@ These endpoints return markdown that AI agents can parse to integrate CAIRN into
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Whitepaper v2.0 | ✅ Released | Formal protocol specification, proofs, simulation-validated formula |
-| Smart contracts (v1) | ✅ Deployed | Live on Base Sepolia — 6 contracts, 339 tests passing |
+| Smart contracts (v2) | ✅ Deployed | Live on Base Sepolia — 6 contracts, 408 tests passing |
 | RecoveryRouterV2 (v2) | ✅ Implemented | 24 unit tests, gas measured (avg 5,748 / max 19,935) — ready for governance upgrade |
 | Monte Carlo simulation | ✅ Complete | 4 runs, 16 experiments, 100k events each — see [`simulation/`](./simulation) |
 | PRD-01 MVP | ✅ Complete | v1 protocol shipped |
 | PRD-03 Recovery score calibration | ✅ Complete | Derived the v2 multiplicative formula and its parameters |
-| PRD-04 v2 contract upgrade | 🟡 Phase 1 complete | Phases 2-6 (three-tier routing in CairnCore, stake raise, schema validation, deploy) pending |
+| PRD-04 v2 contract upgrade | ✅ Complete | Three-tier routing, 20% stake, schema validation deployed + activated on Base Sepolia |
 | SDK (Python) | ✅ Complete | CairnClient, CairnAgent, CheckpointStore, Observers |
 | CLI Tool | ✅ Complete | submit-task, heartbeat, checkpoint, monitor, recover |
 | Subgraph | ✅ Deployed | The Graph Studio indexing |
@@ -510,7 +510,7 @@ For detailed integration guidance, see [Standards Documentation](./docs/standard
 cairn-protocol/
 ├── contracts/          # Solidity smart contracts (Foundry)
 │   ├── src/           # Core contracts (CairnCore, RecoveryRouter, RecoveryRouterV2, FallbackPool, ArbiterRegistry)
-│   └── test/          # 339 tests passing
+│   └── test/          # 408 tests passing
 ├── sdk/               # Python SDK (CairnClient, CairnAgent, CheckpointStore)
 ├── cli/               # CLI tool — task management, monitoring
 ├── frontend/          # Next.js 14 dashboard
@@ -575,7 +575,7 @@ If you use CAIRN in your research, please cite the whitepaper:
   author = {Boudoukha, Maroua},
   year   = {2026},
   note   = {Whitepaper v2.0. Reproducible simulation: python3 -m simulation.run\_eq4 (seed=42).},
-  url    = {https://github.com/MarouaBoud/cairn-protocol}
+  url    = {https://github.com/swarmproof/cairn-protocol}
 }
 ```
 
@@ -592,7 +592,7 @@ Built by <strong>Maroua Boudoukha</strong> · ML/AI Engineer · Web3 Builder
 <p>
   <a href="https://linkedin.com/in/maroua-boudoukha"><img src="https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=flat-square&logo=linkedin"/></a>
   <a href="mailto:maroua@maroua-boudoukha.com"><img src="https://img.shields.io/badge/Email-Contact-00CED1?style=flat-square&logo=gmail&logoColor=white"/></a>
-  <a href="https://github.com/MarouaBoud"><img src="https://img.shields.io/badge/GitHub-Follow-181717?style=flat-square&logo=github"/></a>
+  <a href="https://github.com/swarmproof"><img src="https://img.shields.io/badge/GitHub-Follow-181717?style=flat-square&logo=github"/></a>
 </p>
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:00CED1,100:0a0a0f&height=80&section=footer" width="100%"/>

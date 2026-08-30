@@ -210,7 +210,7 @@ Before running `make deploy`, complete these steps:
 
 ### 1. Update Start Block
 
-**Current**: `startBlock: 17741070` (approximate)
+**Current**: `startBlock: 45036020` (approximate)
 
 **Action**:
 ```bash

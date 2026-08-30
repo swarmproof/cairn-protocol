@@ -144,7 +144,7 @@ BONFIRES_API_URL=https://api.bonfires.ai/v1
 BONFIRES_ROOM=cairn-failures
 
 # Contract & RPC
-CAIRN_CONTRACT_ADDRESS=0xB65596B21d670b6C670106C3e3c7E5FFf8E3A640  # CairnCore (production)
+CAIRN_CONTRACT_ADDRESS=0x9917E509742495EbEedfF6335406096B2e1aFB3a  # CairnCore (v2, Base Sepolia)
 RPC_URL=https://sepolia.base.org
 
 # IPFS

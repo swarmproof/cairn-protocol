@@ -33,7 +33,7 @@ Check `subgraph.yaml` has correct values:
 ```yaml
 source:
   address: "0x9917E509742495EbEedfF6335406096B2e1aFB3a"  # CairnCore contract
-  startBlock: 17741070  # Deployment block
+  startBlock: 45036020  # Deployment block
 ```
 
 **Important**: Update `startBlock` to the actual deployment block to optimize indexing speed.
