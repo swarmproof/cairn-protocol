@@ -54,7 +54,7 @@ export default function HomePage() {
                 </ShimmerButton>
               </Link>
               <a
-                href="https://github.com/MarouaBoud/cairn-protocol#readme"
+                href="https://github.com/swarmproof/cairn-protocol#readme"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border bg-background hover:bg-muted transition-colors"
@@ -63,7 +63,7 @@ export default function HomePage() {
                 Documentation
               </a>
               <a
-                href="https://github.com/MarouaBoud/cairn-protocol"
+                href="https://github.com/swarmproof/cairn-protocol"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border bg-background hover:bg-muted transition-colors"
@@ -142,11 +142,11 @@ export default function HomePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 rounded-lg bg-muted/50 text-center">
                 <div className="font-semibold mb-1">Python SDK</div>
-                <div className="text-xs text-muted-foreground">Production Ready</div>
+                <div className="text-xs text-muted-foreground">Alpha (0.1.0)</div>
               </div>
               <div className="p-4 rounded-lg bg-muted/50 text-center">
-                <div className="font-semibold mb-1">Verified</div>
-                <div className="text-xs text-muted-foreground">Contract</div>
+                <div className="font-semibold mb-1">Base Sepolia</div>
+                <div className="text-xs text-muted-foreground">Deployed (v2)</div>
               </div>
               <div className="p-4 rounded-lg bg-muted/50 text-center">
                 <div className="font-semibold mb-1">Merkle</div>

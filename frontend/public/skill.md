@@ -5,7 +5,8 @@
 ## Install
 
 ```bash
-pip install cairn-sdk
+# Not yet on PyPI — install the alpha SDK from source:
+pip install "git+https://github.com/swarmproof/cairn-protocol.git#subdirectory=sdk"
 ```
 
 ## Environment
