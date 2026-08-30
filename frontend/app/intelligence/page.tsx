@@ -20,59 +20,6 @@ interface TaskType {
   topFailure: string;
 }
 
-// Fallback mock data - only used when subgraph returns no data
-// This represents example patterns for demo/development
-const fallbackTaskTypes: TaskType[] = [
-  {
-    id: 'defi.rebalance',
-    name: 'defi.rebalance',
-    cairnCount: 47,
-    successRate: 87,
-    recentActivity: 'Demo data',
-    topFailure: 'RATE_LIMIT (52%)',
-  },
-  {
-    id: 'api.fetch',
-    name: 'api.fetch',
-    cairnCount: 34,
-    successRate: 91,
-    recentActivity: 'Demo data',
-    topFailure: 'TIMEOUT (41%)',
-  },
-  {
-    id: 'data.report',
-    name: 'data.report',
-    cairnCount: 23,
-    successRate: 94,
-    recentActivity: 'Demo data',
-    topFailure: 'RESOURCE (38%)',
-  },
-  {
-    id: 'ml.inference',
-    name: 'ml.inference',
-    cairnCount: 12,
-    successRate: 78,
-    recentActivity: 'Demo data',
-    topFailure: 'OOM (67%)',
-  },
-  {
-    id: 'defi.trade',
-    name: 'defi.trade',
-    cairnCount: 8,
-    successRate: 82,
-    recentActivity: 'Demo data',
-    topFailure: 'SLIPPAGE (45%)',
-  },
-  {
-    id: 'nft.mint',
-    name: 'nft.mint',
-    cairnCount: 5,
-    successRate: 95,
-    recentActivity: 'Demo data',
-    topFailure: 'GAS (60%)',
-  },
-];
-
 export default function IntelligencePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -81,13 +28,11 @@ export default function IntelligencePage() {
   const { data: taskTypes, isLoading: isLoadingTypes, error: typesError } = useTaskTypeStats();
   const { data: protocolStats, isLoading: isLoadingProtocol } = useProtocolStats();
 
-  // Use real data if available, otherwise fallback to demo data
-  const isUsingFallback = !taskTypes || taskTypes.length === 0;
+  // Real data only — no fabricated fallback. Show an honest empty state when the
+  // subgraph has not indexed any tasks yet.
+  const hasNoData = !taskTypes || taskTypes.length === 0;
   const displayTaskTypes: TaskType[] = useMemo(() => {
-    if (taskTypes && taskTypes.length > 0) {
-      return taskTypes;
-    }
-    return fallbackTaskTypes;
+    return taskTypes && taskTypes.length > 0 ? taskTypes : [];
   }, [taskTypes]);
 
   const filteredTypes = displayTaskTypes.filter((t) =>
@@ -131,8 +76,8 @@ export default function IntelligencePage() {
               <p className="text-slate-500 text-sm">
                 <strong className="text-white">{totalCairns} cairns</strong> across{' '}
                 <strong className="text-white">{displayTaskTypes.length}</strong> task types
-                {isUsingFallback && (
-                  <span className="ml-2 text-amber-500/70">(demo data)</span>
+                {hasNoData && (
+                  <span className="ml-2 text-muted-foreground">(no live data yet)</span>
                 )}
               </p>
             )}
@@ -178,22 +123,15 @@ export default function IntelligencePage() {
         </div>
       </section>
 
-      {/* Data Source Notice */}
-      {isUsingFallback && !isLoading && (
+      {/* No-data notice */}
+      {hasNoData && !isLoading && (
         <section className="max-w-4xl mx-auto mb-8">
-          <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500">
+          <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 border text-muted-foreground">
             <AlertTriangle className="h-5 w-5 flex-shrink-0" />
             <div className="text-sm">
-              <strong>Demo Mode:</strong> Displaying example data. Live data from{' '}
-              <a
-                href="https://thegraph.com/studio/subgraph/cairn"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-amber-400"
-              >
-                The Graph subgraph
-              </a>{' '}
-              will appear when tasks are indexed on Base Sepolia.
+              <strong>No execution intelligence yet.</strong> Patterns appear here once agents
+              fail and recover on-chain (Base Sepolia) and the subgraph indexes them. No
+              example or placeholder data is shown.
             </div>
           </div>
         </section>
@@ -212,12 +150,6 @@ export default function IntelligencePage() {
               className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-amber-500/50"
             />
           </div>
-          <select className="px-4 py-2 rounded-lg border bg-background">
-            <option>All time</option>
-            <option>Last 24h</option>
-            <option>Last 7d</option>
-            <option>Last 30d</option>
-          </select>
         </div>
       </section>
 
@@ -227,6 +159,11 @@ export default function IntelligencePage() {
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+          </div>
+        ) : filteredTypes.length === 0 ? (
+          <div className="py-12 text-center text-muted-foreground border rounded-xl bg-muted/30">
+            No task types indexed yet. This grid populates from on-chain activity once
+            tasks run on Base Sepolia.
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -278,81 +215,9 @@ export default function IntelligencePage() {
         )}
       </section>
 
-      {/* Selected Task Type Detail */}
-      {selectedType && (
-        <section className="max-w-4xl mx-auto mb-12">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span className="font-mono">{selectedType}</span>
-                <span className="text-sm font-normal text-muted-foreground">Intelligence Detail</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-8">
-                {/* Known Failure Patterns */}
-                <div>
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-red-500" />
-                    Known Failure Patterns
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                      <span className="font-mono text-sm">RATE_LIMIT</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full bg-red-500" style={{ width: '52%' }} />
-                        </div>
-                        <span className="text-xs text-muted-foreground">52%</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                      <span className="font-mono text-sm">GAS_SPIKE</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full bg-amber-500" style={{ width: '35%' }} />
-                        </div>
-                        <span className="text-xs text-muted-foreground">35%</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                      <span className="font-mono text-sm">HEARTBEAT_MISS</span>
-                      <div className="flex items-center gap-2">
-                        <div className="w-20 h-2 rounded-full bg-muted overflow-hidden">
-                          <div className="h-full bg-stone-500" style={{ width: '13%' }} />
-                        </div>
-                        <span className="text-xs text-muted-foreground">13%</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recommendations */}
-                <div>
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    Intelligence Insights
-                  </h3>
-                  <div className="space-y-3 text-sm">
-                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                      <strong className="text-amber-500">Avoid:</strong>
-                      <span className="text-muted-foreground ml-2">00:00-04:00 UTC (12 failures)</span>
-                    </div>
-                    <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                      <strong className="text-amber-500">Best agent:</strong>
-                      <span className="text-muted-foreground ml-2">0x91a2...4b (94% success)</span>
-                    </div>
-                    <div className="p-3 rounded-lg bg-stone-500/10 border border-stone-500/20">
-                      <strong className="text-stone-400">Est. cost:</strong>
-                      <span className="text-muted-foreground ml-2">P50: 0.023 ETH</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
+      {/* Per-type intelligence detail (failure breakdown, recommended agents, cost
+          estimates) will render here from real subgraph data once tasks exist. The
+          previous hardcoded/always-identical mock pane was removed for honesty. */}
 
       {/* CTA */}
       <section className="text-center">

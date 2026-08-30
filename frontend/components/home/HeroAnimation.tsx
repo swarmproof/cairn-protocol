@@ -129,7 +129,6 @@ export function HeroAnimation() {
               <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-amber-500/20 to-emerald-500/20 border-2 border-amber-500/50 flex items-center justify-center animate-glow-pulse">
                 <div className="flex flex-col items-center">
                   <span className="text-2xl">🪨</span>
-                  <span className="text-xs text-amber-400 font-medium">(47)</span>
                 </div>
               </div>
               {/* Connecting glow */}
@@ -174,13 +173,13 @@ export function HeroAnimation() {
             {/* Intelligence Insights */}
             <div className="flex flex-wrap gap-2 justify-center max-w-md">
               <span className="px-2 py-1 rounded bg-amber-500/20 text-amber-400 text-xs font-medium animate-insight-appear">
-                AVOID 2-4am
+                failure patterns
               </span>
               <span className="px-2 py-1 rounded bg-green-500/20 text-green-400 text-xs font-medium animate-insight-appear delay-100">
-                USE Agent X
+                recommended agent
               </span>
               <span className="px-2 py-1 rounded bg-cyan-500/20 text-cyan-400 text-xs font-medium animate-insight-appear delay-200">
-                COST: 0.05 ETH
+                cost estimate
               </span>
             </div>
           </div>
