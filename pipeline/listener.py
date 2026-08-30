@@ -22,7 +22,7 @@ class EventListener:
     """
     Event listener for CAIRN Protocol contract events.
 
-    Connects to Base Sepolia RPC, subscribes to TaskFailed and TaskResolved events,
+    Connects to Base Sepolia RPC, subscribes to TaskFailed and TaskSettled events,
     and routes them to BonfiresAdapter for processing.
 
     Example:
@@ -104,11 +104,13 @@ class EventListener:
             from_block = await self._w3.eth.block_number
             logger.info(f"Starting from current block: {from_block}")
 
-        # Create event filters
+        # Create event filters. CairnCore emits TaskSettled (not TaskResolved) on
+        # every settlement path (success, dispute ruling, timeout refund); it carries
+        # the payout split. Agent/checkpoint fields are enriched via getTask below.
         task_failed_filter = await self._contract.events.TaskFailed.create_filter(
             from_block=from_block
         )
-        task_resolved_filter = await self._contract.events.TaskResolved.create_filter(
+        task_settled_filter = await self._contract.events.TaskSettled.create_filter(
             from_block=from_block
         )
 
@@ -122,10 +124,10 @@ class EventListener:
                 for entry in failed_entries:
                     await self._handle_task_failed(entry)
 
-                # Check TaskResolved events
-                resolved_entries = await task_resolved_filter.get_new_entries()
+                # Check TaskSettled events
+                resolved_entries = await task_settled_filter.get_new_entries()
                 for entry in resolved_entries:
-                    await self._handle_task_resolved(entry)
+                    await self._handle_task_settled(entry)
 
                 # Run pattern detection periodically
                 if len(failed_entries) > 0 or len(resolved_entries) > 0:
@@ -196,9 +198,13 @@ class EventListener:
             logger.error(f"Failed to handle TaskFailed event: {e}")
             # Continue processing other events
 
-    async def _handle_task_resolved(self, event: EventData) -> None:
+    async def _handle_task_settled(self, event: EventData) -> None:
         """
-        Handle TaskResolved event.
+        Handle TaskSettled event.
+
+        TaskSettled carries (taskId, resolutionType, primaryPayout, fallbackPayout,
+        protocolFee). The agent addresses and checkpoint counts the resolution record
+        needs are read from getTask(taskId) — enrichment, best-effort.
 
         Args:
             event: Web3 EventData object
@@ -206,23 +212,41 @@ class EventListener:
         try:
             args = event["args"]
             block = await self._w3.eth.get_block(event["blockNumber"])
+            task_id = args["taskId"]
+
+            # Enrich with agent/checkpoint fields from on-chain task state.
+            primary_agent = ""
+            fallback_agent = ""
+            primary_checkpoints = 0
+            fallback_checkpoints = 0
+            try:
+                task = await self._contract.functions.getTask(task_id).call()
+                # Task struct field order (see ICairnCore.Task):
+                # 4=primaryAgent, 5=fallbackAgent, 17=primaryCheckpoints, 18=fallbackCheckpoints
+                primary_agent = task[4]
+                fallback_agent = task[5]
+                primary_checkpoints = task[17]
+                fallback_checkpoints = task[18]
+            except Exception as e:  # noqa: BLE001 - enrichment is best-effort
+                logger.warning(f"getTask enrichment failed for settled task: {e}")
 
             event_data = {
-                "task_id": args["taskId"],
-                "primary_agent": args.get("primaryAgent", ""),
-                "fallback_agent": args.get("fallbackAgent", ""),
-                "primary_checkpoints": args.get("primaryCheckpoints", 0),
-                "fallback_checkpoints": args.get("fallbackCheckpoints", 0),
+                "task_id": task_id,
+                "primary_agent": primary_agent,
+                "fallback_agent": fallback_agent,
+                "primary_checkpoints": primary_checkpoints,
+                "fallback_checkpoints": fallback_checkpoints,
                 "primary_payout": args.get("primaryPayout", 0),
                 "fallback_payout": args.get("fallbackPayout", 0),
                 "protocol_fee": args.get("protocolFee", 0),
+                "resolution_type": args.get("resolutionType", 0),
                 "block_number": event["blockNumber"],
                 "timestamp": block["timestamp"],
                 "transaction_hash": event["transactionHash"].hex(),
             }
 
             logger.info(
-                f"TaskResolved event: task={event_data['task_id'].hex()[:16]}... "
+                f"TaskSettled event: task={event_data['task_id'].hex()[:16]}... "
                 f"block={event_data['block_number']}"
             )
 
@@ -231,7 +255,7 @@ class EventListener:
             logger.info(f"Resolution record created: {cid}")
 
         except Exception as e:
-            logger.error(f"Failed to handle TaskResolved event: {e}")
+            logger.error(f"Failed to handle TaskSettled event: {e}")
             # Continue processing other events
 
     def _run_pattern_detection(self) -> None:

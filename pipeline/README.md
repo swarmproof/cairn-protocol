@@ -12,7 +12,7 @@ The pipeline implements **PRD-03: Execution Intelligence Layer** which transform
 
 ```
 CairnCore Contract (Base Sepolia)
-    ↓ (TaskFailed, TaskResolved events)
+    ↓ (TaskFailed, TaskSettled events)
 EventListener
     ↓ (event data)
 BonfiresAdapter
@@ -119,7 +119,7 @@ Web3 event listener that subscribes to contract events and routes to adapter.
 
 **Events Listened:**
 - `TaskFailed(bytes32 taskId, address agent, uint8 failureClass, uint256 checkpointCount)`
-- `TaskResolved(bytes32 taskId, address primaryAgent, address fallbackAgent, ...)`
+- `TaskSettled(bytes32 taskId, uint8 resolutionType, uint256 primaryPayout, uint256 fallbackPayout, uint256 protocolFee)` — agent / checkpoint fields read via `getTask`
 
 ## Installation
 
@@ -313,7 +313,7 @@ Real-time pattern detection enables:
 ## Monitoring
 
 The pipeline logs:
-- ✅ Event processing (TaskFailed, TaskResolved)
+- ✅ Event processing (TaskFailed, TaskSettled)
 - ✅ IPFS pinning success/failure
 - ✅ Bonfires indexing status
 - ⚠️ Pattern detection alerts

@@ -44,7 +44,7 @@ Successfully implemented the complete Bonfires data pipeline for CAIRN Protocol 
 
 6. **listener.py** - Web3 event listener
    - Connects to Base Sepolia RPC
-   - Subscribes to `TaskFailed` and `TaskResolved` events
+   - Subscribes to `TaskFailed` and `TaskSettled` events
    - Routes events to BonfiresAdapter
    - Configurable polling interval and start block
    - Health check endpoint
@@ -68,7 +68,7 @@ Successfully implemented the complete Bonfires data pipeline for CAIRN Protocol 
 
 - **test_adapter.py** - Event processing tests (8 tests)
   - TaskFailed event handling
-  - TaskResolved with/without recovery
+  - TaskSettled with/without recovery
   - Failure class mapping
   - Failure type inference
   - Recovery score calculation
@@ -132,7 +132,7 @@ Successfully implemented the complete Bonfires data pipeline for CAIRN Protocol 
 - Authentication via Bearer token
 
 ### With Base Sepolia
-- Web3 event filters for `TaskFailed` and `TaskResolved`
+- Web3 event filters for `TaskFailed` and `TaskSettled`
 - Block-by-block polling (configurable interval)
 - Handles block reorganizations gracefully
 
