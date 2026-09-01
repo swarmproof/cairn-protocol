@@ -20,7 +20,7 @@ simulation, not in production recoveries* — before anything is published or la
 | Delete demo fallback numbers | Removed error-fallback `156/98.7/12.4`, trends, `avgRecoveryTime`; hero `47` + fake insights; intelligence `129` + always-same detail pane + dead time-filter | ✅ | #55, #59 |
 | Remove false claims | `pip install cairn-sdk`/`npm i @cairn/sdk`, `cairn.protocol` host, "production ready"/"verified"/"95% coverage", Discord-no-URL, `MarouaBoud`→`swarmproof` | ✅ | #58 |
 | Unify license → AGPL-3.0 | Site/README/footer standardized to AGPL-3.0 | ✅ | #54 |
-| Pipeline event names | Pipeline listens for `TaskResolved` (Core emits `TaskSettled`/`TaskCompleted`); address fixed in #60, event names remain | ☐ | — |
+| Pipeline event names | Listener now subscribes to `TaskSettled` (+ getTask enrichment); address fixed in #60 | ✅ | #63 |
 
 ## P1 — One true story (docs/paper consistency)
 
@@ -52,7 +52,7 @@ simulation, not in production recoveries* — before anything is published or la
 | M-11 (Olas) | Distinct Olas activation path (selection returns unregistered mech) | ⏸ | — |
 | H-5 follow-up | Bind checkpoint count to Merkle leaf count (cap shipped in #46) | ⏸ | — |
 | H-7 follow-up | Wire param store into consumers or remove it (advisory doc shipped in #51) | ⏸ | — |
-| Redeploy to Sepolia | Ship audited contracts (#46–#52) to testnet; re-point frontend/subgraph | ☐ | — |
+| Redeploy to Sepolia | Ship audited contracts (#46–#63 on main) to testnet; re-point frontend/subgraph. USER-only; runbook ready. Prev deployer/admin `0xd98C…a815` | ☐ | — |
 
 ---
 
