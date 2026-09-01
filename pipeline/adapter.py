@@ -2,7 +2,7 @@
 Bonfires Adapter
 
 Event listener and adapter for CAIRN Protocol -> Bonfires integration.
-Handles TaskFailed and TaskResolved events, creates records, pins to IPFS, indexes in Bonfires.
+Handles TaskFailed and TaskSettled events, creates records, pins to IPFS, indexes in Bonfires.
 """
 
 import logging
@@ -174,12 +174,12 @@ class BonfiresAdapter:
 
     async def on_task_resolved(self, event: dict[str, Any]) -> str:
         """
-        Handle TaskResolved event.
+        Handle a settlement (from the TaskSettled event).
 
         Creates a ResolutionRecord, pins to IPFS, and indexes in Bonfires.
 
         Args:
-            event: TaskResolved event data with fields:
+            event: settlement data (from TaskSettled + getTask enrichment) with fields:
                 - task_id: bytes32
                 - primary_agent: address
                 - fallback_agent: address (or zero address)
@@ -316,7 +316,7 @@ class BonfiresAdapter:
             return cid
 
         except Exception as e:
-            logger.error(f"Failed to process TaskResolved event: {e}")
+            logger.error(f"Failed to process settlement event: {e}")
             raise BonfiresError(f"Failed to process resolution event: {e}") from e
 
     async def on_pattern_detected(self, pattern: Pattern) -> None:

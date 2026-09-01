@@ -33,7 +33,7 @@ async def run_pipeline():
 
     This will:
     1. Connect to Base Sepolia RPC
-    2. Listen for TaskFailed and TaskResolved events
+    2. Listen for TaskFailed and TaskSettled events
     3. Create structured records
     4. Pin records to IPFS
     5. Index records in Bonfires
