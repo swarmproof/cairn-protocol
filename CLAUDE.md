@@ -131,6 +131,16 @@ pnpm test           # matchstick-as unit tests
 - Current decisions / session state → `.planning/SESSION_CONTEXT.md`.
 - Deployed addresses → `README.md` "Deployed Contracts" table.
 
+### Project agents (`.claude/agents/`)
+
+| Agent | Use it for |
+|-------|-----------|
+| `cairn-contract-engineer` | Implementing or fixing contracts; keeps interface, UUPS variant, and tests in lockstep |
+| `cairn-contract-auditor` | The Section 0 gate — read-only, returns `READY_FOR_DEPLOYMENT` / `BLOCKED` |
+| `cairn-surface-sync` | Address/ABI/claim drift across README, frontend, subgraph, SDK, pipeline; re-pointing after a redeploy |
+
+Typical contract change: engineer → auditor → surface-sync (if the ABI or addresses changed).
+
 ---
 
 ## 0. MANDATORY VALIDATION GATE
