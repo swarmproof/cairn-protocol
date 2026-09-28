@@ -15,7 +15,7 @@ license: CC0-1.0
 
 CAIRN defines a standard interface for agent task lifecycle management, failure classification, checkpoint-based recovery, and execution intelligence accumulation. It extends ERC-8183 (Agentic Commerce) with a failure and recovery layer and integrates ERC-8004 (Trustless Agents) for identity and reputation.
 
-The protocol enables autonomous recovery from agent failures by: (1) classifying failures by recoverability, (2) routing recoverable failures to qualified fallback agents, (3) settling escrow proportionally to verified work, and (4) accumulating execution intelligence that future agents inherit.
+The protocol enables autonomous recovery from agent failures by: (1) classifying failures by recoverability, (2) routing recoverable failures to qualified fallback agents, (3) settling escrow proportionally to committed checkpoint contributions, and (4) accumulating execution intelligence that future agents inherit.
 
 ---
 
@@ -94,7 +94,7 @@ The multiplicative form captures the "any-factor-kills-it" dynamic: if budget, d
 
 #### Escrow Split Rule
 
-On RESOLVED, escrow is distributed proportionally to verified work:
+On RESOLVED, escrow is distributed proportionally to committed checkpoints:
 
 ```
 original_agent_share = (original_checkpoint_count / total_checkpoint_count) × escrow_amount × (1 - protocol_fee)
@@ -661,13 +661,13 @@ See [contracts documentation](./docs/contracts.md) for full implementation detai
 
 **Attack:** Agent manipulates failure conditions to achieve desired recovery score.
 
-**Mitigation:** Recovery score is deterministic function of: failure_class (detected automatically), budget_remaining (on-chain), deadline_remaining (on-chain). No agent-controlled inputs.
+**Mitigation:** The recovery score is a deterministic function of failure_class, budget_remaining, and deadline_remaining. deadline_remaining and mechanically detected failures (missed heartbeat, passed deadline) are not agent-controlled. Two inputs are agent-attested and not verified on-chain: an agent-declared failure type and the reported execution cost that determines budget_remaining. They are bounded: reported cost is monotone and capped at the escrow; settlement does not depend on it; mechanically established types (missed heartbeat, passed deadline) cannot be self-reported; declaring a LOGIC failure routes the task to dispute, which does not pay the declaring agent more; a task gets at most one fallback attempt; and every report is emitted on-chain with its evidence identifier.
 
 #### 6. Escrow Draining via Partial Completion
 
 **Attack:** Agent completes minimal checkpoints then fails intentionally to collect partial payment.
 
-**Mitigation:** Checkpoint content must match schema (verified). Reputation system tracks completion rate. Repeated failures result in reputation decay and exclusion from assignments.
+**Mitigation:** Each checkpoint batch must carry the task's schema hash, and the counted checkpoints equal the content identifiers published in the batch (checkpoint content itself is not verified on-chain). Reputation system tracks completion rate. Repeated failures result in reputation decay and exclusion from assignments.
 
 #### 7. Task Type Registry Pollution
 
