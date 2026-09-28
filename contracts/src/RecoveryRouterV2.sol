@@ -4,7 +4,7 @@ pragma solidity 0.8.24;
 import {IRecoveryRouter} from "./interfaces/IRecoveryRouter.sol";
 import {ICairnTypes} from "./interfaces/ICairnTypes.sol";
 import {FailureTaxonomy} from "./libraries/FailureTaxonomy.sol";
-import {UD60x18, ud, unwrap, pow as udPow} from "@prb/math/UD60x18.sol";
+import {MultiplicativeRecoveryScore as Score} from "./libraries/MultiplicativeRecoveryScore.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title RecoveryRouterV2 - Multiplicative recovery scoring (CAIRN v2)
@@ -39,25 +39,25 @@ contract RecoveryRouterV2 is IRecoveryRouter, Ownable {
     // ═══════════════════════════════════════════════════════════════
 
     /// @notice Precision scale (1e18 = 100% in UD60x18)
-    uint256 public constant PRECISION = 1e18;
+    uint256 public constant PRECISION = Score.PRECISION;
 
     /// @notice Budget exponent b = 0.35 in UD60x18
-    uint256 public constant B_EXPONENT = 0.35e18;
+    uint256 public constant B_EXPONENT = Score.B_EXPONENT;
 
     /// @notice Deadline exponent c = 0.15 in UD60x18
-    uint256 public constant D_EXPONENT = 0.15e18;
+    uint256 public constant D_EXPONENT = Score.D_EXPONENT;
 
     /// @notice Pre-computed F^0.80 lookup for LIVENESS class weight 0.70
     /// @dev 0.70^0.80 = 0.751758646650045568 (verified to 18 decimals)
-    uint256 public constant F_POW_LIVENESS = 751_758_646_650_045_568;
+    uint256 public constant F_POW_LIVENESS = Score.F_POW_LIVENESS;
 
     /// @notice Pre-computed F^0.80 lookup for RESOURCE class weight 0.30
     /// @dev 0.30^0.80 = 0.381677890961817600 (verified to 18 decimals)
-    uint256 public constant F_POW_RESOURCE = 381_677_890_961_817_600;
+    uint256 public constant F_POW_RESOURCE = Score.F_POW_RESOURCE;
 
     /// @notice Pre-computed F^0.80 lookup for LOGIC class weight 0.00
     /// @dev 0.00^0.80 = 0; LOGIC always routes to DISPUTED (r = 0)
-    uint256 public constant F_POW_LOGIC = 0;
+    uint256 public constant F_POW_LOGIC = Score.F_POW_LOGIC;
 
     /// @notice Upper threshold — score ≥ this routes to RECOVERING (full)
     uint256 public constant DEFAULT_UPPER_THRESHOLD = 0.40e18;
@@ -91,7 +91,8 @@ contract RecoveryRouterV2 is IRecoveryRouter, Ownable {
     /// @notice Threshold value is outside the [0.1, 0.9] permitted range
     error InvalidThresholdRange();
 
-    /// @notice Input scaled fixed-point value exceeds 1e18
+    /// @notice Input scaled fixed-point value exceeds 1e18 (raised by the score library;
+    ///         declared here so the selector is part of this contract's ABI)
     error InputOutOfRange();
 
     /// @notice Zero address supplied where a contract address is required
@@ -179,9 +180,7 @@ contract RecoveryRouterV2 is IRecoveryRouter, Ownable {
         override
         returns (uint256)
     {
-        if (failureClass == ICairnTypes.FailureClass.LIVENESS) return 0.70e18;
-        if (failureClass == ICairnTypes.FailureClass.RESOURCE) return 0.30e18;
-        return 0;
+        return Score.classWeight(failureClass);
     }
 
     /// @inheritdoc IRecoveryRouter
@@ -217,39 +216,7 @@ contract RecoveryRouterV2 is IRecoveryRouter, Ownable {
         pure
         returns (uint256)
     {
-        if (budgetRemaining > PRECISION || deadlineRemaining > PRECISION) {
-            revert InputOutOfRange();
-        }
-
-        // F^0.80 via lookup (3 possible values — saves a pow call)
-        uint256 fPow = _fPowLookup(failureClass);
-        if (fPow == 0) {
-            // LOGIC: r = 0 regardless of B, D — short-circuit
-            return 0;
-        }
-
-        // B^0.35 and D^0.15 via PRBMath UD60x18 pow
-        // Edge case: pow(0, exp) returns 0 in PRBMath when exp != 0, which is
-        // exactly what we want — score collapses to 0 if any factor is 0.
-        uint256 bPow = unwrap(udPow(ud(budgetRemaining), ud(B_EXPONENT)));
-        uint256 dPow = unwrap(udPow(ud(deadlineRemaining), ud(D_EXPONENT)));
-
-        // r = fPow × bPow × dPow, all in UD60x18
-        // Multiply in two stages, dividing by PRECISION between to keep scale.
-        uint256 score = (fPow * bPow) / PRECISION;
-        score = (score * dPow) / PRECISION;
-
-        return score;
-    }
-
-    function _fPowLookup(ICairnTypes.FailureClass failureClass)
-        internal
-        pure
-        returns (uint256)
-    {
-        if (failureClass == ICairnTypes.FailureClass.LIVENESS) return F_POW_LIVENESS;
-        if (failureClass == ICairnTypes.FailureClass.RESOURCE) return F_POW_RESOURCE;
-        return F_POW_LOGIC;
+        return Score.score(failureClass, budgetRemaining, deadlineRemaining);
     }
 
     // ═══════════════════════════════════════════════════════════════
