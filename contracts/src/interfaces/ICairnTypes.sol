@@ -21,7 +21,8 @@ interface ICairnTypes {
     }
 
     /// @notice Failure classification (PRD-02: 3-class taxonomy)
-    /// @dev Weights: LIVENESS=0.9, RESOURCE=0.5, LOGIC=0.1
+    /// @dev The class is derived from recorded failure evidence (see FailureTaxonomy);
+    ///      class weights are defined by the wired recovery router.
     enum FailureClass {
         LIVENESS,   // Agent stopped responding (high recovery potential)
         RESOURCE,   // External resource limit hit (medium recovery)
@@ -41,7 +42,19 @@ interface ICairnTypes {
         // LOGIC failures (internal, low recovery)
         VALIDATION_FAILED,
         SCHEMA_MISMATCH,
-        INVARIANT_VIOLATION
+        INVARIANT_VIOLATION,
+        // RESOURCE failures appended after the original set (ordinals above unchanged)
+        BUDGET_EXHAUSTED,  // reported cost reached the task's escrow
+        DEADLINE_EXCEEDED  // task deadline passed before completion (mechanical only)
+    }
+
+    /// @notice Where the evidence for a failure came from
+    /// @dev HEARTBEAT_TIMEOUT and DEADLINE_EXPIRED are mechanically verifiable on-chain.
+    ///      AGENT_REPORT is attested by the current agent and is not verified on-chain.
+    enum FailureEvidenceSource {
+        HEARTBEAT_TIMEOUT, // heartbeat missed by more than 2x the interval
+        DEADLINE_EXPIRED,  // block.timestamp passed the task deadline
+        AGENT_REPORT       // current agent declared a failure type with an evidence CID
     }
 
     /// @notice How a task was resolved (PRD-06)
@@ -82,6 +95,26 @@ interface ICairnTypes {
         RulingOutcome outcome;
         uint256 agentShare;
         bytes32 rationaleCID;
+    }
+
+    /// @notice Inputs the recovery router classifies and scores a failure from
+    /// @param source Where the failure evidence came from
+    /// @param reportedType Failure type declared by the agent (AGENT_REPORT only)
+    /// @param evidenceCID Content identifier of the agent's evidence (zero for mechanical sources)
+    /// @param escrowAmount Task escrow; the budget against which cost is measured
+    /// @param costAccrued Cumulative execution cost reported by the task's agents (wei, <= escrow)
+    /// @param createdAt Task creation timestamp
+    /// @param deadline Task deadline timestamp
+    /// @param checkpointCount Checkpoints committed so far (recorded; not used for classification)
+    struct FailureEvidence {
+        FailureEvidenceSource source;
+        FailureType reportedType;
+        bytes32 evidenceCID;
+        uint256 escrowAmount;
+        uint256 costAccrued;
+        uint256 createdAt;
+        uint256 deadline;
+        uint256 checkpointCount;
     }
 
     /// @notice Intelligence hints for task execution (PRD-03)
