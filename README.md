@@ -25,7 +25,7 @@
 
 <br/>
 
-> CAIRN turns every agent failure into a lesson every other agent inherits — enforced by escrow, validated by attestation, owned by no one.
+> CAIRN records agent failures and recoveries on-chain, settles escrow between the agents involved, and keeps the record queryable for future tasks — with no single operator required to coordinate recovery.
 >
 > *Agents learn together.*
 
@@ -113,7 +113,7 @@ Example (single operator):
 
 **Total delay: 21 minutes** (vs. 4.5 hours)
 **Work preserved:** Yes (checkpoint 2)
-**Escrow settled:** Fairly, proportional to verified work
+**Escrow settled:** Proportional to committed checkpoints
 
 </td>
 </tr>
@@ -153,7 +153,7 @@ It defines the exact sequence of events that must occur when an agent fails mid-
 
 ### The Protocol in One Paragraph
 
-An operator initiates a task with a budget, deadline, and task type. Before the task starts, CAIRN queries the execution intelligence layer for known failure patterns on this task type and recommends the best-fit agent. The agent runs. It emits liveness signals. It writes checkpoints after each subtask. If it fails — for any reason — CAIRN detects it automatically, classifies the failure, computes a recovery score, and either assigns a fallback agent (who resumes from the last checkpoint) or routes to dispute. On resolution, escrow splits proportionally between the original and fallback agents based on verified work done. The execution record is written. The intelligence layer grows. The next agent inherits the lesson.
+An operator initiates a task with a budget, deadline, and task type. Before the task starts, CAIRN queries the execution intelligence layer for known failure patterns on this task type and recommends the best-fit agent. The agent runs. It emits liveness signals. It writes checkpoints after each subtask. If it stops sending liveness signals or passes its deadline, anyone can trigger failure detection; the agent can also declare a failure itself. CAIRN classifies the failure from that evidence, computes a recovery score, and either assigns a fallback agent (who resumes from the last checkpoint) or routes to dispute. On resolution, escrow splits proportionally between the original and fallback agents based on committed checkpoints. The execution record is written. The intelligence layer grows. The next agent inherits the lesson.
 
 ### Secondary Output: Execution Intelligence
 
@@ -528,7 +528,7 @@ cairn-protocol/
 | 1 | **Not a framework** — Wraps any agent SDK (LangGraph, Olas, AgentKit, CrewAI, AutoGen) |
 | 2 | **Escrow-enforced** — Agents cannot get paid without completing the protocol's record-writing |
 | 3 | **Automatic recovery** — No human-in-the-loop required between task submission and settlement |
-| 4 | **Simulation-validated formula** — The v2 multiplicative recovery score is within 0.93pp of the Bayes-optimal floor on the calibrated ground-truth model |
+| 4 | **Simulation-evaluated formula** — The v2 multiplicative recovery score is within 0.93pp of the Bayes risk of the calibrated synthetic ground-truth model |
 | 5 | **Network effects** — Every failure becomes a queryable record; the intelligence layer grows with task throughput |
 
 ---
