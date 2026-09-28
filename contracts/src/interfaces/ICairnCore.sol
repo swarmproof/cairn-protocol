@@ -321,9 +321,10 @@ interface ICairnCore {
     /// @param taskId The task
     /// @param cid The checkpoint CID to verify
     /// @param batchIndex Which batch the checkpoint is in
-    /// @param leafIndex Index within the batch
+    /// @param leafIndex Index within the batch; must be below the batch size
     /// @param proof Merkle proof
-    /// @return valid True if checkpoint is verified
+    /// @return valid True if the CID is committed at leafIndex of the batch (the content the
+    ///         CID references is not verified)
     function verifyCheckpoint(
         bytes32 taskId,
         bytes32 cid,

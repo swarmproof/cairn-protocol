@@ -200,4 +200,28 @@ contract CheckpointBindingTest is Test {
         assertEq(core.getTask(taskId).checkpointCount, 7);
         assertTrue(core.verifyCheckpoint(taskId, b[3], 1, 3, _proof(b, 3)));
     }
+
+    /// An internal Merkle node cannot be passed off as a checkpoint leaf: its sorted children
+    /// form a 64-byte preimage like (cid, index), but the "index" is out of the batch's range.
+    function test_InternalNodeAsLeaf_NotProvable() public {
+        bytes32 taskId = _start();
+        bytes32[] memory cids = _cids(4, 21);
+        vm.prank(primaryAgent);
+        core.commitCheckpointBatch(taskId, cids, specHash);
+
+        bytes32[] memory leaves = _leaves(cids);
+        (bytes32 a, bytes32 b) = leaves[0] < leaves[1] ? (leaves[0], leaves[1]) : (leaves[1], leaves[0]);
+        bytes32[] memory proof = new bytes32[](1);
+        proof[0] = _hashPair(leaves[2], leaves[3]);
+
+        assertFalse(core.verifyCheckpoint(taskId, a, 0, uint256(b), proof));
+    }
+
+    function test_LeafIndexOutOfRange_NotProvable() public {
+        bytes32 taskId = _start();
+        bytes32[] memory cids = _cids(3, 22);
+        vm.prank(primaryAgent);
+        core.commitCheckpointBatch(taskId, cids, specHash);
+        assertFalse(core.verifyCheckpoint(taskId, cids[0], 0, 3, _proof(cids, 0)));
+    }
 }
