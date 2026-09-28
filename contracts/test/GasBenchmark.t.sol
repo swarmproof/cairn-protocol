@@ -11,9 +11,9 @@ import {ICairnTypes} from "../src/interfaces/ICairnTypes.sol";
 
 /// @title Full-system gas benchmark (PRD-04 Phase 5, G6)
 /// @notice Measures per-call gas for the v2 hot paths, including
-///         commitCheckpointBatch at batch sizes 1/10/50 (which are
-///         count-independent by design — Merkle batching commits one root
-///         per batch regardless of checkpoint count). Run with -vv to read
+///         commitCheckpointBatch at batch sizes 1/10/50/1000 (the root is computed
+///         on-chain from the published CIDs, so cost grows with the batch size; one
+///         root is stored per batch). Run with -vv to read
 ///         the console output; numbers backfill WHITEPAPER_V2 §6.5.
 contract GasBenchmarkTest is Test {
     CairnCore core;
@@ -70,7 +70,7 @@ contract GasBenchmarkTest is Test {
         bytes32 taskId = _startedTask();
         vm.prank(primaryAgent);
         uint256 g = gasleft();
-        core.commitCheckpointBatch(taskId, count, keccak256("root"), keccak256("cid"), specHash);
+        core.commitCheckpointBatch(taskId, _cids(count, keccak256("cid")), specHash);
         used = g - gasleft();
     }
 
@@ -100,11 +100,12 @@ contract GasBenchmarkTest is Test {
         console.log("commitCheckpointBatch(count=1):", _measureCheckpointBatch(1));
         console.log("commitCheckpointBatch(count=10):", _measureCheckpointBatch(10));
         console.log("commitCheckpointBatch(count=50):", _measureCheckpointBatch(50));
+        console.log("commitCheckpointBatch(count=1000):", _measureCheckpointBatch(1000));
 
         // completeTask (settlement path)
         bytes32 t2 = _startedTask();
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(t2, 1, keccak256("r"), keccak256("c"), specHash);
+        core.commitCheckpointBatch(t2, _cids(1, keccak256("c")), specHash);
         vm.prank(primaryAgent);
         g = gasleft();
         core.completeTask(t2);
@@ -124,5 +125,14 @@ contract GasBenchmarkTest is Test {
         g = gasleft();
         router.routingTier(0.5e18);
         console.log("routingTier                   :", g - gasleft());
+    }
+
+    /// @dev `n` distinct checkpoint CIDs; the last one equals `last`
+    function _cids(uint256 n, bytes32 last) internal pure returns (bytes32[] memory c) {
+        c = new bytes32[](n);
+        for (uint256 i = 0; i < n; i++) {
+            c[i] = keccak256(abi.encode("checkpoint", i));
+        }
+        if (n > 0) c[n - 1] = last;
     }
 }

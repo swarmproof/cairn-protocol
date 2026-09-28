@@ -238,17 +238,19 @@ interface ICairnCore {
     /// @param taskId The task being executed
     function heartbeat(bytes32 taskId) external;
 
-    /// @notice Commit a batch of checkpoints via Merkle root (PRD-07)
+    /// @notice Commit a batch of checkpoints
+    /// @dev The batch size is the number of CIDs supplied (1..MAX_CHECKPOINTS_PER_BATCH) and
+    ///      the batch's Merkle root is computed on-chain from them: leaf i is
+    ///      keccak256(abi.encodePacked(cids[i], i)), pairs are hashed with OpenZeppelin's
+    ///      commutative keccak256, and an odd last node is promoted. The last CID becomes the
+    ///      task's latest checkpoint CID. The contract commits to the CIDs; it does not verify
+    ///      the content they reference.
     /// @param taskId The task being executed
-    /// @param count Number of checkpoints in this batch
-    /// @param merkleRoot Root of Merkle tree containing checkpoint CIDs
-    /// @param latestCID Most recent checkpoint CID (for quick access)
+    /// @param cids Checkpoint content identifiers, in order
     /// @param schemaHash Schema hash for this batch; must equal the task's specHash (PRD-04 Phase 3)
     function commitCheckpointBatch(
         bytes32 taskId,
-        uint256 count,
-        bytes32 merkleRoot,
-        bytes32 latestCID,
+        bytes32[] calldata cids,
         bytes32 schemaHash
     ) external;
 

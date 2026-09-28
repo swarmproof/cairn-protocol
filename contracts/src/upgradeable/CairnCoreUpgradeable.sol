@@ -13,6 +13,7 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {Hashes} from "@openzeppelin/contracts/utils/cryptography/Hashes.sol";
 
 /// @title CairnCoreUpgradeable - UUPS Upgradeable Main CAIRN Protocol Contract
 /// @author CAIRN Protocol
@@ -294,9 +295,7 @@ contract CairnCoreUpgradeable is
     /// @inheritdoc ICairnCore
     function commitCheckpointBatch(
         bytes32 taskId,
-        uint256 count,
-        bytes32 merkleRoot,
-        bytes32 latestCID,
+        bytes32[] calldata cids,
         bytes32 schemaHash
     ) external override taskExists(taskId) onlyCurrentAgent(taskId) whenNotPaused {
         Task storage task = _tasks[taskId];
@@ -312,13 +311,15 @@ contract CairnCoreUpgradeable is
             revert InvalidCheckpointSchema(schemaHash, task.specHash);
         }
 
-        // H-5: bound the self-reported batch size. The escrow split is weighted by
-        // checkpoint counts, so an unbounded count lets an agent capture the whole
-        // payout. This caps per-batch inflation; binding count to the Merkle tree's
-        // leaf count is tracked as a follow-up hardening item.
+        // H-5: the batch size is the number of published CIDs, and the root is computed
+        // from them on-chain, so the checkpoint count that weights settlement cannot exceed
+        // what the agent actually committed to. The per-batch cap bounds gas.
+        uint256 count = cids.length;
         if (count == 0 || count > MAX_CHECKPOINTS_PER_BATCH) {
             revert InvalidCheckpointCount(count, MAX_CHECKPOINTS_PER_BATCH);
         }
+        bytes32 merkleRoot = _checkpointRoot(cids);
+        bytes32 latestCID = cids[count - 1];
 
         uint256 batchStart = task.checkpointCount;
 
@@ -720,6 +721,31 @@ contract CairnCoreUpgradeable is
     // ═══════════════════════════════════════════════════════════════
     // MERKLE VERIFICATION (PRD-07)
     // ═══════════════════════════════════════════════════════════════
+
+    /// @notice Merkle root of a checkpoint batch (H-5: count is bound to the published CIDs)
+    /// @dev Leaf i = keccak256(abi.encodePacked(cids[i], i)); pairs hashed with the same
+    ///      commutative keccak256 MerkleProof uses; an odd last node is promoted. Built in
+    ///      place: level entries are only read at indices >= the one being written.
+    function _checkpointRoot(bytes32[] calldata cids) internal pure returns (bytes32) {
+        uint256 n = cids.length;
+        bytes32[] memory level = new bytes32[](n);
+        for (uint256 i = 0; i < n; i++) {
+            level[i] = keccak256(abi.encodePacked(cids[i], i));
+        }
+        while (n > 1) {
+            uint256 pairs = n / 2;
+            for (uint256 i = 0; i < pairs; i++) {
+                level[i] = Hashes.commutativeKeccak256(level[2 * i], level[2 * i + 1]);
+            }
+            if (n % 2 == 1) {
+                level[pairs] = level[n - 1];
+                n = pairs + 1;
+            } else {
+                n = pairs;
+            }
+        }
+        return level[0];
+    }
 
     /// @inheritdoc ICairnCore
     function verifyCheckpoint(

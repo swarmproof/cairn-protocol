@@ -76,7 +76,7 @@ contract CairnCoreThreeTierTest is Test {
 
     function _commit(bytes32 taskId, address who, uint256 count) internal {
         vm.prank(who);
-        core.commitCheckpointBatch(taskId, count, keccak256("root"), keccak256("cid"), specHash);
+        core.commitCheckpointBatch(taskId, _cids(count, keccak256("cid")), specHash);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -250,5 +250,14 @@ contract CairnCoreThreeTierTest is Test {
         assertEq(uint8(task.state), uint8(ICairnTypes.TaskState.RECOVERING));
         // v1 path never assigns REDUCED — scope stays default FULL
         assertEq(uint8(task.recoveryScope), uint8(ICairnTypes.RecoveryScope.FULL));
+    }
+
+    /// @dev `n` distinct checkpoint CIDs; the last one equals `last`
+    function _cids(uint256 n, bytes32 last) internal pure returns (bytes32[] memory c) {
+        c = new bytes32[](n);
+        for (uint256 i = 0; i < n; i++) {
+            c[i] = keccak256(abi.encode("checkpoint", i));
+        }
+        if (n > 0) c[n - 1] = last;
     }
 }
