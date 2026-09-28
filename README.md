@@ -238,7 +238,7 @@ Routing: `r ≥ 0.40` → RECOVERING (full scope) | `0.35 ≤ r < 0.40` → RECO
 
 The multiplicative form captures the "any-factor-kills-it" dynamic: if budget, deadline, or class recoverability approaches zero, the score collapses to zero — matching the ground-truth recovery dynamics. The formula was selected after Monte Carlo simulation across 100,000 task-failure events and 16 experiments comparing it against three linear alternatives; see [Whitepaper §6.4](./WHITEPAPER_V2.md) and [`simulation/RESULTS_EQ4.md`](./simulation/RESULTS_EQ4.md).
 
-> **Deployment note.** The v2 multiplicative formula with three-tier routing is **deployed and activated** on Base Sepolia (`RecoveryRouterV2` + `CairnCore` with `threeTierRoutingEnabled`). The earlier v1 interim-linear deployment has been superseded. See [PRD-04](./PRDs/PRD-04-V2-UPGRADE/PRD.md) for the upgrade history.
+> **Deployment note.** The v2 multiplicative formula with three-tier routing is **deployed and activated** on Base Sepolia (`RecoveryRouterV2` + `CairnCore` with `threeTierRoutingEnabled`). The earlier v1 interim-linear deployment has been superseded. See the whitepaper's [Implementation Status](./WHITEPAPER_V2.md#implementation-status-authoritative) for the upgrade history.
 
 ---
 
@@ -434,7 +434,7 @@ These endpoints return markdown that AI agents can parse to integrate CAIRN into
 | Testnet deployment | **v2** (multiplicative, three-tier routing) — Live on Base Sepolia, Chain ID 84532 |
 | Whitepaper | [v2.0 — April 2026](./WHITEPAPER_V2.md) |
 | ERC Dependencies | ERC-8183, ERC-8004, ERC-7710 |
-| v1 → v2 migration | Governance-gated via `IRecoveryRouter` interface; see [PRD-04](./PRDs/PRD-04-V2-UPGRADE/PRD.md) |
+| v1 → v2 migration | Governance-gated via `IRecoveryRouter` interface; see [Implementation Status](./WHITEPAPER_V2.md#implementation-status-authoritative) |
 
 ### Implementation Status
 
@@ -453,7 +453,7 @@ These endpoints return markdown that AI agents can parse to integrate CAIRN into
 | Upgradeability | 🟡 Variants ready | UUPS-upgradeable variants implemented (OpenZeppelin 5.x); the deployed set is non-upgradeable, pending the v2 governance upgrade |
 | Frontend | ✅ Deployed | Next.js 14, wagmi |
 
-See [`PRDs/README.md`](./PRDs/README.md) for the full roadmap.
+See the [live roadmap](https://cairn-protocol.vercel.app/roadmap).
 
 ### Deployed Contracts (Base Sepolia)
 
@@ -467,7 +467,7 @@ The **v2 protocol** (multiplicative recovery score, three-tier routing, 20% arbi
 | FallbackPool | [`0x363a0812333aE98945bE4c9Cd17E97aD383C5D07`](https://sepolia.basescan.org/address/0x363a0812333aE98945bE4c9Cd17E97aD383C5D07) | Agent registration, selection algorithm |
 | ArbiterRegistry | [`0x3AF10DDAd783Cf10d5CD938F641B8CB96e1F35eB`](https://sepolia.basescan.org/address/0x3AF10DDAd783Cf10d5CD938F641B8CB96e1F35eB) | Dispute resolution (20% arbiter stake) |
 
-All five contracts are source-verified on BaseScan. The deployed contracts are the **non-upgradeable base implementations**; UUPS-upgradeable variants (OpenZeppelin 5.x) exist in `contracts/src/upgradeable/` but are not deployed. See [PRD-04](./PRDs/PRD-04-V2-UPGRADE/PRD.md).
+All five contracts are source-verified on BaseScan. The deployed contracts are the **non-upgradeable base implementations**; UUPS-upgradeable variants (OpenZeppelin 5.x) exist in `contracts/src/upgradeable/` but are not deployed. See [`contracts/UPGRADEABILITY.md`](./contracts/UPGRADEABILITY.md).
 
 ### Live Demo
 
@@ -517,9 +517,7 @@ cairn-protocol/
 ├── pipeline/          # Off-chain event listener
 ├── subgraph/          # The Graph indexer
 ├── simulation/        # Monte Carlo recovery-score calibration (Runs 1-4, 16 experiments)
-├── PRDs/              # Product requirements documents
 ├── docs/              # Technical documentation
-├── PUBLICATION/       # arXiv submission bundle (whitepaper LaTeX, figures, metadata)
 └── WHITEPAPER_V2.md   # Protocol specification
 ```
 

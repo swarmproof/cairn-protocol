@@ -107,7 +107,7 @@ All governance actions require multi-sig approval:
 | `APPEAL_WINDOW` | 48 hours | 48 hours | 24-72 hours | Appeal window |
 | `MIN_HEARTBEAT_INTERVAL` | 30 | 30 | 10-300 | Min heartbeat (sec) |
 
-The v1 → v2 governance migration path is specified in [PRD-04](../PRDs/PRD-04-V2-UPGRADE/PRD.md); parameter writes are governance-gated, no contract redeployment is required.
+The v1 → v2 governance migration path is described in the whitepaper's [Implementation Status](../WHITEPAPER_V2.md#implementation-status-authoritative); parameter writes are governance-gated, no contract redeployment is required.
 
 ### Emergency Controls
 

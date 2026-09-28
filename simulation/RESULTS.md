@@ -1,7 +1,7 @@
 # Recovery Score Calibration: Simulation Results
 
 > Generated: April 2026 | Seed: 42 | Trials: 100,000
-> Reference: [PRD-03](../PRDs/PRD-03-RECOVERY-CALIBRATION/PRD.md) | [Whitepaper V2, Section 6.4](../WHITEPAPER_V2.md)
+> Reference: [Whitepaper V2, Section 6.4](../WHITEPAPER_V2.md)
 
 ---
 
@@ -274,7 +274,7 @@ The LOGIC class is well-separated (scores < 0.3 in most cases). The LIVENESS and
 
 ### Future Improvement: Non-Linear Formula
 
-To break below 20% misrouting, the formula needs non-linear terms. See companion document `local-docs/FORMULA_RESEARCH.md` for analysis of candidate approaches.
+To break below 20% misrouting, the formula needs non-linear terms. Runs 2–4 ([EQ2](./RESULTS_EQ2.md), [EQ3](./RESULTS_EQ3.md), [EQ4](./RESULTS_EQ4.md)) test the candidate approaches.
 
 ---
 

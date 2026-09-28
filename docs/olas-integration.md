@@ -428,7 +428,6 @@ adapter.setEnabled(true);
 - [Olas Documentation](https://docs.autonolas.network/)
 - [Mech Client GitHub](https://github.com/valory-xyz/mech-client)
 - [AI Registry Mech Contracts](https://github.com/valory-xyz/ai-registry-mech)
-- [PRD-04: Fallback Ecosystem](/PRDs/PRD-04-FALLBACK-ECOSYSTEM/PRD.md)
 
 ## Sources
 

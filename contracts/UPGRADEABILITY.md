@@ -429,7 +429,6 @@ forge inspect CairnCoreUpgradeable storage-layout --pretty
 - [OpenZeppelin UUPS Docs](https://docs.openzeppelin.com/contracts/4.x/api/proxy#UUPSUpgradeable)
 - [EIP-1822: UUPS Standard](https://eips.ethereum.org/EIPS/eip-1822)
 - [EIP-1967: Proxy Storage Slots](https://eips.ethereum.org/EIPS/eip-1967)
-- [CAIRN PRD-06](../PRDs/PRD-06-FULL-INTEGRATION/PRD.md)
 
 ## Support
 

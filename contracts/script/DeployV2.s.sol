@@ -15,7 +15,7 @@ import {ArbiterRegistry} from "../src/ArbiterRegistry.sol";
 /// @dev Deploy-time actions only. Enabling three-tier routing
 ///      (`CairnCore.setThreeTierRouting(true)`) is `onlyGovernance` and is
 ///      performed AFTER deployment via the governance path — see
-///      docs/v2-deployment-runbook.md. USER runs this script; agents never deploy.
+///      the maintainer deployment runbook. USER runs this script; agents never deploy.
 ///
 /// Required env:
 ///   DEPLOYER_PRIVATE_KEY, ADMIN_ADDRESS, FEE_RECIPIENT_ADDRESS
@@ -90,7 +90,7 @@ contract DeployCairnV2 is Script {
         console.log("  ArbiterRegistry:  ", address(arbiterRegistry));
         console.log("  CairnCore:        ", address(cairnCore));
         console.log("");
-        console.log("POST-DEPLOY (governance, see docs/v2-deployment-runbook.md):");
+        console.log("POST-DEPLOY (governance steps):");
         console.log("  * governance.execute(cairnCore, setThreeTierRouting(true)) <- activates v2");
         console.log("  * Verify all 5 contracts on BaseScan");
         console.log("  * Update README 'Deployed Contracts' + frontend addresses");

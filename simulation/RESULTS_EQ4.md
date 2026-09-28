@@ -2,7 +2,7 @@
 
 > Generated: April 2026 | Seed: 42 | Trials: 100,000
 > Formula: `r = F^a × B^b × D^c`
-> Reference: [PRD-03](../PRDs/PRD-03-RECOVERY-CALIBRATION/PRD.md) | [Run 1](./RESULTS.md) | [Run 2](./RESULTS_EQ2.md) | [Run 3](./RESULTS_EQ3.md)
+> Reference: [Whitepaper V2, Section 6.4](../WHITEPAPER_V2.md) | [Run 1](./RESULTS.md) | [Run 2](./RESULTS_EQ2.md) | [Run 3](./RESULTS_EQ3.md)
 
 ---
 
