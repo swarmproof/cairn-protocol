@@ -464,6 +464,21 @@ contract CairnCoreUpgradeTest is Test {
         assertTrue(cairnCore.verifyCheckpoint(taskId, cids[0], 0, 0, proof));
     }
 
+    function test_Upgradeable_VerifyCheckpoint_LeafIndexBounded() public {
+        bytes32 taskId = _submitStartUpgradeable();
+        bytes32[] memory cids = new bytes32[](2);
+        cids[0] = keccak256("a");
+        cids[1] = keccak256("b");
+        vm.prank(primaryAgent);
+        cairnCore.commitCheckpointBatch(taskId, cids, SPEC_HASH);
+
+        bytes32 l0 = keccak256(abi.encodePacked(cids[0], uint256(0)));
+        bytes32 l1 = keccak256(abi.encodePacked(cids[1], uint256(1)));
+        (bytes32 lo, bytes32 hi) = l0 < l1 ? (l0, l1) : (l1, l0);
+        // The root's children read as (cid, index) must not verify as a leaf
+        assertFalse(cairnCore.verifyCheckpoint(taskId, lo, 0, uint256(hi), new bytes32[](0)));
+    }
+
     /// @dev `n` distinct checkpoint CIDs; the last one equals `last`
     function _cids(uint256 n, bytes32 last) internal pure returns (bytes32[] memory c) {
         c = new bytes32[](n);

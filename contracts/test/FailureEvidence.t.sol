@@ -477,4 +477,42 @@ contract FailureEvidenceTest is Test {
         vm.expectRevert(abi.encodeWithSelector(ICairnCore.TaskNotStale.selector, taskId));
         core.detectFailure(taskId);
     }
+
+    /// The fallback reports cost during recovery; cost is cumulative across both agents.
+    function test_ReportCost_ByFallbackDuringRecovery() public {
+        bytes32 taskId = _submitAndStart();
+        vm.prank(primaryAgent);
+        core.reportCost(taskId, 0.01 ether);
+        vm.prank(primaryAgent);
+        core.reportFailure(taskId, ICairnTypes.FailureType.NODE_CRASH, EVIDENCE);
+
+        vm.prank(primaryAgent);
+        vm.expectRevert(abi.encodeWithSelector(ICairnCore.NotAuthorized.selector, primaryAgent, fallbackAgent));
+        core.reportCost(taskId, 0.02 ether);
+
+        vm.prank(fallbackAgent);
+        vm.expectRevert(abi.encodeWithSelector(ICairnCore.CostNotMonotonic.selector, 0.005 ether, 0.01 ether));
+        core.reportCost(taskId, 0.005 ether);
+
+        vm.prank(fallbackAgent);
+        core.reportCost(taskId, 0.03 ether);
+        assertEq(core.getTask(taskId).costAccrued, 0.03 ether);
+    }
+
+    /// A fallback heart-beating past the deadline is failed through deadline evidence.
+    function test_DetectFailure_PastDeadlineDuringRecovery() public {
+        bytes32 taskId = _submitAndStart();
+        vm.prank(primaryAgent);
+        core.reportFailure(taskId, ICairnTypes.FailureType.NODE_CRASH, EVIDENCE);
+        uint256 deadline = core.getTask(taskId).deadline;
+        while (block.timestamp <= deadline + HEARTBEAT) {
+            vm.warp(block.timestamp + HEARTBEAT);
+            vm.prank(fallbackAgent);
+            core.heartbeat(taskId);
+        }
+        core.detectFailure(taskId);
+        ICairnCore.Task memory t = core.getTask(taskId);
+        assertEq(uint8(t.state), uint8(ICairnTypes.TaskState.DISPUTED));
+        assertEq(uint8(t.failureEvidenceSource), uint8(ICairnTypes.FailureEvidenceSource.DEADLINE_EXPIRED));
+    }
 }

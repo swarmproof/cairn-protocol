@@ -761,6 +761,13 @@ contract CairnCoreUpgradeable is
             return false;
         }
 
+        // A leaf and an internal node are both keccak256 of 64 bytes, so an internal node's
+        // children could be presented as (cid, leafIndex). Bounding the index to the batch
+        // size rejects that: a child hash read as an index is far outside the range.
+        if (leafIndex >= _batchSizes[taskId][batchIndex]) {
+            return false;
+        }
+
         bytes32 leaf = keccak256(abi.encodePacked(cid, leafIndex));
         return MerkleProof.verify(proof, roots[batchIndex], leaf);
     }
