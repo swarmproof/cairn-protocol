@@ -19,15 +19,15 @@
 
 ## Abstract
 
-AI agent task completion rates remain at approximately 50% across popular frameworks, yet no standardized protocol exists for failure detection, classification, and recovery in the on-chain agent economy. We present CAIRN, the **first on-chain agent protocol** to classify agent failures by **recoverability** rather than symptom — adapting the classical crash-vs-Byzantine distinction from distributed systems [8] to the AI agent domain — enabling deterministic routing to checkpoint-based recovery or dispute resolution.
+AI agent task completion rates remain at approximately 50% across popular frameworks, yet no standardized protocol exists for failure detection, classification, and recovery in the on-chain agent economy. We present CAIRN, an on-chain protocol that classifies agent failures by **recoverability** rather than symptom — adapting the classical crash-vs-Byzantine distinction from distributed systems [8] to the AI agent domain — enabling deterministic routing to checkpoint-based recovery or dispute resolution.
 
-CAIRN defines a 6-state machine with three-tier recovery routing, enforced by smart contracts: when an agent fails mid-task, the protocol detects the failure via missed heartbeats or resource exhaustion, classifies it into one of three recoverability classes (LIVENESS, RESOURCE, LOGIC), computes a multiplicative recovery score *r* = *F*<sup>0.80</sup> × *B*<sup>0.35</sup> × *D*<sup>0.15</sup>, and routes the task to either a qualified fallback agent who resumes from the last IPFS-committed checkpoint, or to dispute resolution. The formula is **calibrated and validated via Monte Carlo simulation** against a ground-truth model derived from published failure-mode distributions [1][2][3]: across 100,000 synthetic task-failure events and 16 experiments, the multiplicative formula achieves 23.46% misrouting against that ground truth — within 0.93pp of the Bayes-optimal minimum (22.53%) attainable for the same model — and reduces wasted-recovery false positives by 65% versus a linear baseline. We are explicit that this is near-optimality *against the calibrated model*, not against measured production data, which does not yet exist; the staged calibration roadmap (Section 10.1) replaces the synthetic ground truth with observed outcomes as testnet and mainnet data accumulate. Escrow is settled proportionally to verified work. We prove escrow safety, termination, and state determinism, and show that honest checkpointing is the dominant strategy under realistic economic parameters.
+CAIRN defines a 6-state machine with three-tier recovery routing, enforced by smart contracts: when an agent fails mid-task, the protocol records failure evidence (a missed heartbeat or passed deadline, both checked on-chain, or a failure declared by the agent), derives one of three recoverability classes (LIVENESS, RESOURCE, LOGIC) from that evidence, computes a multiplicative recovery score *r* = *F*<sup>0.80</sup> × *B*<sup>0.35</sup> × *D*<sup>0.15</sup>, and routes the task to either a qualified fallback agent who resumes from the last IPFS-committed checkpoint, or to dispute resolution. The formula is **calibrated and evaluated via Monte Carlo simulation** against a synthetic ground-truth model derived from published failure-mode distributions [1][2][3]: across 100,000 synthetic task-failure events and 16 experiments, the multiplicative formula achieves 23.46% misrouting against that ground truth — within 0.93pp of that model's Bayes risk (22.53%) — and reduces wasted-recovery false positives by 65% versus a linear baseline. We are explicit that this is near-optimality *against the calibrated model*, not against measured production data, which does not yet exist; the staged calibration roadmap (Section 10.1) replaces the synthetic ground truth with observed outcomes as testnet and mainnet data accumulate. Escrow is settled proportionally to committed checkpoint contributions. We prove escrow safety and state determinism, prove termination assuming eventual inclusion of permissionless enforcement transactions, and show that honest checkpointing is the dominant strategy under the stated payoff model and parameter bounds.
 
 Our key insight is that **economic enforcement** — escrow-conditioned record writing — bootstraps a collective intelligence layer without requiring altruistic participation. Every failure becomes a queryable record. Every recovery teaches the next agent. The accumulated execution history grows with task throughput and is openly queryable across the ecosystem.
 
 CAIRN integrates three Ethereum standards: ERC-8004 for agent identity and reputation, ERC-8183 for job escrow lifecycle, and ERC-7710 for scoped delegation. It is deployed on Base and composable with existing agent frameworks (LangGraph, Olas, CrewAI, AutoGen) and emerging coordination protocols (Google A2A, Anthropic MCP). All simulation code, results, and figures are reproducible from `simulation/` in the CAIRN repository via `python3 -m simulation.run_eq4` (seed=42); see reference [18].
 
-> **Note on protocol versions.** This paper specifies CAIRN **v2** — the simulation-validated protocol described throughout — which is **deployed and activated on Base Sepolia** (`RecoveryRouterV2` wired into `CairnCore` with three-tier routing enabled). The earlier v1 interim-linear router has been superseded. References to "v1 deployment" throughout this text are historical (the pre-calibration state); where they imply v1 is what is currently live, see the **Implementation Status** section immediately below for the authoritative account of what is deployed and how the code differs from this specification. There are no tasks on-chain yet; the paper's headline results are validated against a calibrated simulation model, not production recoveries.
+> **Note on protocol versions.** This paper specifies CAIRN **v2** — the protocol described throughout, whose recovery formula was evaluated in simulation — which is **deployed and activated on Base Sepolia** (`RecoveryRouterV2` wired into `CairnCore` with three-tier routing enabled). The earlier v1 interim-linear router has been superseded. References to "v1 deployment" throughout this text are historical (the pre-calibration state); where they imply v1 is what is currently live, see the **Implementation Status** section immediately below for the authoritative account of what is deployed and how the code differs from this specification. There are no tasks on-chain yet; the paper's headline results are measured against a calibrated simulation model, not production recoveries.
 
 ---
 
@@ -40,18 +40,32 @@ disagree, the code (and this section) govern what is live.
 
 **Deployed (Base Sepolia, chain 84532):** CairnCore `0x9917…FB3a`, RecoveryRouterV2
 `0x1481…9A70`, FallbackPool `0x363a…5D07`, ArbiterRegistry `0x3AF1…35eB`,
-CairnGovernance `0xA142…221C`. Zero tasks so far. **Note:** an internal security
-audit produced fixes (repo PRs #46–#59) that are on `main` but **not yet redeployed**
-— the live addresses run the pre-audit code until the redeploy.
+CairnGovernance `0xA142…221C`. Zero tasks so far. **Note:** the security-audit fixes
+and the score-input changes listed below are on `main` but **not yet redeployed** —
+the live addresses run the earlier code until the redeploy.
 
 **Spec → code name map:**
 
 | Paper term | Deployed function |
 |------------|-------------------|
 | `confirmTask` (IDLE→RUNNING) | `startTask` (`onlyCurrentAgent`) |
-| `checkLiveness` / `checkProgress` | `detectFailure` (permissionless; `isStale`) |
-| `commitCheckpoint` | `commitCheckpointBatch(taskId, count, merkleRoot, latestCID, schemaHash)` |
+| `checkLiveness` / `checkProgress` | `detectFailure` (permissionless; heartbeat stale or deadline passed) |
+| agent-declared failure | `reportFailure(taskId, failureType, evidenceCID)` (current agent) |
+| cost accounting for *B* | `reportCost(taskId, cumulativeCost)` (current agent) |
+| `commitCheckpoint` | `commitCheckpointBatch(taskId, cids[], schemaHash)` |
 | `settle(taskId)` | internal `_settleEscrow` (invoked by `completeTask` / `finalizeDispute` / timeout refund) — there is no public `settle()` |
+
+**Recovery-score inputs and failure evidence.** The table gives the behaviour of the
+currently deployed contracts and of the code on `main` that the redeploy ships.
+
+| Property | Deployed (pre-redeploy) | On `main` (pending redeploy) |
+|----------|-------------------------|------------------------------|
+| Budget input *B* | Constant 1 for any funded task | *B* = (escrow − costAccrued) / escrow; `costAccrued` is reported by the current agent via `reportCost` (monotone, clamped to the escrow) and is not verified on-chain; settlement does not use it |
+| Failure class | Derived from checkpoint count (0 → LIVENESS, 1–2 → RESOURCE, ≥3 → LIVENESS); LOGIC unreachable | Derived from recorded evidence: heartbeat timeout → LIVENESS (RESOURCE/`BUDGET_EXHAUSTED` if reported cost reached the escrow); passed deadline → RESOURCE/`DEADLINE_EXCEEDED`; agent report → the reported type's class (LOGIC reachable). Checkpoint count does not affect the class |
+| Failure evidence | Heartbeat timeout only | Heartbeat timeout and passed deadline (checked on-chain, permissionless); agent-declared failure with an evidence CID (attested, not verified on-chain). The source is stored on the task and emitted in `FailureEvidenceRecorded` |
+| Deadline expiry | Not detectable while the agent keeps sending heartbeats | Detectable by anyone via `detectFailure`; routes to dispute |
+| Checkpoint count | Supplied by the caller, capped at 1,000 per batch | Equal to the number of CIDs published in the batch; the batch's Merkle root is computed on-chain from them. The contract commits to the CIDs; it does not verify the content they reference |
+| `RecoveryRouterV2` upgradeability | Non-upgradeable | Non-upgradeable router plus a UUPS variant (`RecoveryRouterV2Upgradeable`, not deployed) |
 
 **Deliberate divergences from this spec:**
 
@@ -314,7 +328,7 @@ A DeFi portfolio-management agent (acting as the operator — its own wallet pos
 
 **Result without CAIRN:** The operator (agent or human) discovers the failure only on its next polling cycle — typically 4+ hours later for a human, or whenever the next health-check fires for an automated principal. Full restart. Original agent paid 0.
 
-**Result with CAIRN:** Automatic detection in 65 seconds. Fallback resumes from step 4. Original agent paid 0.00597 ETH for verified work (60% of the 0.00995 ETH distributable after the 0.5% protocol fee). Total recovery time: ~85 seconds.
+**Result with CAIRN:** Automatic detection in 65 seconds. Fallback resumes from step 4. Original agent paid 0.00597 ETH for its committed checkpoints (60% of the 0.00995 ETH distributable after the 0.5% protocol fee). Total recovery time: ~85 seconds.
 
 > *Detection-window note.* The timeline above uses the strict single-interval liveness window (`block.timestamp > lastHeartbeat + H`), as implemented in the MVP contract variant. The full v1 `CairnCore` deployment applies the more conservative two-consecutive-miss rule of Section 4.3 (`lastHeartbeat + 2H`), under which detection fires at ~T+245s — 125 seconds after the crash rather than 65. Either way, detection is measured in seconds, not the hours typical of polling-based discovery.
 
@@ -340,13 +354,13 @@ The value of checkpoint-based recovery scales with task length and failure point
 | Data pipeline | 10 | Step 7 | 0.00697 ETH (70%) | 0 ETH | Steps 1-7: $0 | Steps 1-7: ~$0.006 |
 | Complex pipeline | 50 | Step 42 | 0.00836 ETH (84%) | 0 ETH | Steps 1-42: $0 | Steps 1-42: ~$0.035 |
 
-With CAIRN, the original agent is compensated for verified work. Without CAIRN, 100% of work and payment is lost on any failure.
+With CAIRN, the original agent is compensated for its committed checkpoints. Without CAIRN, 100% of work and payment is lost on any failure.
 
 ### 2.6 What CAIRN Is NOT
 
 - **Not a new agent framework.** CAIRN wraps any existing framework — LangGraph, Olas SDK, AgentKit, CrewAI, custom builds.
 - **Not a replacement for A2A or MCP.** Google's A2A protocol [12] handles agent discovery and communication. Anthropic's MCP [13] connects agents to tools. CAIRN handles what happens when those agents fail mid-task: detection, recovery, and settlement. These are complementary layers.
-- **Not a replacement for ERC-8183.** Virtuals' Agent Commerce Protocol implements ERC-8183 for the job lifecycle happy path (job creation → completion → payment). CAIRN handles the unhappy path (failure → classification → recovery → settlement). They compose.
+- **Not a replacement for ERC-8183.** ERC-8183 (implemented by Virtuals' Agent Commerce Protocol) specifies job creation, completion, and payment. CAIRN specifies failure handling, recovery, and settlement for tasks that do not complete. CAIRN integrates as an ERC-8183 hook.
 - **Not a centralized service.** Every state transition is enforced by the CAIRN state machine contract. No server. No admin key. No human-in-the-loop after task submission (the operator who submits the task may be a human, an agent, a DAO, or a contract — see Section 2.1).
 - **Not optional infrastructure.** The escrow condition makes record-writing mandatory — agents cannot receive payment without completing the protocol.
 
@@ -368,17 +382,31 @@ This mapping is analogous to the foundational distinction between **crash faults
 
 **Sub-class modulation.** Within each class, the failure type provides additional signal that the fallback agent uses for off-chain strategy selection (e.g., retry with different API key vs. reduced context vs. alternative model), though it does not affect the on-chain recovery score. The separation is deliberate: the score determines *whether* to attempt recovery (an on-chain decision requiring determinism), while the failure type informs *how* to attempt recovery (an off-chain decision that benefits from richness).
 
-| Failure Class | Failure Types | On-Chain Score Impact | Off-Chain Strategy Impact |
+| Failure Class | Failure Types (contract enum) | On-Chain Score Impact | Off-Chain Strategy Impact |
 |---|---|---|---|
-| LIVENESS | HEARTBEAT_MISS, PROCESS_CRASH, NETWORK_PARTITION | Same (*F* = 0.70) | Fallback uses same approach vs. different node |
-| RESOURCE | BUDGET_EXCEEDED, DEADLINE_HIT, RATE_LIMIT, CONTEXT_OVERFLOW | Same (*F* = 0.30) | Fallback uses different API key vs. smaller context vs. reduced scope |
-| LOGIC | HALLUCINATION, SPEC_MISMATCH, STEP_LOOP, WRONG_TOOL | Same (*F* = 0.00) | N/A (routes to dispute) |
+| LIVENESS | `HEARTBEAT_MISS`, `NODE_CRASH`, `NETWORK_PARTITION` | Same (*F* = 0.70) | Fallback uses same approach vs. different node |
+| RESOURCE | `BUDGET_EXHAUSTED`, `DEADLINE_EXCEEDED`, `RATE_LIMIT`, `GAS_EXHAUSTED`, `UPSTREAM_TIMEOUT` | Same (*F* = 0.30) | Fallback uses different API key vs. smaller context vs. reduced scope |
+| LOGIC | `VALIDATION_FAILED`, `SCHEMA_MISMATCH`, `INVARIANT_VIOLATION` | Same (*F* = 0.00) | N/A (routes to dispute) |
+
+**How the class is established.** The contract derives the class only from recorded
+failure evidence, and records where that evidence came from:
+
+| Evidence source | Trigger | Who can submit | Verified on-chain |
+|---|---|---|---|
+| `HEARTBEAT_TIMEOUT` | Heartbeat missed by more than 2× the interval | Anyone (`detectFailure`) | Yes |
+| `DEADLINE_EXPIRED` | Block time past the task deadline | Anyone (`detectFailure`) | Yes |
+| `AGENT_REPORT` | The current agent declares a failure type with an evidence CID | Current agent (`reportFailure`) | No (attested) |
+
+`HEARTBEAT_MISS` and `DEADLINE_EXCEEDED` cannot be self-reported. Semantic failures
+(hallucination, specification mismatch, task misunderstanding) reach the LOGIC class
+only through an agent report or through dispute resolution; the contract does not
+detect them.
 
 Future protocol versions may introduce sub-class weights if production data reveals that within-class recovery rate variance exceeds between-class variance for specific failure types.
 
 ### 3.2 Resume, Not Restart
 
-Without checkpoints, a fallback agent must restart the entire task — wasting the original agent's completed work and the budget spent on it. Checkpoints commit verified work after each subtask. On recovery, the fallback reads the checkpoint list and resumes from the last verified output. No restart from zero.
+Without checkpoints, a fallback agent must restart the entire task — wasting the original agent's completed work and the budget spent on it. Checkpoints commit the output of each subtask. On recovery, the fallback reads the checkpoint list and resumes from the last committed output. No restart from zero.
 
 The theoretical foundation for this approach is the Chandy-Lamport algorithm for distributed snapshots [8], which proves that consistent global state can be reconstructed from local checkpoints in a distributed system. CAIRN adapts this: agents independently checkpoint after each subtask (independent timing), but checkpoints are schema-validated and IPFS-stored (coordinated verification) — a quasi-synchronous model.
 
@@ -404,7 +432,7 @@ The loop starts from day one because the economic incentive is immediate.
 
 A legitimate question: why does agent failure recovery require a blockchain? The answer is structural, not ideological.
 
-**Escrow requires trustless settlement.** CAIRN distributes escrow proportionally to verified checkpoints from two agents who do not trust each other (the primary and fallback). A centralized coordinator could modify checkpoint counts or settlement calculations. On-chain settlement removes this trust dependency — the escrow split is computed by an immutable function visible to all parties.
+**Escrow settlement without a trusted coordinator.** CAIRN distributes escrow proportionally to committed checkpoints from two agents who do not trust each other (the primary and fallback). A centralized coordinator could modify checkpoint counts or settlement calculations. On-chain settlement removes this trust dependency — the escrow split is computed by an immutable function visible to all parties.
 
 **Permissionless enforcement requires public state.** Any participant can call `checkLiveness` to trigger failure detection. This is only possible when the enforcement function, the last heartbeat timestamp, and the heartbeat interval are all publicly readable on-chain. A centralized system could restrict who is allowed to report failures.
 
@@ -650,7 +678,7 @@ These estimates follow from the exponential model: at *n* = *k*, confidence is 1
 
 ### 6.1 Escrow Split Rule
 
-On RESOLVED, escrow is distributed proportionally to verified work:
+On RESOLVED, escrow is distributed proportionally to committed checkpoints:
 
 ```
 protocol_fee      = escrow × fee_bps / 10000
@@ -709,16 +737,16 @@ The three-tier model enables graduated recovery: high-confidence failures get fu
 
 **Why multiplicative.** The formula uses a product rather than a weighted sum because recovery success depends on *all* factors being adequate simultaneously. If budget is zero, recovery is impossible regardless of failure type or deadline. If the failure is a LOGIC error (*F* = 0.00), no amount of budget or time helps. The multiplicative structure captures this "any-factor-kills-it" dynamic: when any input approaches zero, the score approaches zero — matching empirical recovery dynamics.
 
-This design choice is empirically validated. Monte Carlo simulation across 100,000 synthetic task-failure events per run (seed=42, reproducible via `python3 -m simulation.run_eq4`) systematically compared four formula structures across 16 experiments: (1) linear weighted sum — optimal 33.81% misrouting (Run 1, 362 grid points); (2) piecewise-linear with *B*×*D* interaction — 33.17% (Run 2); (3) 5-variable linear with complexity and skill inputs — 32.78% (Run 3); and (4) multiplicative — **23.46%** (Run 4, 2,646 grid points). The first three formulas converge to a ~33% misrouting floor — a structural ceiling intrinsic to additive formulas, confirmed across 3,008 configurations. The multiplicative formula breaks through to 23.46%, within **0.93 percentage points of the Bayes-optimal theoretical minimum (22.53%)** — capturing 96% of achievable improvement. A hybrid α-sweep (11 ratios from α=0.0 pure multiplicative to α=1.0 pure linear) confirms that pure multiplicative is strictly optimal: misrouting increases monotonically with α (23.46% at α=0, 24.57% at α=0.1, 26.27% at α=0.5, 35.07% at α=1.0). Cross-task-type leave-one-out validation shows 23.39% ± 0.36% across five task types — best generalization of any formula tested. Most importantly, the confusion matrix pivots: **FULL-tier false positives drop from 22.3% (Eq1 linear) to 7.9% (Eq4 multiplicative) — a 65% reduction in wasted recovery attempts.** Full methodology, per-experiment findings, and confusion matrices are documented in Section 10.1; raw results in `simulation/RESULTS_EQ4.md`.
+This design choice is evaluated in simulation. Monte Carlo simulation across 100,000 synthetic task-failure events per run (seed=42, reproducible via `python3 -m simulation.run_eq4`) systematically compared four formula structures across 16 experiments: (1) linear weighted sum — optimal 33.81% misrouting (Run 1, 362 grid points); (2) piecewise-linear with *B*×*D* interaction — 33.17% (Run 2); (3) 5-variable linear with complexity and skill inputs — 32.78% (Run 3); and (4) multiplicative — **23.46%** (Run 4, 2,646 grid points). The first three formulas converge to a ~33% misrouting floor across the 3,008 additive configurations evaluated. The multiplicative formula breaks through to 23.46%, within **0.93 percentage points of the model's Bayes risk (22.53%)** — 96% of the improvement achievable under the model. A hybrid α-sweep (11 ratios from α=0.0 pure multiplicative to α=1.0 pure linear) shows pure multiplicative performing best among the blends tested: misrouting increases monotonically with α (23.46% at α=0, 24.57% at α=0.1, 26.27% at α=0.5, 35.07% at α=1.0). Cross-task-type leave-one-out validation shows 23.39% ± 0.36% across five task types — the lowest variance of the formulas tested. Most importantly, the confusion matrix pivots: **FULL-tier false positives drop from 22.3% (Eq1 linear) to 7.9% (Eq4 multiplicative) — a 65% reduction in wasted recovery attempts.** Full methodology, per-experiment findings, and confusion matrices are documented in Section 10.1; raw results in `simulation/RESULTS_EQ4.md`.
 
 **Exponent rationale.** The failure class exponent *a* = 0.80 makes *F* the dominant factor: a LIVENESS failure (*F* = 0.70) produces *F*^0.80 ≈ 0.752, while a RESOURCE failure (*F* = 0.30) produces *F*^0.80 ≈ 0.382 — roughly a 2× separation (precise ratio 1.97). The sub-linear exponent provides diminishing returns above *F* = 0.5, preventing the class signal from overwhelming resource signals. The budget exponent *b* = 0.35 assigns moderate influence: 50% budget remaining yields *B*^0.35 = 0.79, while 10% yields *B*^0.35 = 0.47 — a meaningful but not catastrophic penalty. The deadline exponent *c* = 0.15 assigns the least weight: in the multiplicative context, deadline contributes through the product interaction (low deadline × low budget is catastrophic) more than through its individual exponent. All exponents are governance-adjustable parameters (see Section 8).
 
 **Class weight rationale.** LIVENESS failures (agent crashes, API timeouts) have the highest base recovery rate (~92% when resources are available), justifying *F*<sub>LIVENESS</sub> = 0.70. RESOURCE failures (budget exhaustion, context overflow) are partially recoverable (~48%), justifying *F*<sub>RESOURCE</sub> = 0.30. LOGIC failures (reasoning errors, hallucinations, spec mismatches) have ~8% base recovery rate — a different agent retrying the same reasoning task rarely succeeds. Setting *F*<sub>LOGIC</sub> = 0.00 routes all LOGIC failures directly to dispute, which is the economically correct decision: the expected value of a recovery attempt (8% × escrow saved) is less than the expected cost (92% × wasted fallback budget).
 
-**Threshold rationale.** The Bayes-optimal three-tier sweep (Exp 13) identified `(upper, lower) = (0.50, 0.45)` as the threshold pair that minimises overall misrouting against the ground-truth probability *p*. CAIRN ships `(0.40, 0.35)` instead. The deviation is deliberate, not an error:
+**Threshold rationale.** The three-tier threshold sweep against the ground-truth probability (Exp 13) identified `(upper, lower) = (0.50, 0.45)` as the threshold pair that minimises overall misrouting against the ground-truth probability *p*. CAIRN ships `(0.40, 0.35)` instead. The deviation is deliberate, not an error:
 
-- **Asymmetric cost.** The Bayes-optimal objective treats false positives and false negatives symmetrically — every misroute counts equally. In production economics they do not. A false positive (recovery attempted that fails) wastes ~50% of the remaining escrow plus the fallback agent's gas and reputation; a false negative (recoverable task disputed) costs the operator only the 3% arbiter fee plus a 7-day delay. Section 6.6 quantifies the asymmetry: at *E* = 0.01 ETH, a FULL-tier FP costs ~10× more than an FN. The Bayes-optimal threshold treats these as equivalent; CAIRN's lower thresholds shift the routing band toward the *cheaper* error mode (more FNs, fewer FPs), which the §6.6 confusion matrix confirms (Eq4 FULL-FP drops to 7.9% vs Bayes's 9.2%, FN rises to 12.2% vs Bayes's 13.0%).
-- **Coverage objective.** The narrow band `[0.35, 0.40)` is small by design: the multiplicative formula's primary value is the binary recover/dispute decision, not the FULL/REDUCED distinction. Setting both thresholds near the Bayes-optimal *lower* boundary (0.45) maximises the set of tasks routed to *some* recovery attempt rather than to immediate dispute, which is the operator-friendly bias.
+- **Asymmetric cost.** The sweep's objective treats false positives and false negatives symmetrically — every misroute counts equally. In production economics they do not. A false positive (recovery attempted that fails) wastes ~50% of the remaining escrow plus the fallback agent's gas and reputation; a false negative (recoverable task disputed) costs the operator only the 3% arbiter fee plus a 7-day delay. Section 6.6 quantifies the asymmetry: at *E* = 0.01 ETH, a FULL-tier FP costs ~10× more than an FN. The sweep's optimal thresholds treat these as equivalent; CAIRN's lower thresholds shift the routing band toward the *cheaper* error mode (more FNs, fewer FPs), which the §6.6 confusion matrix confirms (Eq4 FULL-FP drops to 7.9% vs Bayes's 9.2%, FN rises to 12.2% vs Bayes's 13.0%).
+- **Coverage objective.** The narrow band `[0.35, 0.40)` is small by design: the multiplicative formula's primary value is the binary recover/dispute decision, not the FULL/REDUCED distinction. Setting both thresholds near the oracle sweep's *lower* boundary (0.45) maximises the set of tasks routed to *some* recovery attempt rather than to immediate dispute, which is the operator-friendly bias.
 - **Headroom check.** Worked example: LIVENESS at *B*=0.85, *D*=0.88 yields *r* = 0.697, comfortably above 0.40. RESOURCE failures span 0.25-0.45 depending on resources, sitting exactly in the discriminating band. LOGIC failures score 0 regardless.
 
 All thresholds are governance-adjustable parameters (Section 8) — an operator population with different cost ratios can move toward (0.50, 0.45) for symmetric-cost optimisation, or further down for even more aggressive recovery bias.
@@ -732,14 +760,15 @@ All operations are designed for Base L2, where gas is inexpensive. **Every row b
 | Operation | Gas (measured) | Cost @ 0.01 gwei Base L2 | Cost @ $2,500/ETH | Source |
 |-----------|-----|--------------------------|-------------------|--------|
 | `submitTask` (incl. fallback auto-selection) | 460,091 (median) | 4.6 × 10⁻⁶ ETH | $0.0115 | measured |
-| `commitCheckpointBatch` (any batch size) | 195,199 (median) | 2.0 × 10⁻⁶ ETH | $0.0049 | measured |
+| `commitCheckpointBatch` (deployed; any batch size) | 195,199 (median) | 2.0 × 10⁻⁶ ETH | $0.0049 | measured |
+| `commitCheckpointBatch(cids[])` (on `main`, pending redeploy) | 160,587 (1 CID) · 174,035 (10) · 228,381 (50) · 1,633,412 (1,000) | 2.3 × 10⁻⁶ ETH at 50 CIDs | $0.0057 at 50 CIDs | measured |
 | `heartbeat` | 31,220 (median) | 3.1 × 10⁻⁷ ETH | $0.00078 | measured |
 | `completeTask` (settlement) | 148,921 (median) | 1.5 × 10⁻⁶ ETH | $0.0037 | measured |
 | `RecoveryRouterV2.computeRecoveryScore` (full multiplicative path) | **19,935 max / 5,748 avg / 524 min** | 2.0 × 10⁻⁷ ETH max | $0.00050 max | measured |
 | `RecoveryRouterV2.classifyAndScore` (called from CairnCore on failure) | **53,680 max / 39,017 avg / 24,354 min** | 5.4 × 10⁻⁷ ETH max | $0.00134 max | measured |
 | `RecoveryRouterV2` deployment cost | 1,224,782 | 1.2 × 10⁻⁵ ETH | $0.031 | measured |
 
-Two measured results are worth highlighting. First, **`commitCheckpointBatch` gas is independent of checkpoint count** — because Merkle batching commits a single root per batch, an isolated call costs ~158,528 gas of execution whether it commits 1, 10, or 50 checkpoints (benchmark in `test/GasBenchmark.t.sol`). Batching therefore amortizes checkpoint cost to near-zero per checkpoint at scale. Second, **`submitTask` (~460k) is higher than earlier design estimates (~180k)** because v2 auto-selects the fallback agent from the pool via an external call rather than requiring a pre-declared fallback — a deliberate trade of gas for operator convenience and a larger fallback set. Even so, at 0.01 gwei on Base the full task lifecycle (submit + checkpoint + settle) costs well under two cents.
+Two measured results are worth highlighting. First, in the deployed contracts **`commitCheckpointBatch` gas is independent of checkpoint count** (~158,528 gas of execution for 1, 10, or 50 checkpoints), because the caller supplies the count and the root. On `main`, the contract computes the root from the published CIDs so that the count is bound to them; execution cost then grows by ~1.4k gas per checkpoint (160,587 for 1 CID, 228,381 for 50; benchmark in `test/GasBenchmark.t.sol`), plus 16 gas per calldata byte (512 per CID) and Base's L1 data fee. Second, **`submitTask` (~460k) is higher than earlier design estimates (~180k)** because v2 auto-selects the fallback agent from the pool via an external call rather than requiring a pre-declared fallback — a deliberate trade of gas for operator convenience and a larger fallback set. Even so, at 0.01 gwei on Base the full task lifecycle (submit + checkpoint + settle) costs well under two cents.
 
 The 0.01 gwei assumption reflects typical post-Dencun Base L2 gas prices; actual L2 execution gas has ranged from below 0.001 gwei (low congestion) to approximately 0.1 gwei (high congestion) per BaseScan. Base transactions also carry an L1 publication fee (~1-5% of total cost at typical congestion) that is not included in the table above and can dominate at very low L2 gas prices. Dollar figures should therefore be read as order-of-magnitude estimates, not contractual guarantees.
 
@@ -773,7 +802,7 @@ At an average escrow *E* = 0.01 ETH with 50% remaining-budget *E*<sub>rem</sub> 
 - FN: 5 × 0.03 × 0.01 ETH = 0.0015 ETH / 1,000 tasks
 - **Total Eq1 misrouting cost: ~0.754 ETH / 1,000 tasks (~$1,885).**
 
-The multiplicative v2 formula therefore saves **~0.452 ETH / 1,000 tasks (~$1,130)**, a **60% reduction** in misrouting cost. The residual 0.93pp gap above the Bayes-optimal floor (22.53%) bounds the maximum further savings from calibration at roughly 0.012 ETH / 1,000 tasks (~$30) — essentially exhausted.
+The multiplicative v2 formula therefore saves **~0.452 ETH / 1,000 tasks (~$1,130)**, a **60% reduction** in misrouting cost. Under the synthetic model, the residual 0.93pp gap above its Bayes risk (22.53%) bounds further savings from recalibration at roughly 0.012 ETH / 1,000 tasks (~$30).
 
 Relative to deployed escrow capital (10 ETH of escrow across 1,000 tasks at *E* = 0.01): Eq4 misrouting costs **~3.0% of escrow value**; Eq1-current costs ~7.5%. Eq4 reduces the friction on deployed escrow by ~2.5× — an acceptable overhead for permissionless, trustless automated recovery.
 
@@ -800,7 +829,7 @@ CAIRN assumes:
 - Operators submit accurate task specifications (agents can query specs before accepting)
 - Block time is consistent (~2s on Base)
 
-**L2 sequencer trust dependency.** Base is operated by a single centralised sequencer (Coinbase, as of April 2026). For a protocol that markets "trustless" recovery, this dependency requires explicit treatment:
+**L2 sequencer trust dependency.** Base is operated by a single centralised sequencer (Coinbase, as of April 2026). Recovery depends on the sequencer including enforcement transactions, so this dependency is treated explicitly:
 
 - **Liveness:** if the Coinbase sequencer is offline or refuses to include CAIRN transactions, the entire protocol pauses — `checkLiveness`, `commitCheckpointBatch`, `settle`, and arbiter rulings cannot execute. This is a censorship/availability risk shared with every Base-deployed protocol. The mitigation Base provides today is a "force inclusion" escape hatch through L1, but it adds latency (hours-to-days, depending on Base's exact bridge cadence) that exceeds CAIRN's heartbeat intervals; force-included transactions would arrive too late to prevent stale failures.
 - **Ordering:** the sequencer chooses the in-block order of transactions. For CAIRN this matters in two cases: (i) a worker agent submitting a just-in-time `heartbeat` racing against an enforcer's `checkLiveness`, and (ii) a fallback agent committing checkpoints racing against the deadline. In both cases the sequencer can pick a winner. The atomicity of CAIRN's failure path (detection → classification → routing in one transaction) limits the MEV surface to ordering only — there is no mid-transaction state insertion — but ordering alone is sufficient to extract value in adversarial scenarios.
@@ -954,7 +983,7 @@ All upgrades require governance approval via the timelock. In-flight tasks are n
 
 | Solution | Checkpointing | Cross-Agent Handoff | Escrow Settlement | Failure Intelligence |
 |----------|:---:|:---:|:---:|:---:|
-| LangGraph | Yes (proprietary) | No | No | No |
+| LangGraph | Yes (open-source checkpointers) | No | No | No |
 | Temporal.io | Yes | No (same worker) | No | No |
 | Kubernetes | No (container-level) | No | No | No |
 | LangSmith | No (observability only) | No | No | No |
@@ -1013,11 +1042,11 @@ CAIRN builds on established theory:
 | 2 | Run 1 + piecewise cliffs + *w*<sub>int</sub>·*B*·*D* interaction | Linear + non-linear | 3 + 4 cliff params + 1 interaction | **33.17%** |
 | 3 | Run 1 + *w*<sub>c</sub>·*C* (complexity) + *w*<sub>s</sub>·*S* (fallback skill) | Linear | 5 (adds *C*, *S*) | **32.78%** |
 | **4** | ***r* = *F*^*a* × *B*^*b* × *D*^*c*** | **Multiplicative** | **3 (*F*, *B*, *D*)** | **23.46%** |
-| — | Bayes-optimal three-tier (thresholds 0.50/0.45) | Perfect oracle (ground-truth *p*) | — | 22.53% |
+| — | Oracle three-tier (thresholds 0.50/0.45) | Routes on ground-truth *p* (Bayes risk of the model) | — | 22.53% |
 
-Runs 1-3 exhaustively proved that any additive formula — regardless of non-linear terms or additional variables — converges to a ~33% misrouting structural ceiling. The **"93/4/3 rule"** emerged: 93% of achievable improvement comes from weight tuning within the linear formula, 4% from non-linear terms, and 3% from adding variables. The ceiling exists because additive formulas cannot express the "any-factor-kills-it" dynamic: in reality, zero budget means zero recovery chance regardless of failure type, but a sum always produces a positive value from the remaining terms.
+Across the additive formula families and parameter ranges evaluated in Runs 1–3 (including non-linear terms and additional variables), misrouting converged near a ~33% floor. The **"93/4/3 rule"** emerged: 93% of achievable improvement comes from weight tuning within the linear formula, 4% from non-linear terms, and 3% from adding variables. The ceiling exists because additive formulas cannot express the "any-factor-kills-it" dynamic: in the ground-truth model, zero budget means zero recovery chance regardless of failure type, but a sum always produces a positive value from the remaining terms.
 
-Run 4 changed the formula structure to multiplicative. The result — 23.46% misrouting — captures 96% of the theoretically achievable improvement and lies within 0.93 percentage points of the Bayes-optimal three-tier baseline (22.53%). The binary Bayes-optimal floor is 22.52%, confirming that the 22.5% irreducible noise is intrinsic to the stochastic ground truth rather than to the three-tier structure.
+Run 4 changed the formula structure to multiplicative. The result — 23.46% misrouting — captures 96% of the improvement achievable under the model and lies within 0.93 percentage points of the model's three-tier Bayes risk (22.53%). The binary Bayes risk is 22.52%, so the remaining ~22.5% error comes from the stochastic ground truth rather than from the three-tier structure.
 
 *Experiment catalog.* Each experiment answered a distinct calibration question:
 
@@ -1035,7 +1064,7 @@ Run 4 changed the formula structure to multiplicative. The result — 23.46% mis
 | 10 | 3 | 5-variable threshold optimization | Threshold grid for Eq3 scores | Optimal: upper=0.50, lower=0.45 — tighter than Eq1's 0.45/0.40 | −1.00pp |
 | 11 | 3 | Variable ablation | Solo complexity, solo skill, both | Solo: −0.86pp (complexity), −0.87pp (skill); combined: −0.55pp (**subadditive** — linear sum cannot capture the multiplicative *C*·*S* ground-truth interaction) | — |
 | 12 | 3 | 5-var cross-task LOO-CV | Leave-one-type-out on Eq3 | 32.37% ± 0.36% — generalizes; confirms ~33% ceiling is structural, not data-specific | — |
-| 13 | 4 | Bayes-optimal baseline | Route using ground-truth *p* directly | Binary floor 22.52%; three-tier floor 22.53% — any formula ≤25% is near-optimal | — |
+| 13 | 4 | Oracle baseline (Bayes risk) | Route using ground-truth *p* directly | Binary 22.52%; three-tier 22.53% — the lowest misrouting achievable under the model | — |
 | 14 | 4 | Multiplicative grid search | 2,646 Phase-A configs (9×7×7 exponent triples × 6 coarse threshold pairs) + 53 Phase-B threshold refinements at best exponents | Optimal: (0.80, 0.35, 0.15), thresholds 0.40/0.35 | −10.35pp vs Eq1 |
 | 15 | 4 | Hybrid α-sweep | *r* = α·Eq1 + (1−α)·Eq4 at 11 α values | Monotonic: α=0.0 best (23.46%), α=1.0 worst (35.07%) — every increment of linear component strictly degrades routing | — |
 | 16 | 4 | Multiplicative cross-task LOO-CV | Leave-one-type-out on Eq4 | 23.39% ± 0.36% — best generalization of any run | — |
@@ -1065,7 +1094,7 @@ Class frequencies match literature to within 0.17pp. Recovery rates are proporti
 | **DISPUTED + Succeeded** | **7.7%** | **12.2%** | **13.0%** | **False negative — missed recovery** |
 | DISPUTED + Failed | 36.7% | 51.5% | 53.3% | Correctly disputed |
 
-The headline result: **FULL-tier false positives drop from 22.3% to 7.9% — a 65% reduction**. The multiplicative formula is far more selective about which tasks receive full recovery resources. The trade-off is a rise in disputed-but-recoverable cases (7.7% → 12.2%), which is the correct direction: a failed recovery wastes the fallback's budget and time, while a disputed-recoverable task merely delays resolution with the arbiter fee as overhead (see Section 6.6 for economic cost). The Eq4 matrix is strikingly close to the Bayes-optimal matrix, confirming the formula captures nearly all information extractable from the three on-chain inputs.
+The headline result: **FULL-tier false positives drop from 22.3% to 7.9% — a 65% reduction**. The multiplicative formula is far more selective about which tasks receive full recovery resources. The trade-off is a rise in disputed-but-recoverable cases (7.7% → 12.2%), which is the correct direction: a failed recovery wastes the fallback's budget and time, while a disputed-recoverable task merely delays resolution with the arbiter fee as overhead (see Section 6.6 for economic cost). The Eq4 matrix is close to the oracle matrix: under the synthetic model, the formula recovers most of the routing information available from the observable inputs.
 
 *Cross-task-type generalization (LOO-CV).* The per-task-type leave-one-out results confirm the formula is not over-fit to any single domain:
 
@@ -1108,7 +1137,7 @@ CAIRN's current design makes explicit trade-offs. We state them here to bound th
 
 **Checkpoint portability boundary.** CAIRN's full checkpoint portability covers structured pipeline tasks (approximately 90% of current on-chain agent workloads). Reasoning-heavy tasks (chain-of-thought, planning with backtracking) operate in degraded mode where only output-level checkpoints are portable. See Section 4.1.1.
 
-**Recovery score accuracy.** The multiplicative formula achieves 23.46% misrouting against the synthetic ground truth — 0.93pp from the Bayes-optimal floor of 22.53% (96% of achievable improvement captured). The ground truth is calibrated to published class frequencies to within 0.17pp (LIVENESS/RESOURCE/LOGIC at 44.96% / 34.87% / 20.17% vs. literature targets 45% / 35% / 20%), but the recovery *rates* within each class have not been validated against empirical recovery outcomes because no such dataset yet exists. The staged calibration roadmap (Section 10.1) replaces the synthetic ground truth with observed outcomes as testnet and mainnet data accumulate; parameter updates happen via governance, not redeployment.
+**Recovery score accuracy.** The multiplicative formula achieves 23.46% misrouting against the synthetic ground truth — 0.93pp from the model's Bayes risk of 22.53% (96% of the improvement achievable under the model). The ground truth is calibrated to published class frequencies to within 0.17pp (LIVENESS/RESOURCE/LOGIC at 44.96% / 34.87% / 20.17% vs. literature targets 45% / 35% / 20%), but the recovery *rates* within each class have not been validated against empirical recovery outcomes because no such dataset yet exists. The staged calibration roadmap (Section 10.1) replaces the synthetic ground truth with observed outcomes as testnet and mainnet data accumulate; the deployed contracts use compile-time parameters, so recalibration currently requires a redeploy (see Implementation Status).
 
 **Single-fallback architecture.** CAIRN supports one fallback attempt per failure. If the fallback also fails, the task goes to dispute. Multi-fallback chains are deferred to a future version.
 
@@ -1160,7 +1189,7 @@ CAIRN's current design makes explicit trade-offs. We state them here to bound th
 
 [17] R. McPeck, D. Finlay, R. Dawson, D. Chiang, "ERC-7710: Smart Contract Delegation." EIP in Draft status, created May 20, 2024. Used by the MetaMask Delegation Toolkit. EIP: https://eips.ethereum.org/EIPS/eip-7710
 
-[18] CAIRN Recovery Score Calibration Simulation, April 2026. Monte Carlo validation across 100,000 synthetic task-failure events per run, 4 formula structures (linear, piecewise + interaction, 5-variable linear, multiplicative), 16 experiments (Exp 1-5 weight/class/threshold/sensitivity/LOO-CV for Eq1; Exp 6-8 for Eq2; Exp 9-12 for Eq3; Exp 13-16 Bayes-optimal baseline, multiplicative grid, hybrid α-sweep, and cross-task LOO-CV for Eq4). Run 1: 362 grid points (55 weight + 245 class-weight + 62 threshold), runtime ~3 seconds. Run 2: staged grid over 8 Eq2 parameters, runtime ~31 seconds. Run 3: staged grid over 5 linear weights + thresholds. Run 4: 2,646 multiplicative-formula grid points + hybrid α-sweep, runtime ~14 seconds. Reproducible: `python3 -m simulation.run` (Run 1), `run_eq2` (Run 2), `run_eq3` (Run 3), `run_eq4` (Run 4); seed=42, deterministic on any NumPy ≥1.20 installation. Source: `simulation/` in the CAIRN repository. Results: `simulation/RESULTS.md`, `RESULTS_EQ2.md`, `RESULTS_EQ3.md`, `RESULTS_EQ4.md`. Figures: `simulation/figures/fig1` through `fig16`.
+[18] CAIRN Recovery Score Calibration Simulation, April 2026. Monte Carlo validation across 100,000 synthetic task-failure events per run, 4 formula structures (linear, piecewise + interaction, 5-variable linear, multiplicative), 16 experiments (Exp 1-5 weight/class/threshold/sensitivity/LOO-CV for Eq1; Exp 6-8 for Eq2; Exp 9-12 for Eq3; Exp 13-16 oracle (Bayes-risk) baseline, multiplicative grid, hybrid α-sweep, and cross-task LOO-CV for Eq4). Run 1: 362 grid points (55 weight + 245 class-weight + 62 threshold), runtime ~3 seconds. Run 2: staged grid over 8 Eq2 parameters, runtime ~31 seconds. Run 3: staged grid over 5 linear weights + thresholds. Run 4: 2,646 multiplicative-formula grid points + hybrid α-sweep, runtime ~14 seconds. Reproducible: `python3 -m simulation.run` (Run 1), `run_eq2` (Run 2), `run_eq3` (Run 3), `run_eq4` (Run 4); seed=42, deterministic on any NumPy ≥1.20 installation. Source: `simulation/` in the CAIRN repository. Results: `simulation/RESULTS.md`, `RESULTS_EQ2.md`, `RESULTS_EQ3.md`, `RESULTS_EQ4.md`. Figures: `simulation/figures/fig1` through `fig16`.
 
 [19] C. Lesaege, F. Ast, W. George, "Kleros: A Decentralized Court System for the Internet", Kleros Yellowpaper, v1.0.7, 2019. https://kleros.io/yellowpaper.pdf. Pioneers the bonded-juror-with-Schelling-point design for on-chain dispute resolution, including multi-round appeals with quadratically increasing juror pools. Cited in this paper as the canonical prior work on the arbiter-recursion problem (Section 4.5, Section 7.5, Section 10.3).
 
