@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- Internal planning material is no longer tracked in the repository: product requirement documents, the launch-readiness backlog, the arXiv submission bundle, the maintainer deployment runbook, agent configuration, and the hackathon archive. `WHITEPAPER_V2.md` (including its Implementation Status section) and `docs/` remain the public reference.
+
+---
+
 ## [2.0.0] - 2026-04 (Whitepaper v2.0)
 
 ### Changed — Protocol Specification

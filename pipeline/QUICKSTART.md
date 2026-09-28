@@ -254,7 +254,7 @@ python example.py pipeline | rotatelogs pipeline-%Y-%m-%d.log 86400
 
 - **Documentation**: See [README.md](README.md) for full details
 - **Issues**: Open issues on GitHub
-- **PRD**: See [PRD-03](../PRDs/PRD-03-EXECUTION-INTELLIGENCE/PRD.md) for specifications
+- **Specification**: See [Execution Intelligence](../docs/execution-intelligence.md)
 
 ---
 

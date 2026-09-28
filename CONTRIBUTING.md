@@ -92,8 +92,7 @@ cairn-protocol/
 ├── frontend/          # Next.js 14 dashboard
 ├── subgraph/          # The Graph indexer
 ├── pipeline/          # Off-chain event listener
-├── docs/              # Technical documentation
-└── PRDs/              # Product requirements
+└── docs/              # Technical documentation
 ```
 
 ---

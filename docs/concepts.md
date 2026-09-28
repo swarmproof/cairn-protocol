@@ -79,7 +79,7 @@ The multiplicative form captures the "any-factor-kills-it" dynamic: if budget, d
 - `0.35 ≤ r < 0.40` → **RECOVERING (reduced scope)** — medium confidence, fallback receives capped budget
 - `r < 0.35` → **DISPUTED** (requires arbiter resolution)
 
-> **v1 testnet note.** The contract currently deployed on Base Sepolia (`RecoveryRouter.sol`) implements the pre-calibration linear formula `r = 0.5·F + 0.3·B + 0.2·D` with class weights `(0.90, 0.50, 0.10)` and a single binary threshold at `0.30`. The v2 multiplicative formula ships in `RecoveryRouterV2.sol` and migrates via governance through the `IRecoveryRouter` interface; see [PRD-04](../PRDs/PRD-04-V2-UPGRADE/PRD.md). Both `recoveryThresholdUpper` (0.40) and `recoveryThresholdLower` (0.35) are governance-adjustable in v2.
+> **v1 testnet note.** The contract currently deployed on Base Sepolia (`RecoveryRouter.sol`) implements the pre-calibration linear formula `r = 0.5·F + 0.3·B + 0.2·D` with class weights `(0.90, 0.50, 0.10)` and a single binary threshold at `0.30`. The v2 multiplicative formula ships in `RecoveryRouterV2.sol` and migrates via governance through the `IRecoveryRouter` interface; see the whitepaper's [Implementation Status](../WHITEPAPER_V2.md#implementation-status-authoritative). Both `recoveryThresholdUpper` (0.40) and `recoveryThresholdLower` (0.35) are governance-adjustable in v2.
 
 ### Escrow Split Rule
 
@@ -312,7 +312,7 @@ Six states. Every transition is deterministic. No human is required to trigger a
 | `0.35 ≤ r < 0.40` | Recoverable — reduced scope | Recovery attempt with capped budget |
 | `r < 0.35` | Not recoverable | Routed to dispute resolution |
 
-> **v1 testnet implementation:** uses a single threshold at `r = 0.30` (binary recover/dispute). The three-tier band above is the v2 specification; it ships on-chain via the `RecoveryRouterV2` migration ([PRD-04](../PRDs/PRD-04-V2-UPGRADE/PRD.md)).
+> **v1 testnet implementation:** uses a single threshold at `r = 0.30` (binary recover/dispute). The three-tier band above is the v2 specification; it ships on-chain via the `RecoveryRouterV2` migration ([Implementation Status](../WHITEPAPER_V2.md#implementation-status-authoritative)).
 
 ---
 

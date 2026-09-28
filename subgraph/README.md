@@ -343,5 +343,5 @@ This subgraph is part of the CAIRN Protocol project. See main repository for con
 
 - [The Graph Documentation](https://thegraph.com/docs/)
 - [AssemblyScript API](https://thegraph.com/docs/en/developing/assemblyscript-api/)
-- [CAIRN Protocol Docs](../../docs/)
-- [PRD-03: Execution Intelligence](../../PRDs/PRD-03-EXECUTION-INTELLIGENCE/)
+- [CAIRN Protocol Docs](../docs/)
+- [Execution Intelligence](../docs/execution-intelligence.md)

@@ -349,7 +349,7 @@ Reduce `min_samples` or increase `confidence_threshold` in PatternDetector const
 
 ## Contributing
 
-See main project [CLAUDE.md](../CLAUDE.md) for contribution guidelines.
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for contribution guidelines.
 
 ## License
 
