@@ -388,9 +388,9 @@ def observations(agg: dict) -> list[str]:
         tied = [w for w in agg if w not in better and w not in worse]
         obs.append(
             f"{FAMILY_LABELS[fam]} vs Eq4 fixed (paired over seeds, 95% CI excludes 0): "
-            f"lower misrouting in {', '.join(f'`{w}`' for w in better) or 'no world'}; "
-            f"higher in {', '.join(f'`{w}`' for w in worse) or 'no world'}; "
-            f"not distinguishable in {', '.join(f'`{w}`' for w in tied) or 'no world'}."
+            f"lower misrouting in {', '.join(f'`{w}`' for w in better) or 'none'}; "
+            f"higher in {', '.join(f'`{w}`' for w in worse) or 'none'}; "
+            f"not distinguishable in {', '.join(f'`{w}`' for w in tied) or 'none'}."
         )
 
     worst = max(agg, key=lambda w: agg[w]["families"]["eq4_fixed"]["gap_to_bayes"][0])
