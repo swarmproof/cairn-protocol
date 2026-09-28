@@ -45,3 +45,12 @@ PUBLICATION/arxiv/cairn-whitepaper.pdf
 PUBLICATION/arxiv/preamble.tex
 # Submission bundle (regenerated from cairn-whitepaper.tex + figures/)
 PUBLICATION/arxiv/cairn-submission.zip
+
+# Internal planning and maintainer material (kept local, not published)
+PRDs/
+archive/
+PUBLICATION/
+CLAUDE.md
+.claude/
+docs/BACKLOG.md
+docs/v2-deployment-runbook.md
