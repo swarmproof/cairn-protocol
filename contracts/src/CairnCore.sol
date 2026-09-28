@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import {ICairnCore} from "./interfaces/ICairnCore.sol";
 import {ICairnTypes} from "./interfaces/ICairnTypes.sol";
+import {FailureTaxonomy} from "./libraries/FailureTaxonomy.sol";
 import {IRecoveryRouter} from "./interfaces/IRecoveryRouter.sol";
 import {IRecoveryRouterV2} from "./interfaces/IRecoveryRouterV2.sol";
 import {IFallbackPool} from "./interfaces/IFallbackPool.sol";
@@ -400,29 +401,112 @@ contract CairnCore is ICairnCore, ReentrancyGuard, Pausable {
     {
         Task storage task = _tasks[taskId];
 
-        if (!isStale(taskId)) revert TaskNotStale(taskId);
+        // Mechanical evidence only. A passed deadline takes precedence: a task that keeps
+        // heart-beating past its deadline can no longer complete (completeTask reverts),
+        // so it must still be detectable as failed.
+        ICairnTypes.FailureEvidenceSource source;
+        if (_isActive(task) && block.timestamp > task.deadline) {
+            source = ICairnTypes.FailureEvidenceSource.DEADLINE_EXPIRED;
+        } else if (isStale(taskId)) {
+            source = ICairnTypes.FailureEvidenceSource.HEARTBEAT_TIMEOUT;
+        } else {
+            revert TaskNotStale(taskId);
+        }
 
-        // Classify failure via RecoveryRouter (PRD-02)
+        _recordFailure(taskId, source, ICairnTypes.FailureType.HEARTBEAT_MISS, bytes32(0));
+    }
+
+    /// @inheritdoc ICairnCore
+    function reportFailure(
+        bytes32 taskId,
+        ICairnTypes.FailureType failureType,
+        bytes32 evidenceCID
+    )
+        external
+        override
+        taskExists(taskId)
+        onlyCurrentAgent(taskId)
+        nonReentrant
+        whenNotPaused
+    {
+        Task storage task = _tasks[taskId];
+        if (!_isActive(task)) revert InvalidState(task.state, ICairnTypes.TaskState.RUNNING);
+
+        // Mechanical-only types are established by detectFailure, never self-reported.
+        if (FailureTaxonomy.isMechanicalOnly(failureType)) {
+            revert InvalidFailureReport(failureType);
+        }
+
+        _recordFailure(
+            taskId, ICairnTypes.FailureEvidenceSource.AGENT_REPORT, failureType, evidenceCID
+        );
+    }
+
+    /// @inheritdoc ICairnCore
+    function reportCost(bytes32 taskId, uint256 cumulativeCost)
+        external
+        override
+        taskExists(taskId)
+        onlyCurrentAgent(taskId)
+        whenNotPaused
+    {
+        Task storage task = _tasks[taskId];
+        if (!_isActive(task)) revert InvalidState(task.state, ICairnTypes.TaskState.RUNNING);
+        if (cumulativeCost < task.costAccrued) {
+            revert CostNotMonotonic(cumulativeCost, task.costAccrued);
+        }
+
+        // Clamp to the escrow: the budget is the escrow, so reaching it means exhaustion.
+        uint256 cost = cumulativeCost > task.escrowAmount ? task.escrowAmount : cumulativeCost;
+        task.costAccrued = cost;
+
+        emit CostReported(taskId, msg.sender, cost);
+    }
+
+    /// @notice Whether the task is executing (RUNNING or RECOVERING)
+    function _isActive(Task storage task) internal view returns (bool) {
+        return task.state == ICairnTypes.TaskState.RUNNING ||
+            task.state == ICairnTypes.TaskState.RECOVERING;
+    }
+
+    /// @notice Classify and score a failure from its evidence, move the task to FAILED,
+    ///         and route it.
+    function _recordFailure(
+        bytes32 taskId,
+        ICairnTypes.FailureEvidenceSource source,
+        ICairnTypes.FailureType reportedType,
+        bytes32 evidenceCID
+    ) internal {
+        Task storage task = _tasks[taskId];
+
+        ICairnTypes.FailureEvidence memory evidence = ICairnTypes.FailureEvidence({
+            source: source,
+            reportedType: reportedType,
+            evidenceCID: evidenceCID,
+            escrowAmount: task.escrowAmount,
+            costAccrued: task.costAccrued,
+            createdAt: task.createdAt,
+            deadline: task.deadline,
+            checkpointCount: task.checkpointCount
+        });
+
         (
             ICairnTypes.FailureClass failureClass,
             ICairnTypes.FailureType failureType,
             uint256 recoveryScore,
             bytes32 failureRecordCID
-        ) = recoveryRouter.classifyAndScore(
-            taskId,
-            task.escrowAmount,
-            task.createdAt,
-            task.deadline,
-            task.checkpointCount
-        );
+        ) = recoveryRouter.classifyAndScore(taskId, evidence);
 
         // Store failure data
         task.failureClass = failureClass;
         task.failureType = failureType;
         task.recoveryScore = recoveryScore;
         task.failureRecordCID = failureRecordCID;
+        task.failureEvidenceSource = source;
+        task.failureEvidenceCID = evidenceCID;
         task.state = ICairnTypes.TaskState.FAILED;
 
+        emit FailureEvidenceRecorded(taskId, source, failureType, evidenceCID);
         emit TaskFailed(
             taskId,
             task.currentAgent,

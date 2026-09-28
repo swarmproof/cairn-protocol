@@ -82,6 +82,15 @@ interface ICairnCore {
         // appeal window elapses, then finalizeDispute settles the possibly-overturned
         // ruling). Zero means no ruling recorded yet. Appended for storage safety.
         uint256 disputeRuledAt;
+
+        // Cumulative execution cost reported by the task's agents, in wei, clamped to
+        // escrowAmount. Feeds the recovery score's budget input B. Appended for storage safety.
+        uint256 costAccrued;
+
+        // Evidence the failure was recorded from, and the agent's evidence CID (zero for
+        // mechanical sources). Appended for storage safety.
+        ICairnTypes.FailureEvidenceSource failureEvidenceSource;
+        bytes32 failureEvidenceCID;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -156,6 +165,16 @@ interface ICairnCore {
         uint256 disputeDeadline
     );
 
+    // Failure evidence and cost
+    event CostReported(bytes32 indexed taskId, address indexed agent, uint256 costAccrued);
+
+    event FailureEvidenceRecorded(
+        bytes32 indexed taskId,
+        ICairnTypes.FailureEvidenceSource source,
+        ICairnTypes.FailureType failureType,
+        bytes32 evidenceCID
+    );
+
     // Settlement
     event TaskSettled(
         bytes32 indexed taskId,
@@ -175,7 +194,9 @@ interface ICairnCore {
     error InsufficientEscrow(uint256 provided, uint256 minimum);
     error InvalidHeartbeatInterval(uint256 provided, uint256 minimum);
     error HeartbeatTooFrequent(uint256 lastHeartbeat, uint256 minInterval);
-    error TaskNotStale(bytes32 taskId);
+    error TaskNotStale(bytes32 taskId); // neither heartbeat-stale nor past the deadline
+    error CostNotMonotonic(uint256 provided, uint256 current);
+    error InvalidFailureReport(ICairnTypes.FailureType failureType);
     error DeadlineExceeded(bytes32 taskId, uint256 deadline);
     error InvalidMerkleProof();
     error DisputeTimeoutNotReached();
@@ -244,10 +265,34 @@ interface ICairnCore {
     /// @return stale True if heartbeat was missed
     function isStale(bytes32 taskId) external view returns (bool stale);
 
-    /// @notice Trigger failure detection for a stale task
-    /// @dev Anyone can call this to initiate recovery
+    /// @notice Record mechanically verifiable failure evidence and route the task
+    /// @dev Permissionless. Succeeds when the task's deadline has passed (DEADLINE_EXPIRED,
+    ///      takes precedence) or its heartbeat was missed by more than 2x the interval
+    ///      (HEARTBEAT_TIMEOUT). Reverts TaskNotStale otherwise.
     /// @param taskId The task that may have failed
     function detectFailure(bytes32 taskId) external;
+
+    /// @notice The current agent declares that its execution failed
+    /// @dev Records AGENT_REPORT evidence (attested, not verified on-chain) and routes the
+    ///      task without waiting for a heartbeat timeout. HEARTBEAT_MISS and
+    ///      DEADLINE_EXCEEDED cannot be reported; they are established by detectFailure.
+    /// @param taskId The task
+    /// @param failureType The failure type the agent declares
+    /// @param evidenceCID Content identifier of the agent's supporting evidence
+    function reportFailure(
+        bytes32 taskId,
+        ICairnTypes.FailureType failureType,
+        bytes32 evidenceCID
+    ) external;
+
+    /// @notice The current agent reports the task's cumulative execution cost
+    /// @dev Attested by the agent, not verified on-chain. Must be non-decreasing; the stored
+    ///      value is clamped to the task escrow (reaching it means the budget is exhausted).
+    ///      Used as the recovery score's budget input B = (escrow - costAccrued) / escrow.
+    ///      Settlement does not depend on it.
+    /// @param taskId The task
+    /// @param cumulativeCost Total cost consumed by the task so far, in wei
+    function reportCost(bytes32 taskId, uint256 cumulativeCost) external;
 
     // ═══════════════════════════════════════════════════════════════
     // DISPUTE RESOLUTION (PRD-05)

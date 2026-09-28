@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import {IRecoveryRouter} from "./interfaces/IRecoveryRouter.sol";
 import {ICairnTypes} from "./interfaces/ICairnTypes.sol";
+import {FailureTaxonomy} from "./libraries/FailureTaxonomy.sol";
 import {UD60x18, ud, unwrap, pow as udPow} from "@prb/math/UD60x18.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -16,8 +17,10 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 ///
 /// Where:
 ///     F = failure_class_weight ∈ {0.70 (LIVENESS), 0.30 (RESOURCE), 0.00 (LOGIC)}
-///     B = budget_remaining_pct ∈ [0, 1]
-///     D = deadline_remaining_pct ∈ [0, 1]
+///     B = (escrow − costAccrued) / escrow ∈ [0, 1]   (costAccrued is agent-reported)
+///     D = (deadline − now) / (deadline − createdAt) ∈ [0, 1]
+///
+/// The failure class is derived from the recorded failure evidence (FailureTaxonomy).
 ///
 /// Three-tier routing (v2 thresholds):
 ///     r ≥ 0.40                  → RECOVERING (full scope)
@@ -123,10 +126,7 @@ contract RecoveryRouterV2 is IRecoveryRouter, Ownable {
     /// @inheritdoc IRecoveryRouter
     function classifyAndScore(
         bytes32 taskId,
-        uint256 escrowAmount,
-        uint256 createdAt,
-        uint256 deadline,
-        uint256 checkpointCount
+        ICairnTypes.FailureEvidence calldata evidence
     )
         external
         override
@@ -138,10 +138,12 @@ contract RecoveryRouterV2 is IRecoveryRouter, Ownable {
             bytes32 failureRecordCID
         )
     {
-        (failureClass, failureType) = _classifyFailure(checkpointCount);
+        (failureClass, failureType) = FailureTaxonomy.classify(evidence);
 
-        uint256 budgetRemaining = escrowAmount > 0 ? PRECISION : 0;
-        uint256 deadlineRemaining = _computeDeadlineRemaining(createdAt, deadline);
+        uint256 budgetRemaining =
+            FailureTaxonomy.budgetRemaining(evidence.escrowAmount, evidence.costAccrued);
+        uint256 deadlineRemaining =
+            FailureTaxonomy.deadlineRemaining(evidence.createdAt, evidence.deadline);
 
         recoveryScore = _computeScore(failureClass, budgetRemaining, deadlineRemaining);
 
@@ -251,44 +253,8 @@ contract RecoveryRouterV2 is IRecoveryRouter, Ownable {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // INTERNAL — classification + helpers (parity with v1)
+    // INTERNAL — helpers
     // ═══════════════════════════════════════════════════════════════
-
-    function _classifyFailure(uint256 checkpointCount)
-        internal
-        pure
-        returns (ICairnTypes.FailureClass, ICairnTypes.FailureType)
-    {
-        if (checkpointCount == 0) {
-            return (
-                ICairnTypes.FailureClass.LIVENESS,
-                ICairnTypes.FailureType.HEARTBEAT_MISS
-            );
-        } else if (checkpointCount < 3) {
-            return (
-                ICairnTypes.FailureClass.RESOURCE,
-                ICairnTypes.FailureType.UPSTREAM_TIMEOUT
-            );
-        } else {
-            return (
-                ICairnTypes.FailureClass.LIVENESS,
-                ICairnTypes.FailureType.HEARTBEAT_MISS
-            );
-        }
-    }
-
-    function _computeDeadlineRemaining(uint256 createdAt, uint256 deadline)
-        internal
-        view
-        returns (uint256)
-    {
-        if (block.timestamp >= deadline) return 0;
-        uint256 totalDuration = deadline - createdAt;
-        if (totalDuration == 0) return 0;
-        uint256 elapsed = block.timestamp - createdAt;
-        uint256 timeRemaining = totalDuration - elapsed;
-        return (timeRemaining * PRECISION) / totalDuration;
-    }
 
     function _createFailureRecord(
         bytes32 taskId,
