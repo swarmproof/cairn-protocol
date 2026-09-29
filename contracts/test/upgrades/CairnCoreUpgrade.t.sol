@@ -279,7 +279,7 @@ contract CairnCoreUpgradeTest is Test {
         bytes32 merkleRoot = keccak256(abi.encodePacked(checkpoints[0]));
 
         vm.prank(primaryAgent);
-        cairnCore.commitCheckpointBatch(taskId, 1, merkleRoot, checkpoints[0], SPEC_HASH);
+        cairnCore.commitCheckpointBatch(taskId, _cids(1, checkpoints[0]), SPEC_HASH);
 
         // Complete task
         vm.prank(primaryAgent);
@@ -364,5 +364,127 @@ contract CairnCoreUpgradeTest is Test {
         );
 
         assertTrue(taskId != bytes32(0));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // PRD-06 parity: reported cost, agent failure reports, deadline evidence
+    // ═══════════════════════════════════════════════════════════════
+
+    function _submitStartUpgradeable() internal returns (bytes32 taskId) {
+        vm.prank(operator);
+        taskId = cairnCore.submitTask{ value: 1 ether }(
+            TASK_TYPE, SPEC_HASH, primaryAgent, 60, block.timestamp + 1 hours
+        );
+        vm.prank(primaryAgent);
+        cairnCore.startTask(taskId);
+    }
+
+    function test_Upgradeable_ReportCost_ClampedAndMonotonic() public {
+        bytes32 taskId = _submitStartUpgradeable();
+        vm.startPrank(primaryAgent);
+        cairnCore.reportCost(taskId, 0.4 ether);
+        vm.expectRevert(
+            abi.encodeWithSelector(ICairnCore.CostNotMonotonic.selector, 0.1 ether, 0.4 ether)
+        );
+        cairnCore.reportCost(taskId, 0.1 ether);
+        cairnCore.reportCost(taskId, 9 ether);
+        vm.stopPrank();
+        assertEq(cairnCore.getTask(taskId).costAccrued, 1 ether);
+    }
+
+    function test_Upgradeable_DetectFailure_UsesReportedCost() public {
+        bytes32 taskId = _submitStartUpgradeable();
+        vm.prank(primaryAgent);
+        cairnCore.reportCost(taskId, 0.5 ether);
+        vm.warp(block.timestamp + 121);
+        cairnCore.detectFailure(taskId);
+
+        ICairnCore.Task memory t = cairnCore.getTask(taskId);
+        uint256 d = ((t.deadline - block.timestamp) * 1e18) / (t.deadline - t.createdAt);
+        assertEq(
+            t.recoveryScore,
+            recoveryRouter.computeRecoveryScore(ICairnTypes.FailureClass.LIVENESS, 0.5e18, d)
+        );
+        assertEq(
+            uint8(t.failureEvidenceSource),
+            uint8(ICairnTypes.FailureEvidenceSource.HEARTBEAT_TIMEOUT)
+        );
+    }
+
+    function test_Upgradeable_ReportFailure_LogicDisputes() public {
+        bytes32 taskId = _submitStartUpgradeable();
+        vm.prank(primaryAgent);
+        cairnCore.reportFailure(taskId, ICairnTypes.FailureType.INVARIANT_VIOLATION, keccak256("e"));
+        ICairnCore.Task memory t = cairnCore.getTask(taskId);
+        assertEq(uint8(t.failureClass), uint8(ICairnTypes.FailureClass.LOGIC));
+        assertEq(uint8(t.state), uint8(ICairnTypes.TaskState.DISPUTED));
+        assertEq(t.failureEvidenceCID, keccak256("e"));
+    }
+
+    function test_Upgradeable_ReportFailure_MechanicalOnly_Reverts() public {
+        bytes32 taskId = _submitStartUpgradeable();
+        vm.prank(primaryAgent);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ICairnCore.InvalidFailureReport.selector, ICairnTypes.FailureType.HEARTBEAT_MISS
+            )
+        );
+        cairnCore.reportFailure(taskId, ICairnTypes.FailureType.HEARTBEAT_MISS, bytes32(0));
+    }
+
+    function test_Upgradeable_DetectFailure_PastDeadlineWhileHeartbeating() public {
+        bytes32 taskId = _submitStartUpgradeable();
+        uint256 deadline = cairnCore.getTask(taskId).deadline;
+        while (block.timestamp <= deadline + 60) {
+            vm.warp(block.timestamp + 60);
+            vm.prank(primaryAgent);
+            cairnCore.heartbeat(taskId);
+        }
+        cairnCore.detectFailure(taskId);
+        ICairnCore.Task memory t = cairnCore.getTask(taskId);
+        assertEq(uint8(t.failureType), uint8(ICairnTypes.FailureType.DEADLINE_EXCEEDED));
+        assertEq(uint8(t.state), uint8(ICairnTypes.TaskState.DISPUTED));
+    }
+
+    function test_Upgradeable_CheckpointRootComputedOnChain() public {
+        bytes32 taskId = _submitStartUpgradeable();
+        bytes32[] memory cids = new bytes32[](2);
+        cids[0] = keccak256("a");
+        cids[1] = keccak256("b");
+        vm.prank(primaryAgent);
+        cairnCore.commitCheckpointBatch(taskId, cids, SPEC_HASH);
+
+        bytes32 l0 = keccak256(abi.encodePacked(cids[0], uint256(0)));
+        bytes32 l1 = keccak256(abi.encodePacked(cids[1], uint256(1)));
+        bytes32 root = l0 < l1 ? keccak256(abi.encodePacked(l0, l1)) : keccak256(abi.encodePacked(l1, l0));
+        assertEq(cairnCore.getBatchRoots(taskId)[0], root);
+        assertEq(cairnCore.getTask(taskId).checkpointCount, 2);
+        bytes32[] memory proof = new bytes32[](1);
+        proof[0] = l1;
+        assertTrue(cairnCore.verifyCheckpoint(taskId, cids[0], 0, 0, proof));
+    }
+
+    function test_Upgradeable_VerifyCheckpoint_LeafIndexBounded() public {
+        bytes32 taskId = _submitStartUpgradeable();
+        bytes32[] memory cids = new bytes32[](2);
+        cids[0] = keccak256("a");
+        cids[1] = keccak256("b");
+        vm.prank(primaryAgent);
+        cairnCore.commitCheckpointBatch(taskId, cids, SPEC_HASH);
+
+        bytes32 l0 = keccak256(abi.encodePacked(cids[0], uint256(0)));
+        bytes32 l1 = keccak256(abi.encodePacked(cids[1], uint256(1)));
+        (bytes32 lo, bytes32 hi) = l0 < l1 ? (l0, l1) : (l1, l0);
+        // The root's children read as (cid, index) must not verify as a leaf
+        assertFalse(cairnCore.verifyCheckpoint(taskId, lo, 0, uint256(hi), new bytes32[](0)));
+    }
+
+    /// @dev `n` distinct checkpoint CIDs; the last one equals `last`
+    function _cids(uint256 n, bytes32 last) internal pure returns (bytes32[] memory c) {
+        c = new bytes32[](n);
+        for (uint256 i = 0; i < n; i++) {
+            c[i] = keccak256(abi.encode("checkpoint", i));
+        }
+        if (n > 0) c[n - 1] = last;
     }
 }
