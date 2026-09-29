@@ -15,11 +15,11 @@ import {ICairnTypes} from "../src/interfaces/ICairnTypes.sol";
 ///         routing via RecoveryRouterV2.routingTier(), the reduced-scope escrow
 ///         cap in settlement, and the governance toggles.
 ///
-/// Scoring (RecoveryRouterV2, B = 1 since escrow > 0):
-///   r = F^0.80 × D^0.15
-///   - 0 checkpoints  → LIVENESS (F=0.70), F^0.80 ≈ 0.752 → FULL for normal D
-///   - 1-2 checkpoints→ RESOURCE (F=0.30), F^0.80 ≈ 0.382 → REDUCED at high D,
-///                       DISPUTED once the deadline is mostly elapsed
+/// Scoring (RecoveryRouterV2, no cost reported ⇒ B = 1):
+///   r = F^0.80 × B^0.35 × D^0.15
+///   - heartbeat timeout   → LIVENESS (F=0.70), F^0.80 ≈ 0.752 → FULL for normal D
+///   - agent-reported RATE_LIMIT → RESOURCE (F=0.30), F^0.80 ≈ 0.382 → REDUCED at
+///                           high D, DISPUTED once the deadline is mostly elapsed
 contract CairnCoreThreeTierTest is Test {
     CairnCore public core;
     RecoveryRouterV2 public router;
@@ -100,12 +100,15 @@ contract CairnCoreThreeTierTest is Test {
     /// REDUCED: 1 checkpoint (RESOURCE), fresh deadline → 0.35 ≤ r < 0.40
     function test_ReducedScope_ResourceClass() public {
         bytes32 taskId = _submitAndStart();
-        _commit(taskId, primaryAgent, 1); // 1 checkpoint → RESOURCE class
+        _commit(taskId, primaryAgent, 1); // progress does not set the class; the agent report does
         vm.warp(block.timestamp + 121);
 
         vm.expectEmit(true, false, false, true);
         emit ICairnCore.RecoveryScopeAssigned(taskId, ICairnTypes.RecoveryScope.REDUCED);
-        core.detectFailure(taskId);
+        vm.prank(primaryAgent);
+        core.reportFailure(
+            taskId, ICairnTypes.FailureType.RATE_LIMIT, keccak256("rate-limit-evidence")
+        );
 
         ICairnCore.Task memory task = core.getTask(taskId);
         assertEq(uint8(task.state), uint8(ICairnTypes.TaskState.RECOVERING));
@@ -120,7 +123,10 @@ contract CairnCoreThreeTierTest is Test {
         _commit(taskId, primaryAgent, 1);
         vm.warp(block.timestamp + 2400); // ~40 min elapsed of the 1h deadline
 
-        core.detectFailure(taskId);
+        vm.prank(primaryAgent);
+        core.reportFailure(
+            taskId, ICairnTypes.FailureType.RATE_LIMIT, keccak256("rate-limit-evidence")
+        );
 
         ICairnCore.Task memory task = core.getTask(taskId);
         assertEq(uint8(task.state), uint8(ICairnTypes.TaskState.DISPUTED));
@@ -154,9 +160,12 @@ contract CairnCoreThreeTierTest is Test {
     /// refunds the remainder to the operator.
     function test_ReducedScope_SettlementCapsFallbackAt50pct() public {
         bytes32 taskId = _submitAndStart();
-        _commit(taskId, primaryAgent, 1); // primary: 1 checkpoint → REDUCED route
+        _commit(taskId, primaryAgent, 1); // primary: 1 checkpoint
         vm.warp(block.timestamp + 121);
-        core.detectFailure(taskId);
+        vm.prank(primaryAgent);
+        core.reportFailure(
+            taskId, ICairnTypes.FailureType.RATE_LIMIT, keccak256("rate-limit-evidence")
+        );
 
         ICairnCore.Task memory failed = core.getTask(taskId);
         assertEq(uint8(failed.recoveryScope), uint8(ICairnTypes.RecoveryScope.REDUCED));

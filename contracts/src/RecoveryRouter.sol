@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import {IRecoveryRouter} from "./interfaces/IRecoveryRouter.sol";
 import {ICairnTypes} from "./interfaces/ICairnTypes.sol";
+import {FailureTaxonomy} from "./libraries/FailureTaxonomy.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title RecoveryRouter - Failure classification and recovery scoring
@@ -99,25 +100,21 @@ contract RecoveryRouter is IRecoveryRouter, Ownable {
     /// @inheritdoc IRecoveryRouter
     function classifyAndScore(
         bytes32 taskId,
-        uint256 escrowAmount,
-        uint256 createdAt,
-        uint256 deadline,
-        uint256 checkpointCount
+        ICairnTypes.FailureEvidence calldata evidence
     ) external override onlyCairnCore returns (
         ICairnTypes.FailureClass failureClass,
         ICairnTypes.FailureType failureType,
         uint256 recoveryScore,
         bytes32 failureRecordCID
     ) {
-        // Classify the failure (default: heartbeat miss = LIVENESS)
-        // More sophisticated classification would analyze checkpoint content
-        (failureClass, failureType) = _classifyFailure(checkpointCount);
+        // Classify from the recorded evidence (FailureTaxonomy); progress does not affect class
+        (failureClass, failureType) = FailureTaxonomy.classify(evidence);
 
-        // Compute budget remaining (full budget if no settlement yet)
-        uint256 budgetRemaining = escrowAmount > 0 ? PRECISION : 0;
-
-        // Compute deadline remaining
-        uint256 deadlineRemaining = _computeDeadlineRemaining(createdAt, deadline);
+        // B = fraction of escrow not yet consumed by reported cost; D = time remaining
+        uint256 budgetRemaining =
+            FailureTaxonomy.budgetRemaining(evidence.escrowAmount, evidence.costAccrued);
+        uint256 deadlineRemaining =
+            FailureTaxonomy.deadlineRemaining(evidence.createdAt, evidence.deadline);
 
         // Compute recovery score
         recoveryScore = _computeScore(failureClass, budgetRemaining, deadlineRemaining);
@@ -158,60 +155,6 @@ contract RecoveryRouter is IRecoveryRouter, Ownable {
     // ═══════════════════════════════════════════════════════════════
     // INTERNAL FUNCTIONS
     // ═══════════════════════════════════════════════════════════════
-
-    /// @notice Classify failure based on available data
-    /// @dev Default: heartbeat miss = LIVENESS (most common case)
-    /// @param checkpointCount Number of checkpoints completed
-    function _classifyFailure(uint256 checkpointCount)
-        internal
-        pure
-        returns (ICairnTypes.FailureClass, ICairnTypes.FailureType)
-    {
-        // Simple heuristic (PRD-02 Section 2.1):
-        // - 0 checkpoints: likely LIVENESS (agent never responded)
-        // - Some checkpoints: could be RESOURCE or LOGIC
-        //
-        // More sophisticated classification would analyze:
-        // - Checkpoint content for schema mismatches (LOGIC)
-        // - Error messages for rate limits (RESOURCE)
-        // - Time between checkpoints for patterns
-
-        if (checkpointCount == 0) {
-            // Agent never started or crashed immediately
-            return (ICairnTypes.FailureClass.LIVENESS, ICairnTypes.FailureType.HEARTBEAT_MISS);
-        } else if (checkpointCount < 3) {
-            // Early failure, possibly resource issue
-            return (ICairnTypes.FailureClass.RESOURCE, ICairnTypes.FailureType.UPSTREAM_TIMEOUT);
-        } else {
-            // Made progress then failed, could be logic error
-            // But default to LIVENESS (heartbeat miss) for conservative scoring
-            return (ICairnTypes.FailureClass.LIVENESS, ICairnTypes.FailureType.HEARTBEAT_MISS);
-        }
-    }
-
-    /// @notice Compute deadline remaining percentage
-    /// @param createdAt Task creation timestamp
-    /// @param deadline Task deadline timestamp
-    /// @return remaining Percentage remaining (0-1e18)
-    function _computeDeadlineRemaining(uint256 createdAt, uint256 deadline)
-        internal
-        view
-        returns (uint256 remaining)
-    {
-        if (block.timestamp >= deadline) {
-            return 0;
-        }
-
-        uint256 totalDuration = deadline - createdAt;
-        if (totalDuration == 0) {
-            return 0;
-        }
-
-        uint256 elapsed = block.timestamp - createdAt;
-        uint256 timeRemaining = totalDuration - elapsed;
-
-        return (timeRemaining * PRECISION) / totalDuration;
-    }
 
     /// @notice Compute recovery score using PRD-02 formula
     /// @dev score = (class_weight × 0.5) + (budget × 0.3) + (deadline × 0.2)
