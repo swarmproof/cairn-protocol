@@ -84,7 +84,7 @@ contract CairnCoreCoverageTest is Test {
         assertTrue(hook.submitted(), "onTaskSubmitted");
 
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(taskId, 1, keccak256("r"), keccak256("c"), specHash);
+        core.commitCheckpointBatch(taskId, _cids(1, keccak256("c")), specHash);
         assertTrue(hook.checkpointed(), "onCheckpoint");
 
         vm.prank(primaryAgent);
@@ -119,7 +119,7 @@ contract CairnCoreCoverageTest is Test {
         // First task of the type: submit, run, complete → RESOLVED SUCCESS
         bytes32 t1 = _submitStart(taskType);
         vm.prank(primaryAgent);
-        core.commitCheckpointBatch(t1, 1, keccak256("r"), keccak256("c"), specHash);
+        core.commitCheckpointBatch(t1, _cids(1, keccak256("c")), specHash);
         vm.prank(primaryAgent);
         core.completeTask(t1);
 
@@ -140,6 +140,15 @@ contract CairnCoreCoverageTest is Test {
 
         vm.prank(primaryAgent);
         vm.expectRevert();
-        core.commitCheckpointBatch(taskId, 1, keccak256("r"), keccak256("c"), specHash);
+        core.commitCheckpointBatch(taskId, _cids(1, keccak256("c")), specHash);
+    }
+
+    /// @dev `n` distinct checkpoint CIDs; the last one equals `last`
+    function _cids(uint256 n, bytes32 last) internal pure returns (bytes32[] memory c) {
+        c = new bytes32[](n);
+        for (uint256 i = 0; i < n; i++) {
+            c[i] = keccak256(abi.encode("checkpoint", i));
+        }
+        if (n > 0) c[n - 1] = last;
     }
 }

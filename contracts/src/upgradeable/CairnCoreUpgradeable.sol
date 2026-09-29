@@ -3,6 +3,7 @@ pragma solidity 0.8.24;
 
 import {ICairnCore} from "../interfaces/ICairnCore.sol";
 import {ICairnTypes} from "../interfaces/ICairnTypes.sol";
+import {FailureTaxonomy} from "../libraries/FailureTaxonomy.sol";
 import {IRecoveryRouter} from "../interfaces/IRecoveryRouter.sol";
 import {IFallbackPool} from "../interfaces/IFallbackPool.sol";
 import {IArbiterRegistry} from "../interfaces/IArbiterRegistry.sol";
@@ -12,6 +13,7 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {Hashes} from "@openzeppelin/contracts/utils/cryptography/Hashes.sol";
 
 /// @title CairnCoreUpgradeable - UUPS Upgradeable Main CAIRN Protocol Contract
 /// @author CAIRN Protocol
@@ -293,9 +295,7 @@ contract CairnCoreUpgradeable is
     /// @inheritdoc ICairnCore
     function commitCheckpointBatch(
         bytes32 taskId,
-        uint256 count,
-        bytes32 merkleRoot,
-        bytes32 latestCID,
+        bytes32[] calldata cids,
         bytes32 schemaHash
     ) external override taskExists(taskId) onlyCurrentAgent(taskId) whenNotPaused {
         Task storage task = _tasks[taskId];
@@ -311,13 +311,15 @@ contract CairnCoreUpgradeable is
             revert InvalidCheckpointSchema(schemaHash, task.specHash);
         }
 
-        // H-5: bound the self-reported batch size. The escrow split is weighted by
-        // checkpoint counts, so an unbounded count lets an agent capture the whole
-        // payout. This caps per-batch inflation; binding count to the Merkle tree's
-        // leaf count is tracked as a follow-up hardening item.
+        // H-5: the batch size is the number of published CIDs, and the root is computed
+        // from them on-chain, so the checkpoint count that weights settlement cannot exceed
+        // what the agent actually committed to. The per-batch cap bounds gas.
+        uint256 count = cids.length;
         if (count == 0 || count > MAX_CHECKPOINTS_PER_BATCH) {
             revert InvalidCheckpointCount(count, MAX_CHECKPOINTS_PER_BATCH);
         }
+        bytes32 merkleRoot = _checkpointRoot(cids);
+        bytes32 latestCID = cids[count - 1];
 
         uint256 batchStart = task.checkpointCount;
 
@@ -405,29 +407,112 @@ contract CairnCoreUpgradeable is
     {
         Task storage task = _tasks[taskId];
 
-        if (!isStale(taskId)) revert TaskNotStale(taskId);
+        // Mechanical evidence only. A passed deadline takes precedence: a task that keeps
+        // heart-beating past its deadline can no longer complete (completeTask reverts),
+        // so it must still be detectable as failed.
+        ICairnTypes.FailureEvidenceSource source;
+        if (_isActive(task) && block.timestamp > task.deadline) {
+            source = ICairnTypes.FailureEvidenceSource.DEADLINE_EXPIRED;
+        } else if (isStale(taskId)) {
+            source = ICairnTypes.FailureEvidenceSource.HEARTBEAT_TIMEOUT;
+        } else {
+            revert TaskNotStale(taskId);
+        }
 
-        // Classify failure via RecoveryRouter (PRD-02)
+        _recordFailure(taskId, source, ICairnTypes.FailureType.HEARTBEAT_MISS, bytes32(0));
+    }
+
+    /// @inheritdoc ICairnCore
+    function reportFailure(
+        bytes32 taskId,
+        ICairnTypes.FailureType failureType,
+        bytes32 evidenceCID
+    )
+        external
+        override
+        taskExists(taskId)
+        onlyCurrentAgent(taskId)
+        nonReentrant
+        whenNotPaused
+    {
+        Task storage task = _tasks[taskId];
+        if (!_isActive(task)) revert InvalidState(task.state, ICairnTypes.TaskState.RUNNING);
+
+        // Mechanical-only types are established by detectFailure, never self-reported.
+        if (FailureTaxonomy.isMechanicalOnly(failureType)) {
+            revert InvalidFailureReport(failureType);
+        }
+
+        _recordFailure(
+            taskId, ICairnTypes.FailureEvidenceSource.AGENT_REPORT, failureType, evidenceCID
+        );
+    }
+
+    /// @inheritdoc ICairnCore
+    function reportCost(bytes32 taskId, uint256 cumulativeCost)
+        external
+        override
+        taskExists(taskId)
+        onlyCurrentAgent(taskId)
+        whenNotPaused
+    {
+        Task storage task = _tasks[taskId];
+        if (!_isActive(task)) revert InvalidState(task.state, ICairnTypes.TaskState.RUNNING);
+        if (cumulativeCost < task.costAccrued) {
+            revert CostNotMonotonic(cumulativeCost, task.costAccrued);
+        }
+
+        // Clamp to the escrow: the budget is the escrow, so reaching it means exhaustion.
+        uint256 cost = cumulativeCost > task.escrowAmount ? task.escrowAmount : cumulativeCost;
+        task.costAccrued = cost;
+
+        emit CostReported(taskId, msg.sender, cost);
+    }
+
+    /// @notice Whether the task is executing (RUNNING or RECOVERING)
+    function _isActive(Task storage task) internal view returns (bool) {
+        return task.state == ICairnTypes.TaskState.RUNNING ||
+            task.state == ICairnTypes.TaskState.RECOVERING;
+    }
+
+    /// @notice Classify and score a failure from its evidence, move the task to FAILED,
+    ///         and route it.
+    function _recordFailure(
+        bytes32 taskId,
+        ICairnTypes.FailureEvidenceSource source,
+        ICairnTypes.FailureType reportedType,
+        bytes32 evidenceCID
+    ) internal {
+        Task storage task = _tasks[taskId];
+
+        ICairnTypes.FailureEvidence memory evidence = ICairnTypes.FailureEvidence({
+            source: source,
+            reportedType: reportedType,
+            evidenceCID: evidenceCID,
+            escrowAmount: task.escrowAmount,
+            costAccrued: task.costAccrued,
+            createdAt: task.createdAt,
+            deadline: task.deadline,
+            checkpointCount: task.checkpointCount
+        });
+
         (
             ICairnTypes.FailureClass failureClass,
             ICairnTypes.FailureType failureType,
             uint256 recoveryScore,
             bytes32 failureRecordCID
-        ) = recoveryRouter.classifyAndScore(
-            taskId,
-            task.escrowAmount,
-            task.createdAt,
-            task.deadline,
-            task.checkpointCount
-        );
+        ) = recoveryRouter.classifyAndScore(taskId, evidence);
 
         // Store failure data
         task.failureClass = failureClass;
         task.failureType = failureType;
         task.recoveryScore = recoveryScore;
         task.failureRecordCID = failureRecordCID;
+        task.failureEvidenceSource = source;
+        task.failureEvidenceCID = evidenceCID;
         task.state = ICairnTypes.TaskState.FAILED;
 
+        emit FailureEvidenceRecorded(taskId, source, failureType, evidenceCID);
         emit TaskFailed(
             taskId,
             task.currentAgent,
@@ -637,6 +722,31 @@ contract CairnCoreUpgradeable is
     // MERKLE VERIFICATION (PRD-07)
     // ═══════════════════════════════════════════════════════════════
 
+    /// @notice Merkle root of a checkpoint batch (H-5: count is bound to the published CIDs)
+    /// @dev Leaf i = keccak256(abi.encodePacked(cids[i], i)); pairs hashed with the same
+    ///      commutative keccak256 MerkleProof uses; an odd last node is promoted. Built in
+    ///      place: level entries are only read at indices >= the one being written.
+    function _checkpointRoot(bytes32[] calldata cids) internal pure returns (bytes32) {
+        uint256 n = cids.length;
+        bytes32[] memory level = new bytes32[](n);
+        for (uint256 i = 0; i < n; i++) {
+            level[i] = keccak256(abi.encodePacked(cids[i], i));
+        }
+        while (n > 1) {
+            uint256 pairs = n / 2;
+            for (uint256 i = 0; i < pairs; i++) {
+                level[i] = Hashes.commutativeKeccak256(level[2 * i], level[2 * i + 1]);
+            }
+            if (n % 2 == 1) {
+                level[pairs] = level[n - 1];
+                n = pairs + 1;
+            } else {
+                n = pairs;
+            }
+        }
+        return level[0];
+    }
+
     /// @inheritdoc ICairnCore
     function verifyCheckpoint(
         bytes32 taskId,
@@ -648,6 +758,13 @@ contract CairnCoreUpgradeable is
         bytes32[] storage roots = _batchRoots[taskId];
 
         if (batchIndex >= roots.length) {
+            return false;
+        }
+
+        // A leaf and an internal node are both keccak256 of 64 bytes, so an internal node's
+        // children could be presented as (cid, leafIndex). Bounding the index to the batch
+        // size rejects that: a child hash read as an index is far outside the range.
+        if (leafIndex >= _batchSizes[taskId][batchIndex]) {
             return false;
         }
 
