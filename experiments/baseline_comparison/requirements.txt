@@ -1,0 +1,10 @@
+# Versions used to produce the committed results.json (Python 3.9.6).
+# LangGraph and Temporal fall back to labelled emulations if unavailable.
+langgraph==0.6.11
+langgraph-checkpoint==2.1.2
+langgraph-checkpoint-sqlite==2.0.11
+langchain-core==0.3.86
+temporalio==1.18.2
+matplotlib==3.9.4
+numpy==2.0.2
+pytest==8.4.2
