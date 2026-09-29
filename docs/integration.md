@@ -199,7 +199,7 @@ async def register_as_fallback(task_types: list[str], stake_amount: int):
 
 ## Arbiter Registration
 
-The arbiter role in DISPUTED must be trustless, permissionless, and resistant to Sybil attacks — without a DAO and without centralization.
+The arbiter role in DISPUTED must not depend on a trusted party, must be permissionless, and must resist Sybil attacks — without a DAO and without centralization.
 
 ### Arbiter Design
 

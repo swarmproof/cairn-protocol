@@ -176,7 +176,7 @@ contract RecoveryRouterV2Test is Test {
 
     function test_ClassifyAndScore_NotCairnCore_Reverts() public {
         vm.expectRevert(IRecoveryRouter.NotAuthorized.selector);
-        router.classifyAndScore(bytes32(uint256(1)), 1 ether, 1, 100, 0);
+        router.classifyAndScore(bytes32(uint256(1)), _ev(1 ether, 1, 100, 0));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -210,13 +210,7 @@ contract RecoveryRouterV2Test is Test {
             ,
             uint256 score,
             bytes32 cid
-        ) = router.classifyAndScore(
-            bytes32(uint256(1)),
-            1 ether,
-            block.timestamp,
-            block.timestamp + 1000,
-            0 // 0 checkpoints → LIVENESS classification
-        );
+        ) = router.classifyAndScore(bytes32(uint256(1)), _ev(1 ether, block.timestamp, block.timestamp + 1000, 0));
 
         assertEq(uint8(failureClass), uint8(ICairnTypes.FailureClass.LIVENESS));
         assertGt(score, router.upperThreshold()); // fresh task, full resources
@@ -273,22 +267,47 @@ contract RecoveryRouterV2Test is Test {
     function test_ClassifyAndScore_ManyCheckpoints_IsLiveness() public {
         vm.prank(cairnCore);
         (ICairnTypes.FailureClass fc, ICairnTypes.FailureType ft,,) =
-            router.classifyAndScore(keccak256("t"), 1 ether, block.timestamp, block.timestamp + 1 hours, 5);
+            router.classifyAndScore(keccak256("t"), _ev(1 ether, block.timestamp, block.timestamp + 1 hours, 5));
         assertEq(uint8(fc), uint8(ICairnTypes.FailureClass.LIVENESS));
         assertEq(uint8(ft), uint8(ICairnTypes.FailureType.HEARTBEAT_MISS));
     }
 
-    /// 1-2 checkpoints classify as RESOURCE.
-    function test_ClassifyAndScore_FewCheckpoints_IsResource() public {
-        vm.prank(cairnCore);
-        (ICairnTypes.FailureClass fc,,,) =
-            router.classifyAndScore(keccak256("t"), 1 ether, block.timestamp, block.timestamp + 1 hours, 2);
-        assertEq(uint8(fc), uint8(ICairnTypes.FailureClass.RESOURCE));
+    /// Checkpoint progress does not change the class: a heartbeat timeout is LIVENESS
+    /// whether the agent committed 0, 2, or 50 checkpoints.
+    function test_ClassifyAndScore_CheckpointCountDoesNotSetClass() public {
+        uint256[3] memory counts = [uint256(0), 2, 50];
+        for (uint256 i = 0; i < counts.length; i++) {
+            vm.prank(cairnCore);
+            (ICairnTypes.FailureClass fc, ICairnTypes.FailureType ft,,) = router.classifyAndScore(
+                keccak256(abi.encode(i)),
+                _ev(1 ether, block.timestamp, block.timestamp + 1 hours, counts[i])
+            );
+            assertEq(uint8(fc), uint8(ICairnTypes.FailureClass.LIVENESS));
+            assertEq(uint8(ft), uint8(ICairnTypes.FailureType.HEARTBEAT_MISS));
+        }
     }
 
     function test_SetCairnCore() public {
         address newCore = address(0xBEEF);
         router.setCairnCore(newCore);
         assertEq(router.cairnCore(), newCore);
+    }
+
+    /// @dev Heartbeat-timeout evidence with no reported cost (the pre-evidence default inputs)
+    function _ev(uint256 escrow, uint256 createdAt, uint256 deadline, uint256 checkpoints)
+        internal
+        pure
+        returns (ICairnTypes.FailureEvidence memory)
+    {
+        return ICairnTypes.FailureEvidence({
+            source: ICairnTypes.FailureEvidenceSource.HEARTBEAT_TIMEOUT,
+            reportedType: ICairnTypes.FailureType.HEARTBEAT_MISS,
+            evidenceCID: bytes32(0),
+            escrowAmount: escrow,
+            costAccrued: 0,
+            createdAt: createdAt,
+            deadline: deadline,
+            checkpointCount: checkpoints
+        });
     }
 }

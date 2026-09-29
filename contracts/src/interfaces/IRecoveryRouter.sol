@@ -4,20 +4,13 @@ pragma solidity 0.8.24;
 import {ICairnTypes} from "./ICairnTypes.sol";
 
 /// @title IRecoveryRouter - Failure classification and recovery scoring
-/// @notice Classifies failures and computes recovery likelihood scores
-/// @dev Based on PRD-02 Section 2.1-2.2
-///
-/// Recovery Score Formula (PRD-02):
-///   score = (failure_class_weight × 0.5) + (budget_remaining × 0.3) + (deadline_remaining × 0.2)
-///
-/// Class Weights:
-///   - LIVENESS: 0.9 (high recovery potential)
-///   - RESOURCE: 0.5 (medium recovery potential)
-///   - LOGIC: 0.1 (low recovery potential)
-///
-/// Routing:
-///   - score >= 0.3 → RECOVERING (fallback assigned)
-///   - score < 0.3 → DISPUTED (arbiter needed)
+/// @notice Classifies a failure from its recorded evidence and computes a recovery score
+///         from the failure class F, remaining budget B, and remaining deadline D.
+/// @dev The scoring formula and class weights are implementation-specific
+///      (RecoveryRouter: linear; RecoveryRouterV2: multiplicative). Classification and the
+///      B/D inputs are shared across implementations via FailureTaxonomy.
+///      B = (escrow - costAccrued) / escrow, where costAccrued is agent-reported.
+///      D = (deadline - now) / (deadline - createdAt).
 interface IRecoveryRouter {
     // ═══════════════════════════════════════════════════════════════
     // EVENTS
@@ -55,23 +48,18 @@ interface IRecoveryRouter {
     // CORE FUNCTIONS
     // ═══════════════════════════════════════════════════════════════
 
-    /// @notice Classify a failure and compute recovery score
-    /// @dev Called by CairnCore when a task fails (heartbeat miss)
+    /// @notice Classify a failure from its evidence and compute the recovery score
+    /// @dev Called by CairnCore on detectFailure (heartbeat timeout / deadline expiry) or
+    ///      reportFailure (agent report).
     /// @param taskId The failing task's ID
-    /// @param escrowAmount Task's escrowed funds
-    /// @param createdAt Task creation timestamp
-    /// @param deadline Task deadline timestamp
-    /// @param checkpointCount Number of checkpoints completed
-    /// @return failureClass The classified failure type
+    /// @param evidence The recorded failure evidence and score inputs
+    /// @return failureClass The failure class derived from the evidence
     /// @return failureType Specific failure within the class
-    /// @return recoveryScore Recovery likelihood (0-1e18 scale)
-    /// @return failureRecordCID IPFS CID of the failure record
+    /// @return recoveryScore Recovery score (0-1e18 scale)
+    /// @return failureRecordCID Identifier of the failure record
     function classifyAndScore(
         bytes32 taskId,
-        uint256 escrowAmount,
-        uint256 createdAt,
-        uint256 deadline,
-        uint256 checkpointCount
+        ICairnTypes.FailureEvidence calldata evidence
     ) external returns (
         ICairnTypes.FailureClass failureClass,
         ICairnTypes.FailureType failureType,

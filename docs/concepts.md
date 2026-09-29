@@ -68,22 +68,22 @@ r = F^0.80 × B^0.35 × D^0.15
 
 Where:
 - `F` = `failure_class_weight`: LIVENESS = 0.70 | RESOURCE = 0.30 | LOGIC = 0.00
-- `B` = `budget_remaining_pct`: (budget_cap - cost_accrued) / budget_cap, scaled to [0, 1]
+- `B` = `budget_remaining_pct`: (escrow - cost_accrued) / escrow, scaled to [0, 1]; `cost_accrued` is reported by the current agent (`reportCost`) and is not verified on-chain
 - `D` = `deadline_remaining_pct`: (deadline - current_block) / (deadline - start_block), scaled to [0, 1]
-- Exponents (0.80, 0.35, 0.15) are governance-adjustable.
+- Exponents (0.80, 0.35, 0.15) are compile-time constants in the deployed router.
 
-The multiplicative form captures the "any-factor-kills-it" dynamic: if budget, deadline, or class recoverability approaches zero, the score collapses to zero — matching the ground-truth recovery dynamics. See [Whitepaper §6.4](../WHITEPAPER_V2.md) for the simulation methodology and [`simulation/RESULTS_EQ4.md`](../simulation/RESULTS_EQ4.md) for the calibration results (23.46% misrouting, within 0.93pp of Bayes-optimal).
+The multiplicative form captures the "any-factor-kills-it" dynamic: if budget, deadline, or class recoverability approaches zero, the score collapses to zero — matching the dynamics of the synthetic ground-truth model used for calibration. See [Whitepaper §6.4](../WHITEPAPER_V2.md) for the simulation methodology and [`simulation/RESULTS_EQ4.md`](../simulation/RESULTS_EQ4.md) for the calibration results (23.46% misrouting, within 0.93pp of the synthetic model's Bayes risk).
 
 **Three-tier routing (v2 thresholds):**
 - `r ≥ 0.40` → **RECOVERING (full scope)** — high confidence, fallback receives full remaining budget
 - `0.35 ≤ r < 0.40` → **RECOVERING (reduced scope)** — medium confidence, fallback receives capped budget
 - `r < 0.35` → **DISPUTED** (requires arbiter resolution)
 
-> **v1 testnet note.** The contract currently deployed on Base Sepolia (`RecoveryRouter.sol`) implements the pre-calibration linear formula `r = 0.5·F + 0.3·B + 0.2·D` with class weights `(0.90, 0.50, 0.10)` and a single binary threshold at `0.30`. The v2 multiplicative formula ships in `RecoveryRouterV2.sol` and migrates via governance through the `IRecoveryRouter` interface; see the whitepaper's [Implementation Status](../WHITEPAPER_V2.md#implementation-status-authoritative). Both `recoveryThresholdUpper` (0.40) and `recoveryThresholdLower` (0.35) are governance-adjustable in v2.
+> **Deployment note.** The router deployed on Base Sepolia is `RecoveryRouterV2` (multiplicative formula, three-tier routing enabled in `CairnCore`). The earlier linear router `RecoveryRouter.sol` (`r = 0.5·F + 0.3·B + 0.2·D`, class weights `(0.90, 0.50, 0.10)`, single threshold `0.30`) remains in the repository and implements the same `IRecoveryRouter` interface. The v2 thresholds (0.40 upper, 0.35 lower) are set by the router owner via `setThresholds`. See the whitepaper's [Implementation Status](../WHITEPAPER_V2.md#implementation-status-authoritative).
 
 ### Escrow Split Rule
 
-On RESOLVED, escrow is distributed proportionally to verified work:
+On RESOLVED, escrow is distributed proportionally to committed checkpoints:
 
 ```
 original_agent_share = (original_checkpoint_count / total_checkpoint_count) × escrow_amount × (1 - protocol_fee)

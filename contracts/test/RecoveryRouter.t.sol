@@ -54,7 +54,7 @@ contract RecoveryRouterTest is Test {
             ICairnTypes.FailureType failureType,
             uint256 recoveryScore,
             bytes32 failureRecordCID
-        ) = router.classifyAndScore(taskId, escrow, createdAt, deadline, checkpointCount);
+        ) = router.classifyAndScore(taskId, _ev(escrow, createdAt, deadline, checkpointCount));
 
         // Zero checkpoints = LIVENESS failure (agent never started)
         assertEq(uint8(failureClass), uint8(ICairnTypes.FailureClass.LIVENESS));
@@ -68,18 +68,18 @@ contract RecoveryRouterTest is Test {
         uint256 escrow = 1 ether;
         uint256 createdAt = block.timestamp;
         uint256 deadline = block.timestamp + 1 hours;
-        uint256 checkpointCount = 2; // < 3 = RESOURCE
+        uint256 checkpointCount = 2;
 
         vm.prank(cairnCore);
         (
             ICairnTypes.FailureClass failureClass,
             ICairnTypes.FailureType failureType,
             ,
-        ) = router.classifyAndScore(taskId, escrow, createdAt, deadline, checkpointCount);
+        ) = router.classifyAndScore(taskId, _ev(escrow, createdAt, deadline, checkpointCount));
 
-        // Few checkpoints = RESOURCE failure (early failure)
-        assertEq(uint8(failureClass), uint8(ICairnTypes.FailureClass.RESOURCE));
-        assertEq(uint8(failureType), uint8(ICairnTypes.FailureType.UPSTREAM_TIMEOUT));
+        // Checkpoint progress does not set the class: a heartbeat timeout is LIVENESS
+        assertEq(uint8(failureClass), uint8(ICairnTypes.FailureClass.LIVENESS));
+        assertEq(uint8(failureType), uint8(ICairnTypes.FailureType.HEARTBEAT_MISS));
     }
 
     function test_ClassifyAndScoreManyCheckpoints() public {
@@ -94,7 +94,7 @@ contract RecoveryRouterTest is Test {
             ICairnTypes.FailureClass failureClass,
             ICairnTypes.FailureType failureType,
             ,
-        ) = router.classifyAndScore(taskId, escrow, createdAt, deadline, checkpointCount);
+        ) = router.classifyAndScore(taskId, _ev(escrow, createdAt, deadline, checkpointCount));
 
         // Many checkpoints then fail = LIVENESS (default conservative)
         assertEq(uint8(failureClass), uint8(ICairnTypes.FailureClass.LIVENESS));
@@ -117,19 +117,13 @@ contract RecoveryRouterTest is Test {
             0, // score is computed
             bytes32(0) // CID is generated
         );
-        router.classifyAndScore(taskId, escrow, createdAt, deadline, checkpointCount);
+        router.classifyAndScore(taskId, _ev(escrow, createdAt, deadline, checkpointCount));
     }
 
     function test_RevertClassifyAndScoreNotCairnCore() public {
         vm.prank(randomUser);
         vm.expectRevert(IRecoveryRouter.NotAuthorized.selector);
-        router.classifyAndScore(
-            keccak256("task"),
-            1 ether,
-            block.timestamp,
-            block.timestamp + 1 hours,
-            0
-        );
+        router.classifyAndScore(keccak256("task"), _ev(1 ether, block.timestamp, block.timestamp + 1 hours, 0));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -226,7 +220,7 @@ contract RecoveryRouterTest is Test {
 
         // At creation, full deadline remaining
         vm.prank(cairnCore);
-        (,, uint256 score,) = router.classifyAndScore(taskId, 1 ether, createdAt, deadline, 0);
+        (,, uint256 score,) = router.classifyAndScore(taskId, _ev(1 ether, createdAt, deadline, 0));
 
         // With LIVENESS and full budget, score should be high
         assertTrue(score > 0.9e18);
@@ -241,7 +235,7 @@ contract RecoveryRouterTest is Test {
         vm.warp(block.timestamp + 30 minutes);
 
         vm.prank(cairnCore);
-        (,, uint256 score,) = router.classifyAndScore(taskId, 1 ether, createdAt, deadline, 0);
+        (,, uint256 score,) = router.classifyAndScore(taskId, _ev(1 ether, createdAt, deadline, 0));
 
         // Score should be lower than full deadline
         // LIVENESS × 0.5 + budget × 0.3 + 0.5 deadline × 0.2 = 0.45 + 0.30 + 0.10 = 0.85
@@ -257,7 +251,7 @@ contract RecoveryRouterTest is Test {
         vm.warp(block.timestamp + 2 hours);
 
         vm.prank(cairnCore);
-        (,, uint256 score,) = router.classifyAndScore(taskId, 1 ether, createdAt, deadline, 0);
+        (,, uint256 score,) = router.classifyAndScore(taskId, _ev(1 ether, createdAt, deadline, 0));
 
         // Deadline component should be 0
         // LIVENESS × 0.5 + budget × 0.3 + 0 deadline × 0.2 = 0.45 + 0.30 + 0 = 0.75
@@ -273,8 +267,8 @@ contract RecoveryRouterTest is Test {
         bytes32 taskId2 = keccak256("task_cid_2");
 
         vm.startPrank(cairnCore);
-        (,,, bytes32 cid1) = router.classifyAndScore(taskId1, 1 ether, block.timestamp, block.timestamp + 1 hours, 0);
-        (,,, bytes32 cid2) = router.classifyAndScore(taskId2, 1 ether, block.timestamp, block.timestamp + 1 hours, 0);
+        (,,, bytes32 cid1) = router.classifyAndScore(taskId1, _ev(1 ether, block.timestamp, block.timestamp + 1 hours, 0));
+        (,,, bytes32 cid2) = router.classifyAndScore(taskId2, _ev(1 ether, block.timestamp, block.timestamp + 1 hours, 0));
         vm.stopPrank();
 
         // CIDs should be unique
@@ -293,7 +287,7 @@ contract RecoveryRouterTest is Test {
             ICairnTypes.FailureType.HEARTBEAT_MISS,
             block.timestamp
         );
-        router.classifyAndScore(taskId, 1 ether, block.timestamp, block.timestamp + 1 hours, 0);
+        router.classifyAndScore(taskId, _ev(1 ether, block.timestamp, block.timestamp + 1 hours, 0));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -355,7 +349,7 @@ contract RecoveryRouterTest is Test {
         uint256 deadline = block.timestamp; // Same as creation = 0 duration
 
         vm.prank(cairnCore);
-        (,, uint256 score,) = router.classifyAndScore(taskId, 1 ether, createdAt, deadline, 0);
+        (,, uint256 score,) = router.classifyAndScore(taskId, _ev(1 ether, createdAt, deadline, 0));
 
         // Score should still compute (deadline component = 0)
         // LIVENESS × 0.5 + budget × 0.3 + 0 = 0.75
@@ -366,7 +360,7 @@ contract RecoveryRouterTest is Test {
         bytes32 taskId = keccak256("zero_escrow");
 
         vm.prank(cairnCore);
-        (,, uint256 score,) = router.classifyAndScore(taskId, 0, block.timestamp, block.timestamp + 1 hours, 0);
+        (,, uint256 score,) = router.classifyAndScore(taskId, _ev(0, block.timestamp, block.timestamp + 1 hours, 0));
 
         // Budget remaining = 0 (no escrow)
         // LIVENESS × 0.5 + 0 × 0.3 + deadline × 0.2 = 0.45 + 0 + 0.20 = 0.65
@@ -382,13 +376,13 @@ contract RecoveryRouterTest is Test {
             ICairnTypes.FailureClass class1,
             ICairnTypes.FailureType type1,
             ,
-        ) = router.classifyAndScore(taskId1, 1 ether, block.timestamp, block.timestamp + 1 hours, 5);
+        ) = router.classifyAndScore(taskId1, _ev(1 ether, block.timestamp, block.timestamp + 1 hours, 5));
 
         (
             ICairnTypes.FailureClass class2,
             ICairnTypes.FailureType type2,
             ,
-        ) = router.classifyAndScore(taskId2, 1 ether, block.timestamp, block.timestamp + 1 hours, 5);
+        ) = router.classifyAndScore(taskId2, _ev(1 ether, block.timestamp, block.timestamp + 1 hours, 5));
         vm.stopPrank();
 
         // Same checkpoint count should yield same classification
@@ -411,5 +405,23 @@ contract RecoveryRouterTest is Test {
     function test_WeightsSumToOne() public view {
         uint256 totalWeight = router.FAILURE_CLASS_WEIGHT() + router.BUDGET_WEIGHT() + router.DEADLINE_WEIGHT();
         assertEq(totalWeight, 1e18);
+    }
+
+    /// @dev Heartbeat-timeout evidence with no reported cost (the pre-evidence default inputs)
+    function _ev(uint256 escrow, uint256 createdAt, uint256 deadline, uint256 checkpoints)
+        internal
+        pure
+        returns (ICairnTypes.FailureEvidence memory)
+    {
+        return ICairnTypes.FailureEvidence({
+            source: ICairnTypes.FailureEvidenceSource.HEARTBEAT_TIMEOUT,
+            reportedType: ICairnTypes.FailureType.HEARTBEAT_MISS,
+            evidenceCID: bytes32(0),
+            escrowAmount: escrow,
+            costAccrued: 0,
+            createdAt: createdAt,
+            deadline: deadline,
+            checkpointCount: checkpoints
+        });
     }
 }
