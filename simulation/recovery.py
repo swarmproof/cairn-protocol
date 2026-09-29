@@ -1,8 +1,20 @@
 """Ground truth model for recovery success probability.
 
-This model is DELIBERATELY different from the CAIRN score formula.
-It uses non-linear dynamics (sigmoids, products) to represent reality,
-while the score formula is a linear approximation being tested against it.
+The synthetic ground truth used by the calibration runs is a product of
+sigmoid and linear factors:
+
+    p = base[class]
+        × sigmoid(B; k=15, c=0.15)
+        × sigmoid(D; k=20, c=0.10)
+        × 1 / (1 + 0.02 · remaining_subtasks)
+        × (0.4 + 0.6 · fallback_skill)
+
+where sigmoid(x; k, c) = 1 / (1 + exp(-k · (x - c))), B is budget remaining,
+D is deadline remaining, and base[class] comes from GROUND_TRUTH_BASE_RATES.
+remaining_subtasks and fallback_skill enter the ground truth but are not
+inputs to the three-variable score formulas (scorer.py), which are evaluated
+against this model separately. Alternative ground-truth models are defined in
+worlds.py.
 """
 
 import math
@@ -19,7 +31,7 @@ def ground_truth_probability(
 ) -> float:
     """Compute the probability that recovery actually succeeds.
 
-    This is the 'reality' model — independent of the CAIRN score formula.
+    Scalar form of the model described in the module docstring.
     """
     base = GROUND_TRUTH_BASE_RATES[failure_class]
 
